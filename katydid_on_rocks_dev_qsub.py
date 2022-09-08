@@ -90,7 +90,6 @@ def main():
     else:
         file_df = create_file_df(args.run_id)
         file_df["root_file_exists"] = False
-        file_df = create_file_df(args.run_id)
         file_df["file_num"] = file_df.index
         file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
         file_df["exists"] = file_df["rocks_file_path"].apply(
@@ -202,8 +201,10 @@ def root_file_check(file_df):
 
 
 def build_file_df_path(run_id, analysis_index):
+	base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+	rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"ai_{run_id:03d}")
 
-    file_df_path = Path(file_df["root_file_path"][0]).parents[0] / Path(
+    file_df_path = rid_ai_dir / Path(
         f"rid_{run_id}_{analysis_index}.csv"
     )
     return file_df_path
