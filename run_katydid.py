@@ -191,7 +191,7 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
     )
 
     # Trim the df according to the file_num arg.
-    if args.file_num != -1:
+    if file_num != -1:
         file_df = file_df[:file_num]
 
     # Before running katydid write this df to the analysis dir.
