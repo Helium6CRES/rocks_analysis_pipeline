@@ -56,10 +56,10 @@ def main():
             run_id, analysis_index, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
-        qsub_job(run_id, cmd, tlim)
+        qsub_job(run_id, analysis_index, cmd, tlim)
 
 
-def qsub_job(run_id, cmd, tlim):
+def qsub_job(run_id, analysis_index, cmd, tlim):
     """
     ./qsub.py --job 'arbitrary command' [options]
 
@@ -77,7 +77,7 @@ def qsub_job(run_id, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        "-o /data/eliza4/he6_cres/job_logs/output_{}.txt".format(run_id),
+        "-o /data/eliza4/he6_cres/job_logs/rid_{}_{}.txt".format(run_id, analysis_index),
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
