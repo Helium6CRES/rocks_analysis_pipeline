@@ -98,7 +98,7 @@ def main():
     # Before running katydid write this df to the analysis dir. 
     # This will be used during the cleanup
     analysis_dir = Path(file_df["root_file_path"][0]).stem
-    print(analysis_dir)
+    print(f"analysis_dir: {analysis_dir}")
     file_df.to_csv(analysis_dir)
 
     if args.file_num == -1:
@@ -164,8 +164,8 @@ def run_katydid(file_df):
     # Print statement to
     now = datetime.datetime.now()
     print(
-        "file {}. time: {}. root file {}".format(
-            file_df["file_num"], now, file_df["rocks_file_path"]
+        "\nfile {}. time: {}. root file created {}\n".format(
+            file_df["file_num"], now, file_df["root_file_path"]
         )
     )
 
