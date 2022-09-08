@@ -127,7 +127,7 @@ def get_analysis_id(run_ids):
 
         analysis_dirs = glob(str(run_id_dir) + "/*/")
         analysis_id = len(analysis_dirs)
-        analysis_indices.append(analysis_id)
+        analysis_ids.append(analysis_id)
 
     return max(analysis_ids)
 
