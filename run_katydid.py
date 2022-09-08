@@ -80,13 +80,16 @@ def main():
     file_df_path = build_file_df_path(args.run_id, args.analysis_id)
     print(f"\nfile_df_path: {file_df_path}. exists: {file_df_path.is_file()}\n")
 
+    # Clean-up.
     if file_df_path.is_file():
 
         file_df = pd.read_csv(file_df_path)
         file_df["root_file_exists"] = file_df["root_file_path"].apply(
             lambda x: check_if_exists(x)
         )
+        clean_up_root_dir(file_df)
 
+    # New analysis.
     else:
         file_df = build_full_file_df(
             args.run_id, args.analysis_id, args.base_config, args.file_num
@@ -146,18 +149,19 @@ def run_katydid(file_df):
     # Run katydid on the edited katydid config file.
     # Note that you need to have Katydid configured as a bash executable for this to
     # work (as is standard).
+    t_start = time.process_time() 
     run_katydid = sp.run(
         ["/data/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
         capture_output=True,
     )
     # print("\nspec file {} of {}".format(i + 1, len(spec_files)))
     print("Katydid output:", run_katydid.stdout[-100:])
-
+    t_stop = time.process_time() 
     # Print statement to
     now = datetime.datetime.now()
     print(
-        "\nfile {}. time: {}. root file created {}\n".format(
-            file_df["file_num"], now, file_df["root_file_path"]
+        "\nfile {}.\ntime to run: {}.\ncurrent time: {}.\nroot file created {}\n".format(
+            file_df["file_num"], t_stop - t_start, now, file_df["root_file_path"]
         )
     )
 
@@ -201,6 +205,20 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
     file_df.to_csv(file_df_path)
 
     return file_df
+
+def clean_up_root_dir(file_df): 
+
+    # Delete all root files that aren't in our df. 
+
+    run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
+
+    real_path_list = run_id_aid_dir.glob('*.root')
+    desired_path_list = file_df["root_file_path"].to_list()
+    for path in pathlist:
+        if path in desired_path_list: continue
+        else: path.unlink()
+        print(path)
+    return None
 
 
 def root_file_check(file_df):
