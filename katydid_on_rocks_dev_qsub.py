@@ -82,7 +82,7 @@ def main():
 
     if file_df_path.is_file():
 
-        file_df = pd.read(file_df_path)
+        file_df = pd.read_csv(file_df_path)
         file_df["root_file_exists"] = file_df["root_file_path"].apply(
             lambda x: check_if_exists(x)
         )
@@ -205,7 +205,7 @@ def build_file_df_path(run_id, analysis_index):
     rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"ai_{analysis_index:03d}")
 
     file_df_path = rid_ai_dir / Path(
-        f"rid_{run_id}_{analysis_index}.csv"
+        f"rid_{run_id:04d}_{analysis_index:03d}.csv"
     )
     return file_df_path
 
