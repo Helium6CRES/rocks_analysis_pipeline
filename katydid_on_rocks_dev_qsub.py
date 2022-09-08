@@ -201,8 +201,8 @@ def root_file_check(file_df):
 
 
 def build_file_df_path(run_id, analysis_index):
-	base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
-	rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"ai_{run_id:03d}")
+    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+    rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"ai_{run_id:03d}")
 
     file_df_path = rid_ai_dir / Path(
         f"rid_{run_id}_{analysis_index}.csv"
