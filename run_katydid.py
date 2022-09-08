@@ -88,38 +88,9 @@ def main():
         )
 
     else:
-        file_df = create_file_df(args.run_id)
-        file_df["root_file_exists"] = False
-        file_df["file_num"] = file_df.index
-        file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
-        file_df["exists"] = file_df["rocks_file_path"].apply(
-            lambda x: check_if_exists(x)
+        file_df = build_full_file_df(
+            args.run_id, args.analysis_id, args.base_config, args.file_num
         )
-        file_df["approx_slope"] = get_slope(file_df["true_field"][0])
-
-        dbscan_r = get_dbscan_radius(file_df["approx_slope"][0])
-        file_df["dbscan_radius_0"] = dbscan_r[0]
-        file_df["dbscan_radius_1"] = dbscan_r[1]
-
-        file_df["base_config_path"] = get_base_config_path(args.base_config)
-        file_df["output_dir"] = build_dir_structure(args.run_id, args.analysis_id)
-
-        # TODO: Change this to work.
-        file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
-
-        file_df["root_file_path"] = file_df.apply(
-            lambda row: build_root_file_path(row), axis=1
-        )
-
-        # Trim the df according to the file_num arg.
-        if args.file_num != -1:
-            file_df = file_df[: args.file_num]
-
-        # Before running katydid write this df to the analysis dir.
-        # This will be used during the cleanup
-        file_df_path = build_file_df_path(args.run_id, args.analysis_id)
-        print(f"file_df_path: {file_df_path}")
-        file_df.to_csv(file_df_path)
 
     condition = file_df["root_file_exists"] != True
 
@@ -196,6 +167,42 @@ def run_katydid(file_df):
     return None
 
 
+def build_full_file_df(run_id, analysis_id, base_config, file_num):
+
+    file_df = create_base_file_df(run_id)
+    file_df["root_file_exists"] = False
+    file_df["file_num"] = file_df.index
+    file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
+    file_df["exists"] = file_df["rocks_file_path"].apply(lambda x: check_if_exists(x))
+    file_df["approx_slope"] = get_slope(file_df["true_field"][0])
+
+    dbscan_r = get_dbscan_radius(file_df["approx_slope"][0])
+    file_df["dbscan_radius_0"] = dbscan_r[0]
+    file_df["dbscan_radius_1"] = dbscan_r[1]
+
+    file_df["base_config_path"] = get_base_config_path(base_config)
+    file_df["output_dir"] = build_dir_structure(run_id, analysis_id)
+
+    # TODO: Change this to work with external noise path. Is it needed though?
+    file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
+
+    file_df["root_file_path"] = file_df.apply(
+        lambda row: build_root_file_path(row), axis=1
+    )
+
+    # Trim the df according to the file_num arg.
+    if args.file_num != -1:
+        file_df = file_df[:file_num]
+
+    # Before running katydid write this df to the analysis dir.
+    # This will be used during the cleanup
+    file_df_path = build_file_df_path(run_id, analysis_id)
+    print(f"built file_df_path here: {file_df_path}")
+    file_df.to_csv(file_df_path)
+
+    return None
+
+
 def root_file_check(file_df):
     return Path(file_df["root_file_path"]).exists()
 
@@ -204,9 +211,7 @@ def build_file_df_path(run_id, analysis_id):
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
     rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{analysis_id:03d}")
 
-    file_df_path = rid_ai_dir / Path(
-        f"rid_df_{run_id:04d}_{analysis_id:03d}.csv"
-    )
+    file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{analysis_id:03d}.csv")
     return file_df_path
 
 
@@ -313,7 +318,7 @@ def build_dir_structure(run_id, analysis_id):
     return str(current_analysis_dir)
 
 
-def create_file_df(run_id: int):
+def create_base_file_df(run_id: int):
     """
     here we could set up a dataframe from the He6-CRES database
     """
