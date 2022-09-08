@@ -40,11 +40,11 @@ def main():
     )
 
     arg(
-        "-ai",
-        "--analysis_index",
+        "-aid",
+        "--analysis_id",
         type=int,
         default=-1,
-        help="analysis_index used to label directories. If -1, a new index will be created. \
+        help="analysis_id used to label directories. If -1, a new index will be created. \
         If doing a clean then WHAT??",
     )
 
@@ -52,16 +52,16 @@ def main():
 
     tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
-    # If the analysis_index is set to -1 then a new directory is built.
+    # If the analysis_id is set to -1 then a new directory is built.
     # Else you will conduct a clean-up.
     # TODO. Maybe it should be this file that builds the df... and checks to see if all ok...
     # Then the other script just looks and runs it on the ones that aren't there...
-    if args.analysis_index == -1:
+    if args.analysis_id == -1:
         # Get the analysis index to use for the list of jobs.
-        analysis_index = get_analysis_index(args.runids)
-        print(f"analysis_index: {analysis_index}")
+        analysis_id = get_analysis_id(args.runids)
+        print(f"analysis_id: {analysis_id}")
     else:
-        analysis_index = args.analysis_index
+        analysis_id = args.analysis_id
 
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
     con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
@@ -70,13 +70,13 @@ def main():
 
     for run_id in args.runids:
         default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -ai {} -b "{}" -fn {} '.format(
-            run_id, analysis_index, args.base_config, args.file_num
+            run_id, analysis_id, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
-        qsub_job(run_id, analysis_index, cmd, tlim)
+        qsub_job(run_id, analysis_id, cmd, tlim)
 
 
-def qsub_job(run_id, analysis_index, cmd, tlim):
+def qsub_job(run_id, analysis_id, cmd, tlim):
     """
     ./qsub.py --job 'arbitrary command' [options]
 
@@ -94,7 +94,7 @@ def qsub_job(run_id, analysis_index, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/rid_{run_id:04d}_{analysis_index:03d}.txt",
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/rid_{run_id:04d}_{analysis_id:03d}.txt",
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
@@ -104,7 +104,7 @@ def qsub_job(run_id, analysis_index, cmd, tlim):
     sp.run(batch_cmd, shell=True)
 
 
-def get_analysis_index(run_ids):
+def get_analysis_id(run_ids):
 
     """
     We want each analysis run simultaneously to have the same analysis number.
@@ -116,7 +116,7 @@ def get_analysis_index(run_ids):
 
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
 
-    analysis_indices = []
+    analysis_ids = []
     for run_id in run_ids:
 
         run_id_dir = base_path / Path(f"rid_{run_id:04d}")
@@ -126,10 +126,10 @@ def get_analysis_index(run_ids):
             print(f"Created directory: {run_id_dir}")
 
         analysis_dirs = glob(str(run_id_dir) + "/*/")
-        analysis_index = len(analysis_dirs)
-        analysis_indices.append(analysis_index)
+        analysis_id = len(analysis_dirs)
+        analysis_indices.append(analysis_id)
 
-    return max(analysis_indices)
+    return max(analysis_ids)
 
 
 if __name__ == "__main__":
