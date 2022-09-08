@@ -305,7 +305,7 @@ def build_dir_structure(run_id, analysis_id):
     if not run_id_dir.is_dir():
         raise UserWarning("This directory should have been made already.")
 
-    current_analysis_dir = run_id_dir / Path(f"ai_{analysis_id:03d}")
+    current_analysis_dir = run_id_dir / Path(f"aid_{analysis_id:03d}")
     if not current_analysis_dir.is_dir():
         current_analysis_dir.mkdir()
         print(f"Created directory: {current_analysis_dir}")
