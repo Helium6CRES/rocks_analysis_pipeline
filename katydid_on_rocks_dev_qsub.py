@@ -95,6 +95,10 @@ def main():
     file_df["root_file_path"] = file_df.apply(
         lambda row: build_root_file_path(row), axis=1
     )
+    # Before running katydid write this df to the analysis dir. 
+    # This will be used during the cleanup
+    analysis_dir = Path(file_df["root_file_path"]).stem
+    file_df.to_csv(analysis_dir)
 
     if args.file_num == -1:
         file_df.apply(lambda row: run_katydid(row), axis=1)
@@ -159,7 +163,7 @@ def run_katydid(file_df):
     # Print statement to
     now = datetime.datetime.now()
     print(
-        "file {file_df.index}. time: {}. root file {}".format(
+        "file {}. time: {}. root file {}".format(
             file_df["file_num"], now, file_df["rocks_file_path"]
         )
     )
@@ -261,7 +265,7 @@ def build_dir_structure(run_id, analysis_index):
 
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
 
-    run_id_dir = base_path / Path(f"run_id_{run_id}")
+    run_id_dir = base_path / Path(f"rid_{run_id}")
 
     if not run_id_dir.is_dir():
     	raise UserWarning("This directory should have been made already.")
