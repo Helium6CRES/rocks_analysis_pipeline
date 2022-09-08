@@ -97,9 +97,9 @@ def main():
     )
     # Before running katydid write this df to the analysis dir. 
     # This will be used during the cleanup
-    analysis_dir = Path(file_df["root_file_path"][0]).parents[0]
-    print(f"analysis_dir: {analysis_dir}")
-    file_df.to_csv(analysis_dir)
+    file_df_out_path = Path(file_df["root_file_path"][0]).parents[0] / Path(f"rid_{args.run_id}_{args.analysis_index}.csv")
+    print(f"file_df_out_path: {file_df_out_path}")
+    file_df.to_csv(file_df_out_path)
 
     if args.file_num == -1:
         file_df.apply(lambda row: run_katydid(row), axis=1)
