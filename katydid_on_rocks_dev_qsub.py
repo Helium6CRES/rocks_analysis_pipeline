@@ -21,7 +21,7 @@ pd.set_option("display.max_columns", 100)
 def main():
     """
 
-        TODOS:
+    TODOS:
     * Need to source .bashrc for root to work properly. WORKS
     * Need to have the permissions such that the folders are writeable by others in
     our group.
