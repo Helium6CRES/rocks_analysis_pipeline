@@ -43,7 +43,7 @@ def main():
 
     tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
-    # Get the analysis index to use for the list of jobs. 
+    # Get the analysis index to use for the list of jobs.
     analysis_index = get_analysis_index(args.runids)
     print(f"analysis_index: {analysis_index}")
 
@@ -52,9 +52,8 @@ def main():
         r"\n"
     )
 
-
     for run_id in args.runids:
-        default_katydid_sub = 'python3 /data/eliza4/he6_cres/python_dev/katydid_on_rocks_dev_qsub.py -id {} -ai {} -b "{}" -fn {} '.format(
+        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/katydid_on_rocks_dev_qsub.py -id {} -ai {} -b "{}" -fn {} '.format(
             run_id, analysis_index, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
@@ -79,7 +78,9 @@ def qsub_job(run_id, analysis_index, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        "-o /data/eliza4/he6_cres/job_logs/rid_{}_{}.txt".format(run_id, analysis_index),
+        "-o /data/eliza4/he6_cres/job_logs/rid_{}_{}.txt".format(
+            run_id, analysis_index
+        ),
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
