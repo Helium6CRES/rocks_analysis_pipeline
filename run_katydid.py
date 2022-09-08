@@ -92,7 +92,7 @@ def main():
             args.run_id, args.analysis_id, args.base_config, args.file_num
         )
 
-    condition = file_df["root_file_exists"] != True
+    condition = (file_df["root_file_exists"] != True)
 
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
     # Run katydid on each row/spec file in file_df.
@@ -200,7 +200,7 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
     print(f"built file_df_path here: {file_df_path}")
     file_df.to_csv(file_df_path)
 
-    return None
+    return file_df
 
 
 def root_file_check(file_df):
