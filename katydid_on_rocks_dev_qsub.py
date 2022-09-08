@@ -265,12 +265,10 @@ def build_dir_structure(run_id, analysis_index):
 
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
 
-    run_id_dir = base_path / Path(f"rid_{run_id}")
+    run_id_dir = base_path / Path(f"rid_{run_id:04d}")
 
     if not run_id_dir.is_dir():
     	raise UserWarning("This directory should have been made already.")
-        # run_id_dir.mkdir()
-        # print(f"Created directory: {run_id_dir}")
 
     current_analysis_dir = run_id_dir / Path(f"analysis_{analysis_index:03d}")
     if not current_analysis_dir.is_dir():

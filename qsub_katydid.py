@@ -78,9 +78,7 @@ def qsub_job(run_id, analysis_index, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        "-o /data/eliza4/he6_cres/job_logs/rid_{}_ai_{}.txt".format(
-            run_id, analysis_index
-        ),
+        f"-o /data/eliza4/he6_cres/job_logs/rid_{run_id:04d}_ai_{analysis_index:03d}.txt",
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
@@ -105,7 +103,7 @@ def get_analysis_index(run_ids):
     analysis_indices = []
     for run_id in run_ids:
 
-        run_id_dir = base_path / Path(f"rid_{run_id}")
+        run_id_dir = base_path / Path(f"rid_{run_id:04d}")
 
         if not run_id_dir.is_dir():
             run_id_dir.mkdir()
