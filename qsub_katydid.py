@@ -39,13 +39,29 @@ def main():
         help="Number of files in run id to analyze (<= number of files in run_id)",
     )
 
+    arg(
+        "-ai",
+        "--analysis_index",
+        type=int,
+        default = -1,
+        help="analysis_index used to label directories. If -1, a new index will be created.",
+    )
+
     args = par.parse_args()
 
     tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
-    # Get the analysis index to use for the list of jobs.
-    analysis_index = get_analysis_index(args.runids)
-    print(f"analysis_index: {analysis_index}")
+    # If the analysis_index is set to -1 then a new directory is built. 
+    # Else you will conduct a clean-up.
+    # TODO. Maybe it should be this file that builds the df... and checks to see if all ok...
+    # Then the other script just looks and runs it on the ones that aren't there...
+    if args.analysis_index ==-1:
+        # Get the analysis index to use for the list of jobs.
+        analysis_index = get_analysis_index(args.runids)
+        print(f"analysis_index: {analysis_index}")
+    else: 
+        analysis_index = args.analysis_index
+
 
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
     con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
