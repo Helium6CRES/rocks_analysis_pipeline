@@ -69,7 +69,7 @@ def main():
     )
 
     for run_id in args.runids:
-        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/katydid_on_rocks_dev_qsub.py -id {} -ai {} -b "{}" -fn {} '.format(
+        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -ai {} -b "{}" -fn {} '.format(
             run_id, analysis_index, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
