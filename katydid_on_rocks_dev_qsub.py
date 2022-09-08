@@ -76,54 +76,55 @@ def main():
     print(f"run_id: {args.run_id}")
     print(f"base_config: {args.base_config}")
 
-    # New idea: If the file_df exists then it is a clean-up run: 
+    # New idea: If the file_df exists then it is a clean-up run:
     file_df_path = build_file_df_path(args.run_id, args.analysis_index)
     print(f"\nfile_df_path: {file_df_path}. exists: {file_df_path.is_file()}\n")
 
-
-
     if file_df_path.is_file():
 
-    	file_df = pd.read(file_df_path)
-    	file_df["root_file_exists"] = file_df["root_file_path"].apply(lambda x: check_if_exists(x))
+        file_df = pd.read(file_df_path)
+        file_df["root_file_exists"] = file_df["root_file_path"].apply(
+            lambda x: check_if_exists(x)
+        )
 
+    else:
+        file_df = create_file_df(args.run_id)
+        file_df["root_file_exists"] = False
+        file_df = create_file_df(args.run_id)
+        file_df["file_num"] = file_df.index
+        file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
+        file_df["exists"] = file_df["rocks_file_path"].apply(
+            lambda x: check_if_exists(x)
+        )
+        file_df["approx_slope"] = get_slope(file_df["true_field"][0])
 
-    else: 
-    	file_df = create_file_df(args.run_id)
-    	file_df["root_file_exists"] = False
-	    file_df = create_file_df(args.run_id)
-	    file_df["file_num"] = file_df.index
-	    file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
-	    file_df["exists"] = file_df["rocks_file_path"].apply(lambda x: check_if_exists(x))
-	    file_df["approx_slope"] = get_slope(file_df["true_field"][0])
+        dbscan_r = get_dbscan_radius(file_df["approx_slope"][0])
+        file_df["dbscan_radius_0"] = dbscan_r[0]
+        file_df["dbscan_radius_1"] = dbscan_r[1]
 
-	    dbscan_r = get_dbscan_radius(file_df["approx_slope"][0])
-	    file_df["dbscan_radius_0"] = dbscan_r[0]
-	    file_df["dbscan_radius_1"] = dbscan_r[1]
+        file_df["base_config_path"] = get_base_config_path(args.base_config)
+        file_df["output_dir"] = build_dir_structure(args.run_id, args.analysis_index)
 
-	    file_df["base_config_path"] = get_base_config_path(args.base_config)
-	    file_df["output_dir"] = build_dir_structure(args.run_id, args.analysis_index)
+        # TODO: Change this to work.
+        file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
 
-	    # TODO: Change this to work.
-	    file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
+        file_df["root_file_path"] = file_df.apply(
+            lambda row: build_root_file_path(row), axis=1
+        )
 
-	    file_df["root_file_path"] = file_df.apply(
-	        lambda row: build_root_file_path(row), axis=1
-	    )
+        # Trim the df according to the file_num arg.
+        if args.file_num != -1:
+            file_df = file_df[: args.file_num]
 
-	    # Trim the df according to the file_num arg.
-	    if args.file_num != -1:
-	        file_df = file_df[: args.file_num]
+        # Before running katydid write this df to the analysis dir.
+        # This will be used during the cleanup
+        file_df_path = build_file_df_path(args.run_id, args.analysis_index)
+        print(f"file_df_path: {file_df_path}")
+        file_df.to_csv(file_df_path)
 
-	    # Before running katydid write this df to the analysis dir. 
-	    # This will be used during the cleanup
-	    file_df_path = build_file_df_path(args.run_id, args.analysis_index)
-	    print(f"file_df_path: {file_df_path}")
-	    file_df.to_csv(file_df_path)
+    condition = file_df["root_file_exists"] != True
 
-	condition = (file_df["root_file_exists"] != True)
-
-	print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
+    print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
     # Run katydid on each row/spec file in file_df.
     file_df[condition].apply(lambda row: run_katydid(row), axis=1)
 
@@ -196,14 +197,17 @@ def run_katydid(file_df):
     return None
 
 
-def root_file_check(file_df): 
-	return Path(file_df["root_file_path"]).exists()
+def root_file_check(file_df):
+    return Path(file_df["root_file_path"]).exists()
 
 
-def build_file_df_path(run_id, analysis_index): 
+def build_file_df_path(run_id, analysis_index):
 
-	file_df_path = Path(file_df["root_file_path"][0]).parents[0] / Path(f"rid_{run_id}_{analysis_index}.csv")
-	return file_df_path
+    file_df_path = Path(file_df["root_file_path"][0]).parents[0] / Path(
+        f"rid_{run_id}_{analysis_index}.csv"
+    )
+    return file_df_path
+
 
 def build_root_file_path(file_df):
     root_path = Path(file_df["output_dir"]) / str(
@@ -298,7 +302,7 @@ def build_dir_structure(run_id, analysis_index):
     run_id_dir = base_path / Path(f"rid_{run_id:04d}")
 
     if not run_id_dir.is_dir():
-    	raise UserWarning("This directory should have been made already.")
+        raise UserWarning("This directory should have been made already.")
 
     current_analysis_dir = run_id_dir / Path(f"ai_{analysis_index:03d}")
     if not current_analysis_dir.is_dir():
