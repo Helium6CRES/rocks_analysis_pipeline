@@ -101,7 +101,7 @@ def get_analysis_index(run_ids):
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
 
     analysis_indices = []
-    for run_id in args.runids:
+    for run_id in run_ids:
 
         run_id_dir = base_path / Path(f"run_id_{run_id}")
 
