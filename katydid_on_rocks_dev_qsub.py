@@ -95,16 +95,19 @@ def main():
     file_df["root_file_path"] = file_df.apply(
         lambda row: build_root_file_path(row), axis=1
     )
+
+    # Trim the df according to the file_num arg.
+    if args.file_num != -1:
+        file_df = file_df[: args.file_num]
+
     # Before running katydid write this df to the analysis dir. 
     # This will be used during the cleanup
     file_df_out_path = Path(file_df["root_file_path"][0]).parents[0] / Path(f"rid_{args.run_id}_{args.analysis_index}.csv")
     print(f"file_df_out_path: {file_df_out_path}")
     file_df.to_csv(file_df_out_path)
 
-    if args.file_num == -1:
-        file_df.apply(lambda row: run_katydid(row), axis=1)
-    else:
-        file_df[: args.file_num].apply(lambda row: run_katydid(row), axis=1)
+    # Run katydid on each row/spec file in file_df.
+    file_df.apply(lambda row: run_katydid(row), axis=1)
 
 
 def run_katydid(file_df):
@@ -271,7 +274,7 @@ def build_dir_structure(run_id, analysis_index):
     if not run_id_dir.is_dir():
     	raise UserWarning("This directory should have been made already.")
 
-    current_analysis_dir = run_id_dir / Path(f"analysis_{analysis_index:03d}")
+    current_analysis_dir = run_id_dir / Path(f"ai_{analysis_index:03d}")
     if not current_analysis_dir.is_dir():
         current_analysis_dir.mkdir()
         print(f"Created directory: {current_analysis_dir}")
