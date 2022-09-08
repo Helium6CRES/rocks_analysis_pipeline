@@ -94,7 +94,7 @@ def qsub_job(run_id, analysis_index, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/job_logs/rid_{run_id:04d}_{analysis_index:03d}.txt",
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/rid_{run_id:04d}_{analysis_index:03d}.txt",
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])

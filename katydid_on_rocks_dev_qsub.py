@@ -76,7 +76,7 @@ def main():
     print(f"run_id: {args.run_id}")
     print(f"base_config: {args.base_config}")
 
-    # New idea: If the file_df exists then it is a clean-up run:
+    # If the rid_df exists then it is a clean-up run:
     file_df_path = build_file_df_path(args.run_id, args.analysis_index)
     print(f"\nfile_df_path: {file_df_path}. exists: {file_df_path.is_file()}\n")
 
@@ -205,7 +205,7 @@ def build_file_df_path(run_id, analysis_index):
     rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"ai_{analysis_index:03d}")
 
     file_df_path = rid_ai_dir / Path(
-        f"rid_{run_id:04d}_{analysis_index:03d}.csv"
+        f"rid_df_{run_id:04d}_{analysis_index:03d}.csv"
     )
     return file_df_path
 
