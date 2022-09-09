@@ -55,6 +55,10 @@ def main():
 
     # Sanity check: 
     print("TEST", args.run_ids, args.analysis_id)
+
+    # Force a write to the log.
+    sys.stdout.flush()
+    
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
