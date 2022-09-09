@@ -18,7 +18,8 @@ import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports: 
-from rocks_analysis_pipeline.run_katydid import build_file_df_path, check_if_exists
+from . import run_katydid as rk
+# from rocks_analysis_pipeline.run_katydid import build_file_df_path, check_if_exists
 
 pd.set_option("display.max_columns", 100)
 
@@ -69,14 +70,14 @@ def main():
     # Step 0: Make sure that all of the listed rids/aid exists. 
     file_df_list = []
     for run_id in args.run_ids: 
-        file_df_path = build_file_df_path(run_id, analysis_id)
+        file_df_path = rk.build_file_df_path(run_id, analysis_id)
 
         if file_df_path.is_file():
             print("Analysis Type: Clean up.")
 
             file_df = pd.read_csv(file_df_path)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                lambda x: check_if_exists(x)
+                lambda x: rk.check_if_exists(x)
             )
             file_df.append(file_df_list)
 
