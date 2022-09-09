@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import time
 import argparse
@@ -58,7 +59,7 @@ def main():
 
     # Force a write to the log.
     sys.stdout.flush()
-    
+
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
