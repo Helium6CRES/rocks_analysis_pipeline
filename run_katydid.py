@@ -65,6 +65,7 @@ def main():
         type=int,
         help="Number of files in run id to analyze (<= number of files in run_id)",
     )
+    #TODO: IS THIS cleanup arg doing anything?
     arg(
         "-c",
         "--clean_up",
@@ -232,10 +233,14 @@ def clean_up_root_dir(file_df):
 
     real_path_list = run_id_aid_dir.glob("*.root")
     desired_path_list = file_df["root_file_path"].to_list()
+    desired_path_list = [Path(path) for path in desired_path_list]
     remove_list = list(set(real_path_list) - set(desired_path_list))
-    print("Cleaning up. Removing the following files: ", remove_list)
+    print("\nCleaning up. Removing the following files: \n", remove_list)
     # for path in remove_list:
     #     Path(path).unlink()
+
+    # Force a write to the log.
+    sys.stdout.flush()
 
     return None
 
