@@ -132,11 +132,8 @@ def run_katydid(file_df):
     rid = file_df["run_id"]
     aid = file_df["analysis_id"]
 
-    config_path = (
-        base_config_path.parent
-        / base_config_path.stem
-        / Path(f"{rid:04d}_{aid:03d}")
-        / base_config_path.suffix
+    config_path = base_config_path.parent / str(
+        base_config_path.stem + f"{rid:04d}_{aid:03d}" + base_config_path.suffix
     )
     print(config_path)
 
