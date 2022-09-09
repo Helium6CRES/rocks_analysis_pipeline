@@ -65,7 +65,7 @@ def main():
         type=int,
         help="Number of files in run id to analyze (<= number of files in run_id)",
     )
-    #TODO: IS THIS cleanup arg doing anything?
+    # TODO: IS THIS cleanup arg doing anything?
     arg(
         "-c",
         "--clean_up",
@@ -77,9 +77,6 @@ def main():
 
     print(f"run_id: {args.run_id}")
     print(f"base_config: {args.base_config}")
-
-    # # Deal with permissions (chmod 770)
-    # set_permissions()
 
     # If the rid_df exists then it is a clean-up run:
     file_df_path = build_file_df_path(args.run_id, args.analysis_id)
@@ -236,8 +233,8 @@ def clean_up_root_dir(file_df):
     desired_path_list = [Path(path) for path in desired_path_list]
     remove_list = list(set(real_path_list) - set(desired_path_list))
     print("\nCleaning up. Removing the following files: \n", remove_list)
-    # for path in remove_list:
-    #     Path(path).unlink()
+    for path in remove_list:
+        Path(path).unlink()
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -247,11 +244,10 @@ def clean_up_root_dir(file_df):
 
 def set_permissions():
 
-    set_group = sp.run(["chgrp","-R","he6_cres","katydid_analysis/"])
+    set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
 
-    return None 
-
+    return None
 
 
 def root_file_check(file_df):
