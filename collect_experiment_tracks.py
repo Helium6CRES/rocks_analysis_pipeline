@@ -74,13 +74,13 @@ def main():
         file_df_path = build_file_df_path(run_id, analysis_id)
 
         if file_df_path.is_file():
-            print("Analysis Type: Clean up.")
+            print(f"Collecting file_df: {str(file_df_path)} \n")
 
             file_df = pd.read_csv(file_df_path)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
                 lambda x: check_if_exists(x)
             )
-            file_df.append(file_df)
+            file_df_list.append(file_df)
 
         # New analysis.
         else:
