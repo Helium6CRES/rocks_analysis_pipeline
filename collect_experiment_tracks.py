@@ -81,18 +81,6 @@ def main():
     print(file_df_experiment)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 def set_permissions():
 
     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
@@ -102,4 +90,4 @@ def set_permissions():
 
 
 if __name__ == "__main__":
-main()
+    main()
