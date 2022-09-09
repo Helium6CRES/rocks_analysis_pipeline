@@ -13,6 +13,7 @@ from typing import List
 import pandas.io.sql as psql
 from pathlib import Path
 import yaml
+import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 pd.set_option("display.max_columns", 100)
@@ -102,6 +103,9 @@ def main():
 
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
 
+    # Force a write to the log.
+    sys.stdout.flush()
+
     # Run katydid on each row/spec file in file_df.
     file_df[condition].apply(lambda row: run_katydid(row), axis=1)
 
@@ -176,6 +180,9 @@ def run_katydid(file_df):
 
     # Delete the copy of the katydid config file once done with processing.
     Path(config_path).unlink()
+
+    # Force a write to the log.
+    sys.stdout.flush()
 
     return None
 
