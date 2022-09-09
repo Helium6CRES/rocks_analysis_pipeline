@@ -76,6 +76,9 @@ def main():
     print(f"run_id: {args.run_id}")
     print(f"base_config: {args.base_config}")
 
+    # Deal with permissions (chmod 770)
+    set_permissions()
+
     # If the rid_df exists then it is a clean-up run:
     file_df_path = build_file_df_path(args.run_id, args.analysis_id)
     print(f"\nfile_df_path: {file_df_path}. exists: {file_df_path.is_file()}\n")
@@ -232,7 +235,7 @@ def clean_up_root_dir(file_df):
 
 def set_permissions():
     permissions = sp.run(
-        "chmod -R 774 katydid_analysis/",
+        ["chmod -R 774 katydid_analysis/"],
         capture_output=False,
     )
 
