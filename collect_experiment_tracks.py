@@ -17,7 +17,7 @@ import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports: 
-from .run_katydid import build_file_df_path
+from .run_katydid import build_file_df_path, check_if_exists
 
 pd.set_option("display.max_columns", 100)
 
