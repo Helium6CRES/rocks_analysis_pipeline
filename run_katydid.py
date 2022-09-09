@@ -98,8 +98,12 @@ def main():
     condition = file_df["root_file_exists"] != True
 
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
+
     # Run katydid on each row/spec file in file_df.
     file_df[condition].apply(lambda row: run_katydid(row), axis=1)
+
+    # Deal with permissions (chmod 770)
+    set_permissions()
 
     return None
 
@@ -212,7 +216,7 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
 def clean_up_root_dir(file_df):
 
     # Delete all root files that aren't in our df.
-    # TODO: Fix this. 
+    # TODO: Fix this.
 
     run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
 
@@ -224,6 +228,13 @@ def clean_up_root_dir(file_df):
     #     Path(path).unlink()
 
     return None
+
+
+def set_permissions():
+    permissions = sp.run(
+        "chmod -R 774 katydid_analysis/",
+        capture_output=False,
+    )
 
 
 def root_file_check(file_df):
