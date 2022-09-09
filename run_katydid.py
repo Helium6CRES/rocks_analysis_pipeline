@@ -129,11 +129,14 @@ def run_katydid(file_df):
 
     # Copy the katydid config file (in same dir) so that we can write to the copy not
     # the original.
+    rid = file_df["run_id"]
+    aid = file_df["analysis_id"]
+
     config_path = base_config_path.parent / str(
-        base_config_path.stem
-        + f"{int(file_df["run_id"]):04d}_{int(file_df["analysis_id"]):03d}"
-        + base_config_path.suffix
-    )
+        base_config_path.stem)
+        / f"{rid:04d}_{aid:03d}"
+        / base_config_path.suffix
+    print(config_path)
 
     # copy base config file to edit
     copyfile(base_config_path, config_path)
