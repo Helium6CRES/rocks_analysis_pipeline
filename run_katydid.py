@@ -89,8 +89,7 @@ def main():
         file_df["root_file_exists"] = file_df["root_file_path"].apply(
             lambda x: check_if_exists(x)
         )
-        clean_up_root_dir(file_df)
-
+        
     # New analysis.
     else:
         file_df = build_full_file_df(
@@ -107,7 +106,10 @@ def main():
     # Run katydid on each row/spec file in file_df.
     file_df[condition].apply(lambda row: run_katydid(row), axis=1)
 
-    # Deal with permissions (chmod 770)
+    # Clean up any half baked root files.
+    clean_up_root_dir(file_df)
+
+    # Deal with permissions (chmod 770, group he6_cres).
     set_permissions()
 
     return None
