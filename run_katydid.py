@@ -89,7 +89,7 @@ def main():
         file_df["root_file_exists"] = file_df["root_file_path"].apply(
             lambda x: check_if_exists(x)
         )
-        
+
     # New analysis.
     else:
         file_df = build_full_file_df(
@@ -129,10 +129,20 @@ def run_katydid(file_df):
         base_config_path.stem
         + "_copy_"
         + str(file_df["run_id"])
+        + "_"
+        + str(file_df["analysis_id"])
         + base_config_path.suffix
     )
+
+    # copy base config file to edit
     copyfile(base_config_path, config_path)
-    print(config_path)
+
+    # copy first config file to the analysis directory for future reference.
+    if file_df["file_num"] == 0:
+        analysis_dir = Path(file_df["root_file_path"]).parents[0]
+        config_path_name = Path(config_path).name
+        saved_config_path = analysis_dir / config_path_name
+        copyfile(config_path, str(saved_config_path))
 
     # TODO: input noise file path.
     config_dict["spec1"]["filename"] = file_df["rocks_noise_file_path"]
@@ -190,6 +200,7 @@ def run_katydid(file_df):
 def build_full_file_df(run_id, analysis_id, base_config, file_num):
 
     file_df = create_base_file_df(run_id)
+    file_df["analysis_id"] = analysis_id
     file_df["root_file_exists"] = False
     file_df["file_num"] = file_df.index
     file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
