@@ -17,7 +17,7 @@ import yaml
 import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
-# Local imports: 
+# Local imports:
 # from . import run_katydid as rk
 # from rocks_analysis_pipeline.run_katydid import build_file_df_path, check_if_exists
 
@@ -39,11 +39,13 @@ def main():
     # Parse command line arguments.
     par = argparse.ArgumentParser()
     arg = par.add_argument
+
     arg(
         "-rids",
         "--run_ids",
+        nargs="+",
         type=int,
-        help="list of run_ids to collect track data for.",
+        help="list of runids to collect track data for.",
     )
     arg(
         "-aid",
@@ -54,8 +56,7 @@ def main():
 
     args = par.parse_args()
 
-
-    # Sanity check: 
+    # Sanity check:
     print("TEST", args.run_ids, args.analysis_id)
 
     # Force a write to the log.
@@ -67,9 +68,9 @@ def main():
 
     analysis_id = args.analysis_id
 
-    # Step 0: Make sure that all of the listed rids/aid exists. 
+    # Step 0: Make sure that all of the listed rids/aid exists.
     file_df_list = []
-    for run_id in args.run_ids: 
+    for run_id in args.run_ids:
         file_df_path = build_file_df_path(run_id, analysis_id)
 
         if file_df_path.is_file():
@@ -83,21 +84,24 @@ def main():
 
         # New analysis.
         else:
-            raise UserWarning(f"One of the listed run_ids has no analysis_id = {analysis_id}")
-
+            raise UserWarning(
+                f"One of the listed run_ids has no analysis_id = {analysis_id}"
+            )
 
     file_df_experiment = df = pd.concat(file_df_list)
 
     print(len(file_df_experiment))
     print(file_df_experiment)
 
-# TODO: Duplicate function. Refactor. 
+
+# TODO: Duplicate function. Refactor.
 def build_file_df_path(run_id, analysis_id):
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
     rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{analysis_id:03d}")
 
     file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{analysis_id:03d}.csv")
     return file_df_path
+
 
 def set_permissions():
 
@@ -106,8 +110,10 @@ def set_permissions():
 
     return None
 
+
 def check_if_exists(fp):
     return Path(fp).is_file()
+
 
 if __name__ == "__main__":
     main()
