@@ -133,9 +133,8 @@ def run_katydid(file_df):
     aid = file_df["analysis_id"]
 
     config_path = base_config_path.parent / str(
-        base_config_path.stem + f"{rid:04d}_{aid:03d}" + base_config_path.suffix
+        base_config_path.stem + f"_{rid:04d}_{aid:03d}" + base_config_path.suffix
     )
-    print(config_path)
 
     # copy base config file to edit
     copyfile(base_config_path, config_path)
@@ -148,7 +147,7 @@ def run_katydid(file_df):
         copyfile(config_path, saved_config_path)
 
         print(
-            "Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
+            f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
         )
 
     # TODO: input noise file path.
