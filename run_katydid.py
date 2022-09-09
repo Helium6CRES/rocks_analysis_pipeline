@@ -232,9 +232,10 @@ def clean_up_root_dir(file_df):
     desired_path_list = file_df["root_file_path"].to_list()
     desired_path_list = [Path(path) for path in desired_path_list]
     remove_list = list(set(real_path_list) - set(desired_path_list))
-    print("\nCleaning up. Removing the following files: \n", remove_list)
+    print("\nCleaning up. Removing the following files: \n")
     for path in remove_list:
-        Path(path).unlink()
+        print(str(path))
+        path.unlink()
 
     # Force a write to the log.
     sys.stdout.flush()
