@@ -65,29 +65,23 @@ def main():
         type=int,
         help="Number of files in run id to analyze (<= number of files in run_id)",
     )
-    # TODO: IS THIS cleanup arg doing anything?
-    arg(
-        "-c",
-        "--clean_up",
-        default=False,
-        type=bool,
-        help="If true a clean_up run will be run on given analysis_id.",
-    )
+
     args = par.parse_args()
 
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
 
-    print(f"run_id: {args.run_id}")
-    print(f"base_config: {args.base_config}")
-
     # If the rid_df exists then it is a clean-up run:
     file_df_path = build_file_df_path(args.run_id, args.analysis_id)
     print(f"\nfile_df_path: {file_df_path}. exists: {file_df_path.is_file()}\n")
 
-    # Clean-up.
+    # Print Analysis parameters.
+    print("\nAnalysis Summary: \n")
+
+    # Clean up.
     if file_df_path.is_file():
+        print("Analysis Type: Clean up.")
 
         file_df = pd.read_csv(file_df_path)
         file_df["root_file_exists"] = file_df["root_file_path"].apply(
@@ -96,9 +90,15 @@ def main():
 
     # New analysis.
     else:
+        print("Analysis Type: New analysis.")
         file_df = build_full_file_df(
             args.run_id, args.analysis_id, args.base_config, args.file_num
         )
+
+    # Finish printing analysis summary.
+    print(f"run_id: {args.run_id}")
+    print(f"analysis_id: {args.analysis_id}")
+    print(f"base_config: {args.base_config}\n")
 
     condition = file_df["root_file_exists"] != True
 
@@ -183,13 +183,15 @@ def run_katydid(file_df):
         ["/data/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
         capture_output=True,
     )
-    # print("\nspec file {} of {}".format(i + 1, len(spec_files)))
+
     print("Katydid output:", run_katydid.stdout[-100:])
     t_stop = time.process_time()
-    # Print statement to
-    now = datetime.datetime.now()
+
+    # Current time to nearest second.
+    now = datetime.datetime.now().replace(microsecond=0)
+
     print(
-        "\nfile {}.\ntime to run: {}.\ncurrent time: {}.\nroot file created {}\n".format(
+        "\nfile {}.\ntime to run: {:.2f} s.\ncurrent time: {}.\nroot file created {}\n".format(
             file_df["file_num"], t_stop - t_start, now, file_df["root_file_path"]
         )
     )
