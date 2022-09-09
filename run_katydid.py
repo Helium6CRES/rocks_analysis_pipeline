@@ -131,7 +131,7 @@ def run_katydid(file_df):
     # the original.
     config_path = base_config_path.parent / str(
         base_config_path.stem
-        + f"{file_df["run_id"]:04d}_{file_df["analysis_id"]:03d}"
+        + f"{int(file_df["run_id"]):04d}_{int(file_df["analysis_id"]):03d}"
         + base_config_path.suffix
     )
 
