@@ -32,6 +32,8 @@ def main():
     * This will only work with katydid files that have track/event objects in the trees.
     """
 
+    umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
+
     # Parse command line arguments.
     par = argparse.ArgumentParser()
     arg = par.add_argument
@@ -50,6 +52,9 @@ def main():
 
     args = par.parse_args()
 
+
+    # Sanity check: 
+    print("TEST", args.run_ids, args.analysis_id)
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
