@@ -95,7 +95,7 @@ def main():
             args.run_id, args.analysis_id, args.base_config, args.file_num
         )
 
-    condition = (file_df["root_file_exists"] != True)
+    condition = file_df["root_file_exists"] != True
 
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
     # Run katydid on each row/spec file in file_df.
@@ -151,14 +151,14 @@ def run_katydid(file_df):
     # Run katydid on the edited katydid config file.
     # Note that you need to have Katydid configured as a bash executable for this to
     # work (as is standard).
-    t_start = time.process_time() 
+    t_start = time.process_time()
     run_katydid = sp.run(
         ["/data/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
         capture_output=True,
     )
     # print("\nspec file {} of {}".format(i + 1, len(spec_files)))
     print("Katydid output:", run_katydid.stdout[-100:])
-    t_stop = time.process_time() 
+    t_stop = time.process_time()
     # Print statement to
     now = datetime.datetime.now()
     print(
@@ -208,18 +208,20 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
 
     return file_df
 
-def clean_up_root_dir(file_df): 
 
-    # Delete all root files that aren't in our df. 
+def clean_up_root_dir(file_df):
+
+    # Delete all root files that aren't in our df.
+    # TODO: Fix this. 
 
     run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
 
-    real_path_list = run_id_aid_dir.glob('*.root')
+    real_path_list = run_id_aid_dir.glob("*.root")
     desired_path_list = file_df["root_file_path"].to_list()
     remove_list = list(set(real_path_list) - set(desired_path_list))
     print("Cleaning up. Removing the following files: ", remove_list)
-    for path in remove_list:
-        Path(path).unlink()
+    # for path in remove_list:
+    #     Path(path).unlink()
 
     return None
 
