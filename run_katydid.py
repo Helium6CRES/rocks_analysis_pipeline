@@ -99,7 +99,9 @@ def main():
 
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
     # Run katydid on each row/spec file in file_df.
-    # file_df[condition].apply(lambda row: run_katydid(row), axis=1)
+    file_df[condition].apply(lambda row: run_katydid(row), axis=1)
+
+    return None
 
 
 def run_katydid(file_df):
