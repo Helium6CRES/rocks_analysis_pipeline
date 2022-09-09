@@ -80,7 +80,7 @@ def main():
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
                 lambda x: check_if_exists(x)
             )
-            file_df.append(file_df_list)
+            file_df.append(file_df)
 
         # New analysis.
         else:
@@ -91,7 +91,7 @@ def main():
     file_df_experiment = df = pd.concat(file_df_list)
 
     print(len(file_df_experiment))
-    print(file_df_experiment)
+    print(file_df_experiment.columns)
 
 
 # TODO: Duplicate function. Refactor.
