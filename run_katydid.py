@@ -76,7 +76,7 @@ def main():
     args = par.parse_args()
 
     # Deal with permissions (chmod 770, group he6_cres).
-    # Done at the beginning and end of main. 
+    # Done at the beginning and end of main.
     set_permissions()
 
     print(f"run_id: {args.run_id}")
@@ -132,10 +132,12 @@ def run_katydid(file_df):
     rid = file_df["run_id"]
     aid = file_df["analysis_id"]
 
-    config_path = base_config_path.parent / str(
-        base_config_path.stem)
-        / f"{rid:04d}_{aid:03d}"
+    config_path = (
+        base_config_path.parent
+        / base_config_path.stem
+        / Path(f"{rid:04d}_{aid:03d}")
         / base_config_path.suffix
+    )
     print(config_path)
 
     # copy base config file to edit
@@ -146,9 +148,11 @@ def run_katydid(file_df):
         analysis_dir = Path(file_df["root_file_path"]).parents[0]
         config_path_name = Path(config_path).name
         saved_config_path = analysis_dir / config_path_name
-        copyfile(config_path, str(saved_config_path))
+        copyfile(config_path, saved_config_path)
 
-        print("Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n")
+        print(
+            "Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
+        )
 
     # TODO: input noise file path.
     config_dict["spec1"]["filename"] = file_df["rocks_noise_file_path"]
