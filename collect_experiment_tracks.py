@@ -77,29 +77,10 @@ def main():
     set_permissions()
 
     analysis_id = args.analysis_id
+    run_ids = args.run_ids
 
-    # Step 0: Make sure that all of the listed rids/aid exists.
-    file_df_list = []
-    for run_id in args.run_ids:
-        file_df_path = build_file_df_path(run_id, analysis_id)
-
-        if file_df_path.is_file():
-            print(f"Collecting file_df: {str(file_df_path)} \n")
-
-            file_df = pd.read_csv(file_df_path, index_col=0)
-            file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                lambda x: check_if_exists(x)
-            )
-            file_df_list.append(file_df)
-
-        # New analysis.
-        else:
-            raise UserWarning(
-                f"run_id {run_id} has no analysis_id {analysis_id}"
-            )
-
-    file_df_experiment = pd.concat(file_df_list)
-
+    file_df_experiment = get_experiment_files(run_ids, analysis_id)
+   
     # START HERE: DO WE HAVE TRACKS?? 
     # Deal with file_num vs file_id
     condition = file_df_experiment["root_file_exists"] == True
@@ -111,8 +92,8 @@ def main():
     tracks_df_experiment = get_experiment_tracks(file_df_experiment)
 
     print(len(tracks_df_experiment))
-    print(tracks_df_experiment.columns)
-    print(tracks_df_experiment.to_string())
+    print(tracks_df_experiment..head().columns)
+    print(tracks_df_experiment.head(100).to_string())
 
     # Now build these two things into a an instance of a data class.
 
@@ -135,6 +116,32 @@ def sanity_check(file_df):
 
     return None
 
+
+def get_experiment_files(run_ids, analysis_id): 
+
+    # Step 0: Make sure that all of the listed rids/aid exists.
+    file_df_list = []
+    for run_id in run_ids:
+        file_df_path = build_file_df_path(run_id, analysis_id)
+
+        if file_df_path.is_file():
+            print(f"Collecting file_df: {str(file_df_path)} \n")
+
+            file_df = pd.read_csv(file_df_path, index_col=0)
+            file_df["root_file_exists"] = file_df["root_file_path"].apply(
+                lambda x: check_if_exists(x)
+            )
+            file_df_list.append(file_df)
+
+        # New analysis.
+        else:
+            raise UserWarning(
+                f"run_id {run_id} has no analysis_id {analysis_id}"
+            )
+
+    file_df_experiment = pd.concat(file_df_list)
+
+    return file_df_experiment
 
 
 def get_experiment_tracks(file_df_experiment):
