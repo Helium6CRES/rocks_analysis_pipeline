@@ -163,13 +163,13 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
     return tracks_df
 
 
-def add_env_data(run_id, file_id, tracks):
+def add_env_data(run_id, file_id, tracks_df):
 
     # TODO: Fill in this function. 
-    tracks["field"] = 10
-    tracks["monitor_rate"] = 10
+    tracks_df["field"] = 10
+    tracks_df["monitor_rate"] = 10
 
-    return tracks
+    return tracks_df
 
 
 # TODO: Duplicate function. Refactor.
