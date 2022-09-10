@@ -92,7 +92,7 @@ def main():
     tracks_df_experiment = get_experiment_tracks(file_df_experiment)
 
     print(len(tracks_df_experiment))
-    print(tracks_df_experiment..head().columns)
+    print(tracks_df_experiment.head().columns)
     print(tracks_df_experiment.head(100).to_string())
 
     # Now build these two things into a an instance of a data class.
