@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 import argparse
 import pandas as pd
@@ -14,7 +15,8 @@ from typing import List
 import pandas.io.sql as psql
 from pathlib import Path
 import yaml
-import sys
+import uproot4
+
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports:
@@ -56,8 +58,10 @@ def main():
 
     args = par.parse_args()
 
-    # Sanity check:
-    print("TEST", args.run_ids, args.analysis_id)
+    # Print summary of experiment:
+    print(
+        f"Experiment Summary\n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n"
+    )
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -88,10 +92,84 @@ def main():
                 f"One of the listed run_ids has no analysis_id = {analysis_id}"
             )
 
-    file_df_experiment = df = pd.concat(file_df_list)
+    file_df_experiment = pd.concat(file_df_list)
 
     print(len(file_df_experiment))
     print(file_df_experiment.columns)
+
+    tracks_df_experiment = construct_tracks_df(file_df_experiment)
+
+    print(len(tracks_df_experiment))
+    print(tracks_df_experiment.columns)
+    print(tracks_df_experiment.to_string())
+
+    # Now build these two things into a an instance of a data class.
+
+    # Then pickle the object and put it somewhere.
+
+    # Then work on data cleaning and visualization and stuff.
+
+
+def get_experiment_tracks(file_df_experiment):
+    # TODO: Change the run_num to file_id. 
+
+    condition = file_df["root_file_exists"] == True
+
+    experiment_tracks_list = [
+        build_tracks_for_single_file(root_file_path, run_id, file_id)
+        for root_file_path, run_id, file_id in zip(
+            file_df_experiment[condition]["root_file_path"],
+            file_df_experiment[condition]["run_id"],
+            file_df_experiment[condition]["file_num"],
+        )
+    ]
+
+    return pd.concat(experiment_tracks_list)
+
+
+# TODO: MAKE A DATA CLASS?
+# TODO: file_num, file_id, file_in_acq. These need to be made consistent.
+
+
+def build_tracks_for_single_file(root_file_path, run_id, file_id) -> pd.DataFrame:
+    """
+    Given path to root file containing MultiTrackEvents tree, returns
+    a dataframe containing one track per row.
+
+    Args:
+        rootfile_path (pathlib.Path): No specifications.
+
+    Returns:
+        tracks (pd.DataFrame): No specifications.
+    """
+
+    rootfile = uproot4.open(rootfile_path)
+    tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
+
+    tracks_df = pd.DataFrame()
+
+    for key, value in tracks_root.items():
+
+        array_list = []
+
+        # Slice the key so it drops the redundant "fTracks."
+        tracks_df[key[9:]] = flat(value.array())
+
+    tracks_df["run_id"] = run_id
+    tracks_df["file_id"] = file_id
+    tracks_df["root_file_path"] = root_file_path
+
+    tracks_df = add_env_data(run_id, file_id, tracks)
+
+    return tracks_df
+
+
+def add_env_data(run_id, file_id, tracks):
+
+    tracks["field"] = 10
+    tracks["monitor_rate"] = 10
+
+    return tracks
 
 
 # TODO: Duplicate function. Refactor.
