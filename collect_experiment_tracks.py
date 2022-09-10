@@ -16,6 +16,7 @@ import pandas.io.sql as psql
 from pathlib import Path
 import yaml
 import uproot4
+import awkward
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
@@ -190,6 +191,23 @@ def set_permissions():
 def check_if_exists(fp):
     return Path(fp).is_file()
 
+def flat(jaggedarray: awkward.Array) -> np.ndarray:
+    """
+    Given jagged array (common in root), it returns a flattened array.
+
+    Args:
+        jaggedarray (awkward array): No specifications.
+
+    Returns:
+        array (np.ndarray): No specifications.
+
+    """
+    flatarray = np.array([])
+    for i in jaggedarray.tolist():
+        flatarray = np.append(flatarray, i)
+
+    return flatarray
+    
 
 if __name__ == "__main__":
     main()

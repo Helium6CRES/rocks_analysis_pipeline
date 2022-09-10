@@ -9,4 +9,5 @@ psycopg2-binary>=2.9.3
 pyyaml>=6.0
 argparse>=1.1
 uproot4>=4.0.0
+awkward>=1.9.0
 he6-cres-spec-sims>=0.1.5
