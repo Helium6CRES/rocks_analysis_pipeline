@@ -118,7 +118,7 @@ def main():
 def sanity_check(file_df): 
     print("\n")
     print(file_df["run_id"], file_df["file_num"])
-    rootfile = uproot4.open(root_file_path)
+    rootfile = uproot4.open(file_df["root_file_path"])
 
     if "multiTrackEvents" in rootfile.keys():
         print("multiTrackEvents")
