@@ -128,6 +128,7 @@ def sanity_check(file_df):
     print(rootfile.keys())
     if "multiTrackEvents;1" in rootfile.keys():
         print("Yes tracks.")
+        print("{}".format(rootfile["multiTrackEvents;1"]["Event"]["fTracks"]))
     else: 
         print("No tracks.")
     print("\n")
