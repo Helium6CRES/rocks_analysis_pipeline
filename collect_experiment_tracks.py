@@ -113,7 +113,7 @@ def main():
 def get_experiment_tracks(file_df_experiment):
     # TODO: Change the run_num to file_id. 
 
-    condition = file_df["root_file_exists"] == True
+    condition = file_df_experiment["root_file_exists"] == True
 
     experiment_tracks_list = [
         build_tracks_for_single_file(root_file_path, run_id, file_id)
