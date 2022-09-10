@@ -97,6 +97,7 @@ def main():
     file_df_experiment = pd.concat(file_df_list)
 
     # START HERE: DO WE HAVE TRACKS?? 
+    # Deal with file_num vs file_id
     file_df_experiment.apply(lambda row: sanity_check(row), axis = 1)
 
     print(len(file_df_experiment))
@@ -116,7 +117,7 @@ def main():
 
 def sanity_check(file_df): 
     print("\n")
-    print(file_df["run_id"], file_df["file_id"])
+    print(file_df["run_id"], file_df["file_num"])
     rootfile = uproot4.open(root_file_path)
 
     if "multiTrackEvents" in rootfile.keys():
