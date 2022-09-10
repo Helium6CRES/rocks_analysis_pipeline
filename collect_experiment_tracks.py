@@ -113,7 +113,7 @@ def main():
 
 
 def get_experiment_tracks(file_df_experiment):
-    # TODO: Change the run_num to file_id. 
+    # TODO: Change the run_num to file_id.
 
     condition = file_df_experiment["root_file_exists"] == True
 
@@ -125,8 +125,7 @@ def get_experiment_tracks(file_df_experiment):
             file_df_experiment[condition]["file_num"],
         )
     ]
-
-    return pd.concat(experiment_tracks_list)
+    return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
 
 
 # TODO: MAKE A DATA CLASS?
@@ -143,16 +142,21 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
 
     Returns:
         tracks (pd.DataFrame): No specifications.
+
+    NOTES:
+        * We need a place holder to be able to count the total data we're looking at.
     """
 
     rootfile = uproot4.open(root_file_path)
-    tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
 
-    tracks_df = pd.DataFrame()
+    if "multiTrackEvents" in rootfile.keys():
+        tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
 
-    for key, value in tracks_root.items():
-        # Slice the key so it drops the redundant "fTracks."
-        tracks_df[key[9:]] = flat(value.array())
+        tracks_df = pd.DataFrame()
+
+        for key, value in tracks_root.items():
+            # Slice the key so it drops the redundant "fTracks."
+            tracks_df[key[9:]] = flat(value.array())
 
     tracks_df["run_id"] = run_id
     tracks_df["file_id"] = file_id
@@ -165,7 +169,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
 
 def add_env_data(run_id, file_id, tracks_df):
 
-    # TODO: Fill in this function. 
+    # TODO: Fill in this function.
     tracks_df["field"] = 10
     tracks_df["monitor_rate"] = 10
 
@@ -191,6 +195,7 @@ def set_permissions():
 
 def check_if_exists(fp):
     return Path(fp).is_file()
+
 
 def flat(jaggedarray: awkward.Array) -> np.ndarray:
     """
