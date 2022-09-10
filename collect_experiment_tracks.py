@@ -147,12 +147,13 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
         * We need a place holder to be able to count the total data we're looking at.
     """
 
+    tracks_df = pd.DataFrame()
+
     rootfile = uproot4.open(root_file_path)
 
     if "multiTrackEvents" in rootfile.keys():
-        tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
 
-        tracks_df = pd.DataFrame()
+        tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
 
         for key, value in tracks_root.items():
             # Slice the key so it drops the redundant "fTracks."
