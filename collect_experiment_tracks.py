@@ -80,7 +80,7 @@ def main():
         if file_df_path.is_file():
             print(f"Collecting file_df: {str(file_df_path)} \n")
 
-            file_df = pd.read_csv(file_df_path)
+            file_df = pd.read_csv(file_df_path, index_col=0)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
                 lambda x: check_if_exists(x)
             )
@@ -97,7 +97,7 @@ def main():
     print(len(file_df_experiment))
     print(file_df_experiment.columns)
 
-    tracks_df_experiment = construct_tracks_df(file_df_experiment)
+    tracks_df_experiment = get_experiment_tracks(file_df_experiment)
 
     print(len(tracks_df_experiment))
     print(tracks_df_experiment.columns)
@@ -149,9 +149,6 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id) -> pd.DataFram
     tracks_df = pd.DataFrame()
 
     for key, value in tracks_root.items():
-
-        array_list = []
-
         # Slice the key so it drops the redundant "fTracks."
         tracks_df[key[9:]] = flat(value.array())
 
@@ -166,6 +163,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id) -> pd.DataFram
 
 def add_env_data(run_id, file_id, tracks):
 
+    # TODO: Fill in this function. 
     tracks["field"] = 10
     tracks["monitor_rate"] = 10
 
