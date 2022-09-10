@@ -170,12 +170,9 @@ def write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir):
     return None
 
 
-
-
-
 def build_analysis_dir(experiment_name, analysis_id): 
 
-    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/save_experiments")
+    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
     analysis_dir = base_path / Path(f"{experiment_name}_{analysis_id}")
 
