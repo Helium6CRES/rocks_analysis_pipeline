@@ -158,7 +158,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
     tracks_df["file_id"] = file_id
     tracks_df["root_file_path"] = root_file_path
 
-    tracks_df = add_env_data(run_id, file_id, tracks)
+    tracks_df = add_env_data(run_id, file_id, tracks_df)
 
     return tracks_df
 
