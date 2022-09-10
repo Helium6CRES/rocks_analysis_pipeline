@@ -110,7 +110,7 @@ def main():
     list_file_df = [file_df_experiment[i:i+n] for i in range(0,file_df_experiment.shape[0],n)] 
 
     for chunk_idx, file_df_chunk in enumerate(list_file_df): 
-        print(len(tracks_df_chunk))
+        print(len(file_df_chunk))
         tracks_df_chunk = get_experiment_tracks(file_df_chunk)
 
         write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
