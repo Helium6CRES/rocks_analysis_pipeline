@@ -109,7 +109,7 @@ def main():
     n = 50  #chunk row size
     list_file_df = [file_df_experiment[i:i+n] for i in range(0,file_df_experiment.shape[0],n)] 
 
-    for chunk_idx, file_df_chunk in eumerate(list_file_df): 
+    for chunk_idx, file_df_chunk in enumerate(list_file_df): 
         print(len(tracks_df_chunk))
         tracks_df_chunk = get_experiment_tracks(file_df_chunk)
 
