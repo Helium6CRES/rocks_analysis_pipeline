@@ -176,7 +176,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
 
     rootfile = uproot4.open(root_file_path)
 
-    if "multiTrackEvents" in rootfile.keys():
+    if "multiTrackEvents;1" in rootfile.keys():
 
         tracks_root = rootfile["multiTrackEvents;1"]["Event"]["fTracks"]
 
