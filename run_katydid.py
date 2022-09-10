@@ -141,7 +141,7 @@ def run_katydid(file_df):
     copyfile(base_config_path, config_path)
 
     # copy first config file to the analysis directory for future reference.
-    if file_df["file_num"] == 0:
+    if file_df["file_id"] == 0:
         analysis_dir = Path(file_df["root_file_path"]).parents[0]
         config_path_name = Path(config_path).name
         saved_config_path = analysis_dir / config_path_name
@@ -193,7 +193,7 @@ def run_katydid(file_df):
 
     print(
         "\nfile {}.\ntime to run: {:.2f} s.\ncurrent time: {}.\nroot file created {}\n".format(
-            file_df["file_num"], t_stop - t_start, now, file_df["root_file_path"]
+            file_df["file_id"], t_stop - t_start, now, file_df["root_file_path"]
         )
     )
 
@@ -211,7 +211,7 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
     file_df = create_base_file_df(run_id)
     file_df["analysis_id"] = analysis_id
     file_df["root_file_exists"] = False
-    file_df["file_num"] = file_df.index
+    file_df["file_id"] = file_df.index
     file_df["rocks_file_path"] = file_df["file_path"].apply(lambda x: process_fp(x))
     file_df["exists"] = file_df["rocks_file_path"].apply(lambda x: check_if_exists(x))
     file_df["approx_slope"] = get_slope(file_df["true_field"][0])
@@ -455,14 +455,12 @@ def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
 
         # Create a cursor to perform database operations
         cursor = connection.cursor()
-        print("Successfully connected to he6cres_db")
 
         # Execute a sql_command
         cursor.execute(query)
         cols = [desc[0] for desc in cursor.description]
         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
 
-        print("Query executed.")
 
     except (Exception, Error) as error:
         print("Error while connecting to he6cres_db", error)
@@ -472,7 +470,6 @@ def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
         if connection:
             cursor.close()
             connection.close()
-            print("Connection to he6cres_db is closed")
 
     return query_result
 

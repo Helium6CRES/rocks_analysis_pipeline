@@ -62,6 +62,13 @@ def main():
         help="analysis_id to collect track data for.",
     )
 
+    arg(
+        "-name",
+        "--experiment_name",
+        type=str,
+        help="name used to write the experiment to disk.",
+    )
+
     args = par.parse_args()
 
     # Print summary of experiment:
@@ -76,24 +83,49 @@ def main():
     # Done at the beginning and end of main.
     set_permissions()
 
+    # TODO: Build this into a class. Will make it much easier to read..
+
+
     analysis_id = args.analysis_id
     run_ids = args.run_ids
+    experiment_name = args.experiment_name
+
+    analysis_dir = build_analysis_dir(experiment_name, analysis_id)
 
     file_df_experiment = get_experiment_files(run_ids, analysis_id)
    
-    # START HERE: DO WE HAVE TRACKS?? 
-    # Deal with file_num vs file_id
+    # TODO: Deal with file_num vs file_id
+    #TODO: Build files.csv, tracks.csv. 
+
     condition = file_df_experiment["root_file_exists"] == True
-    file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
+    # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
 
     print(len(file_df_experiment))
     print(file_df_experiment.columns)
+    write_files_df(file_df_experiment, analysis_dir)
 
-    tracks_df_experiment = get_experiment_tracks(file_df_experiment)
 
-    print(len(tracks_df_experiment))
-    print(tracks_df_experiment.head().columns)
-    print(tracks_df_experiment.head(100).to_string())
+    # Go through 50 files at a time.
+    n = 50  #chunk row size
+    list_file_df = [file_df_experiment[i:i+n] for i in range(0,file_df_experiment.shape[0],n)] 
+
+    for chunk_idx, file_df_chunk in eumerate(list_file_df): 
+        print(len(tracks_df_chunk))
+        tracks_df_chunk = get_experiment_tracks(file_df_chunk)
+
+        write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
+
+
+
+    # # for file_idx in range(len())
+    # # TODO: Ok the following is too long (or will be) to write out to a csv all at once. 
+    # tracks_df_experiment = get_experiment_tracks(file_df_experiment)
+
+
+
+    # print(len(tracks_df_experiment))
+    # print(tracks_df_experiment.head().columns)
+    # print(tracks_df_experiment.head(100).to_string())
 
     # Now build these two things into a an instance of a data class.
 
@@ -115,6 +147,46 @@ def sanity_check(file_df):
     print("\n")
 
     return None
+
+
+def write_files_df(file_df_experiment, analysis_dir): 
+
+    files_path = analysis_dir / Path("files.csv")
+
+    file_df_experiment.to_csv(files_path)
+
+    return None 
+
+def write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir):
+
+    tracks_path = analysis_dir / Path("tracks.csv")
+    if chunk_idx == 0: 
+        # append data frame to CSV file
+        tracks_df_chunk.to_csv(tracks_path)
+    else: 
+        # append data frame to CSV file
+        tracks_df_chunk.to_csv(tracks_path, mode='a')
+
+    return None
+
+
+
+
+
+def build_analysis_dir(experiment_name, analysis_id): 
+
+    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/save_experiments")
+
+    analysis_dir = base_path / Path(f"{experiment_name}_{analysis_id}")
+
+    if analysis_dir.exists():
+        raise UserWarning(f"{analysis_dir} already exists.")
+    else: 
+        analysis_dir.mkdir()
+        print(f"Made {analysis_dir}")
+
+    return analysis_dir
+
 
 
 def get_experiment_files(run_ids, analysis_id): 
@@ -158,6 +230,8 @@ def get_experiment_tracks(file_df_experiment):
         )
     ]
     return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
+
+
 
 
 # TODO: MAKE A DATA CLASS?
