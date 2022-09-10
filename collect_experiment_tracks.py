@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 import uproot4
 import awkward
+import numpy as np
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
@@ -207,7 +208,7 @@ def flat(jaggedarray: awkward.Array) -> np.ndarray:
         flatarray = np.append(flatarray, i)
 
     return flatarray
-    
+
 
 if __name__ == "__main__":
     main()
