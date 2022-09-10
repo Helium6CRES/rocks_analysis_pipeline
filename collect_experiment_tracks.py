@@ -21,9 +21,12 @@ import numpy as np
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
-# Local imports:
-# from . import run_katydid as rk
-# from rocks_analysis_pipeline.run_katydid import build_file_df_path, check_if_exists
+# START HERE.
+# LOOK AT 13. WHy no tracks. 
+# Then make it work and then work on making this repo pretty and readable. 
+# Work on getting sphynx going before you start documenting. 
+# Dont' start documenting until it's really there. 
+
 
 pd.set_option("display.max_columns", 100)
 
@@ -36,6 +39,7 @@ def main():
 
     Notes:
     * This will only work with katydid files that have track/event objects in the trees.
+    * Should it just take a analysis id? No then it isn't well defined... 
     """
 
     umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
@@ -98,7 +102,8 @@ def main():
 
     # START HERE: DO WE HAVE TRACKS?? 
     # Deal with file_num vs file_id
-    file_df_experiment.apply(lambda row: sanity_check(row), axis = 1)
+    condition = file_df_experiment["root_file_exists"] == True
+    file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
 
     print(len(file_df_experiment))
     print(file_df_experiment.columns)
@@ -120,6 +125,7 @@ def sanity_check(file_df):
     print(file_df["run_id"], file_df["file_num"])
     rootfile = uproot4.open(file_df["root_file_path"])
 
+    print(rootfile.keys())
     if "multiTrackEvents" in rootfile.keys():
         print("multiTrackEvents")
     else: 
