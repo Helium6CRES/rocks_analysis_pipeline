@@ -96,6 +96,9 @@ def main():
 
     file_df_experiment = pd.concat(file_df_list)
 
+    # START HERE: DO WE HAVE TRACKS?? 
+    file_df_experiment.apply(lambda row: sanity_check(row), axis = 1)
+
     print(len(file_df_experiment))
     print(file_df_experiment.columns)
 
@@ -110,6 +113,20 @@ def main():
     # Then pickle the object and put it somewhere.
 
     # Then work on data cleaning and visualization and stuff.
+
+def sanity_check(file_df): 
+    print("\n")
+    print(file_df["run_id"], file_df["file_id"])
+    rootfile = uproot4.open(root_file_path)
+
+    if "multiTrackEvents" in rootfile.keys():
+        print("multiTrackEvents")
+    else: 
+        print("No tracks.")
+    print("\n")
+
+    return None
+
 
 
 def get_experiment_tracks(file_df_experiment):
