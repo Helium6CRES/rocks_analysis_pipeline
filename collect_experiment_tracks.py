@@ -126,8 +126,8 @@ def sanity_check(file_df):
     rootfile = uproot4.open(file_df["root_file_path"])
 
     print(rootfile.keys())
-    if "multiTrackEvents" in rootfile.keys():
-        print("multiTrackEvents")
+    if "multiTrackEvents;1" in rootfile.keys():
+        print("Yes tracks.")
     else: 
         print("No tracks.")
     print("\n")
@@ -177,7 +177,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id):
 
     if "multiTrackEvents" in rootfile.keys():
 
-        tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
+        tracks_root = rootfile["multiTrackEvents;1"]["Event"]["fTracks"]
 
         for key, value in tracks_root.items():
             # Slice the key so it drops the redundant "fTracks."
