@@ -131,7 +131,7 @@ def get_experiment_tracks(file_df_experiment):
 # TODO: file_num, file_id, file_in_acq. These need to be made consistent.
 
 
-def build_tracks_for_single_file(root_file_path, run_id, file_id) -> pd.DataFrame:
+def build_tracks_for_single_file(root_file_path, run_id, file_id):
     """
     Given path to root file containing MultiTrackEvents tree, returns
     a dataframe containing one track per row.
@@ -143,7 +143,7 @@ def build_tracks_for_single_file(root_file_path, run_id, file_id) -> pd.DataFram
         tracks (pd.DataFrame): No specifications.
     """
 
-    rootfile = uproot4.open(rootfile_path)
+    rootfile = uproot4.open(root_file_path)
     tracks_root = rootfile["multiTrackEvents"]["Event"]["fTracks"]
 
     tracks_df = pd.DataFrame()
