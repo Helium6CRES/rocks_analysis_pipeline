@@ -197,7 +197,7 @@ class PostProcessing:
             if file_df_path.is_file():
                 print(f"Collecting file_df: {str(file_df_path)} \n")
 
-                file_df = pd.read_csv(file_df_path, index_col=0)
+                file_df = pd.read_csv(file_df_path)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
                     lambda x: check_if_exists(x)
                 )
@@ -228,30 +228,36 @@ class PostProcessing:
 
     def process_tracks_and_events(self):
 
-        for file_num, files in self.root_files_df.groupby(["file_num"]):
+        for file_num, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
 
             print(len(files))
-            print(files.head(1), "/n")
+            # print(files.head(1), "/n")
 
-    def get_track_data(self):
+            tracks_df = get_track_data_from_files(self, root_files_df_chunk)
+
+            print(len(tracks_df))
+            print(tracks_df.index)
+            print(tracks_df.head())
+
+
+
+    def get_track_data_from_files(self, root_files_df):
 
         # TODO: Change the run_num to file_id.
         # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
         # TODO: Get it to all work for a
 
-        condition = (file_df_experiment["root_file_exists"] == True) & (
-            file_df_experiment["file_num"] < self.num_files_tracks
-        )
+        condition = (root_files_df["root_file_exists"] == True)
 
         experiment_tracks_list = [
             build_tracks_for_single_file(root_file_path, run_id, file_id)
             for root_file_path, run_id, file_id in zip(
-                file_df_experiment[condition]["root_file_path"],
-                file_df_experiment[condition]["run_id"],
-                file_df_experiment[condition]["file_num"],
+                root_files_df[condition]["root_file_path"],
+                root_files_df[condition]["run_id"],
+                root_files_df[condition]["file_num"],
             )
         ]
-        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
+        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop = True)
 
     def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
         """
