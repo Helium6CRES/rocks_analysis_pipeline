@@ -33,9 +33,10 @@ def main():
     * I need to build the clean-up and event-building into this process. Otherwise these
     files are going to get too large. Already 1.1G after 171 out of 5700 files.
     * Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df?
-    * Put a timestamp in the log files for clean-up. 
-    * Put a timestamp in the dfs somehow so we know when the analysis was conducted. 
-    * Get Sphynx working before moving on to documenting! This will be so useful. 
+    * Put a timestamp in the log files for clean-up.
+    * Put a timestamp in the dfs somehow so we know when the analysis was conducted.
+    * Get Sphynx working before moving on to documenting! This will be so useful.
+    * Make an option to delete a currently existing experiment directory with a user enter.
 
 
     Notes:
@@ -106,6 +107,14 @@ def main():
         args.num_files_events,
     )
 
+    # NEXT (9/12/22):
+    # * Work on getting the nft, nfe working.
+    # * Build the cleaning method out. And the writing of the events to disk.
+    #   * Make the defualt of that -1 meaning all of them and the default for nft to be 1 or something?
+    # * keep it moving.
+    # * Work on visualziation stuff on the local machine.
+    # * Get the utility functions like the database call into another module for cleanliness.
+    # *
     print("STOP NOW.")
 
     analysis_id = args.analysis_id
@@ -157,8 +166,12 @@ class PostProcessing:
         self.analysis_dir = self.build_analysis_dir()
         self.root_files_df = self.get_experiment_files()
 
-        # TEST. 
+        # TEST.
         print(self.root_files_df.head(100).to_string())
+        print(self.root_files_df.index)
+
+        # Now gather tracks, clean them up, write some of them to disk, and write events to disk. 
+        self.process_tracks_and_events()
 
     def build_analysis_dir(self):
 
@@ -190,23 +203,136 @@ class PostProcessing:
                 )
                 file_df_list.append(file_df)
 
-            # This file_df should already exist. 
+            # This file_df should already exist.
             else:
-                raise UserWarning(f"run_id {run_id} has no analysis_id {self.analysis_id}")
+                raise UserWarning(
+                    f"run_id {run_id} has no analysis_id {self.analysis_id}"
+                )
 
         root_files_df = pd.concat(file_df_list)
 
         return root_files_df
 
-
     def build_file_df_path(self, run_id):
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
-        rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
+        rid_ai_dir = (
+            base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
+        )
 
-        file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv")
+        file_df_path = rid_ai_dir / Path(
+            f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
+        )
 
         return file_df_path
+
+
+    def process_tracks_and_events(self):
+
+        for file_num, files in self.root_files_df.groupby(["file_num"]):
+
+            print(len(files))
+            print(files.head(1),"/n")
+
+
+
+
+
+
+
+    def get_track_data(self):
+
+        # TODO: Change the run_num to file_id.
+        # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
+        # TODO: Get it to all work for a 
+
+        condition = (file_df_experiment["root_file_exists"] == True) & (
+            file_df_experiment["file_num"] < self.num_files_tracks
+        )
+
+        experiment_tracks_list = [
+            build_tracks_for_single_file(root_file_path, run_id, file_id)
+            for root_file_path, run_id, file_id in zip(
+                file_df_experiment[condition]["root_file_path"],
+                file_df_experiment[condition]["run_id"],
+                file_df_experiment[condition]["file_num"],
+            )
+        ]
+        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
+
+
+    def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
+        """
+        DOCUMENT.
+        """
+
+        tracks_df = pd.DataFrame()
+
+        rootfile = uproot4.open(root_file_path)
+
+        if "multiTrackEvents;1" in rootfile.keys():
+
+            tracks_root = rootfile["multiTrackEvents;1"]["Event"]["fTracks"]
+
+            for key, value in tracks_root.items():
+                # Slice the key so it drops the redundant "fTracks."
+                tracks_df[key[9:]] = flat(value.array())
+
+        tracks_df["run_id"] = run_id
+        tracks_df["file_id"] = file_id
+        tracks_df["root_file_path"] = root_file_path
+
+        tracks_df = self.add_env_data(tracks_df)
+
+        return tracks_df
+
+
+    def add_env_data(self, tracks_df):
+
+        # TODO: Fill in this function.
+        tracks_df["field"] = 10
+        tracks_df["monitor_rate"] = 10
+
+        return tracks_df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def clean_track_data(self):
+
+        return None
+
+
+    def get event_data(self):
 
     # TODO:
 
@@ -321,17 +447,7 @@ def get_experiment_tracks(file_df_experiment):
 
 def build_tracks_for_single_file(root_file_path, run_id, file_id):
     """
-    Given path to root file containing MultiTrackEvents tree, returns
-    a dataframe containing one track per row.
 
-    Args:
-        rootfile_path (pathlib.Path): No specifications.
-
-    Returns:
-        tracks (pd.DataFrame): No specifications.
-
-    NOTES:
-        * We need a place holder to be able to count the total data we're looking at.
     """
 
     tracks_df = pd.DataFrame()
