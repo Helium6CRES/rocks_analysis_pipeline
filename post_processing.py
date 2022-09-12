@@ -71,14 +71,14 @@ def main():
     arg(
         "-nft",
         "--num_files_tracks",
-        type=str,
+        type=int,
         help="number of files for which to save track data per run_id.",
     )
 
     arg(
         "-nfe",
         "--num_files_events",
-        type=str,
+        type=int,
         help="number of files for which to save cleaned-up event data per run_id.",
     )
 
