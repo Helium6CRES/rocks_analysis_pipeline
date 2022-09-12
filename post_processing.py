@@ -170,7 +170,7 @@ class PostProcessing:
         print(self.root_files_df.head(100).to_string())
         print(self.root_files_df.index)
 
-        # Now gather tracks, clean them up, write some of them to disk, and write events to disk. 
+        # Now gather tracks, clean them up, write some of them to disk, and write events to disk.
         self.process_tracks_and_events()
 
     def build_analysis_dir(self):
@@ -226,25 +226,18 @@ class PostProcessing:
 
         return file_df_path
 
-
     def process_tracks_and_events(self):
 
         for file_num, files in self.root_files_df.groupby(["file_num"]):
 
             print(len(files))
-            print(files.head(1),"/n")
-
-
-
-
-
-
+            print(files.head(1), "/n")
 
     def get_track_data(self):
 
         # TODO: Change the run_num to file_id.
         # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
-        # TODO: Get it to all work for a 
+        # TODO: Get it to all work for a
 
         condition = (file_df_experiment["root_file_exists"] == True) & (
             file_df_experiment["file_num"] < self.num_files_tracks
@@ -259,7 +252,6 @@ class PostProcessing:
             )
         ]
         return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
-
 
     def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
         """
@@ -286,7 +278,6 @@ class PostProcessing:
 
         return tracks_df
 
-
     def add_env_data(self, tracks_df):
 
         # TODO: Fill in this function.
@@ -296,55 +287,24 @@ class PostProcessing:
         return tracks_df
 
 
+# def clean_track_data(self):
+
+#     return None
 
 
+# def get event_data(self):
 
+# TODO:
 
+# print(len(tracks_df_experiment))
+# print(tracks_df_experiment.head().columns)
+# print(tracks_df_experiment.head(100).to_string())
 
+# Now build these two things into a an instance of a data class.
 
+# Then pickle the object and put it somewhere.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def clean_track_data(self):
-
-        return None
-
-
-    def get event_data(self):
-
-    # TODO:
-
-    # print(len(tracks_df_experiment))
-    # print(tracks_df_experiment.head().columns)
-    # print(tracks_df_experiment.head(100).to_string())
-
-    # Now build these two things into a an instance of a data class.
-
-    # Then pickle the object and put it somewhere.
-
-    # Then work on data cleaning and visualization and stuff.
+# Then work on data cleaning and visualization and stuff.
 
 
 def sanity_check(file_df):
@@ -446,9 +406,7 @@ def get_experiment_tracks(file_df_experiment):
 
 
 def build_tracks_for_single_file(root_file_path, run_id, file_id):
-    """
-
-    """
+    """ """
 
     tracks_df = pd.DataFrame()
 
