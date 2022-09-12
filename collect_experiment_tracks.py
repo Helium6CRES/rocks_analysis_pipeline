@@ -21,13 +21,7 @@ import numpy as np
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
-# START HERE.
-# LOOK AT 13. WHy no tracks. 
-# Then make it work and then work on making this repo pretty and readable. 
-# Work on getting sphynx going before you start documenting. 
-# Dont' start documenting until it's really there. 
-
-
+# Import options. 
 pd.set_option("display.max_columns", 100)
 
 
@@ -35,7 +29,12 @@ def main():
     """
 
     TODOS:
-    *
+    * Build this into a class. It's going to be much easier to read and interact with. 
+    * I need to build the clean-up and event-building into this process. Otherwise these 
+    files are going to get too large. Already 1.1G after 171 out of 5700 files. 
+    * Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df?
+    * 
+
 
     Notes:
     * This will only work with katydid files that have track/event objects in the trees.
@@ -83,9 +82,6 @@ def main():
     # Done at the beginning and end of main.
     set_permissions()
 
-    # TODO: Build this into a class. Will make it much easier to read..
-
-
     analysis_id = args.analysis_id
     run_ids = args.run_ids
     experiment_name = args.experiment_name
@@ -98,6 +94,9 @@ def main():
     #TODO: Build files.csv, tracks.csv. 
 
     condition = file_df_experiment["root_file_exists"] == True
+    print("Fraction of root files;", condition.mean())
+
+    
     # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
 
     print(len(file_df_experiment))
@@ -115,11 +114,8 @@ def main():
 
         write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
 
+    # TODO: 
 
-
-    # # for file_idx in range(len())
-    # # TODO: Ok the following is too long (or will be) to write out to a csv all at once. 
-    # tracks_df_experiment = get_experiment_tracks(file_df_experiment)
 
 
 
