@@ -235,12 +235,11 @@ class PostProcessing:
             print(len(root_files_df_chunk))
             # print(files.head(1), "/n")
 
-            tracks_df = get_track_data_from_files(self, root_files_df_chunk)
+            tracks_df = self.get_track_data_from_files(root_files_df_chunk)
 
             print(len(tracks_df))
             print(tracks_df.index)
             print(tracks_df.head())
-
 
 
     def get_track_data_from_files(self, root_files_df):
