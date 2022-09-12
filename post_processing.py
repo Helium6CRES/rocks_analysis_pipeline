@@ -104,7 +104,7 @@ def main():
         args.num_files_events,
     )
 
-    break
+    print("STOP NOW.")
 
     analysis_id = args.analysis_id
     run_ids = args.run_ids
