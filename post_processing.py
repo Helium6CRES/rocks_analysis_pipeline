@@ -143,7 +143,7 @@ def main():
 
 class PostProcessing:
     def __init__(
-        run_ids, analysis_id, experiment_name, num_files_tracks, num_files_events
+        self, run_ids, analysis_id, experiment_name, num_files_tracks, num_files_events
     ):
 
         self.run_ids = run_ids
@@ -153,6 +153,10 @@ class PostProcessing:
         self.num_files_events = num_files_events
 
         self.analysis_dir = self.build_analysis_dir()
+        self.root_files_df = self.get_experiment_files()
+
+        # TEST. 
+        print(self.root_files_df.head(100).to_string())
 
     def build_analysis_dir(self):
 
@@ -167,6 +171,40 @@ class PostProcessing:
             print(f"Made {analysis_dir}")
 
         return analysis_dir
+
+    def get_experiment_files(self):
+
+        # Step 0: Make sure that all of the listed rids/aid exists.
+        file_df_list = []
+        for run_id in self.run_ids:
+            file_df_path = self.build_file_df_path(run_id)
+
+            if file_df_path.is_file():
+                print(f"Collecting file_df: {str(file_df_path)} \n")
+
+                file_df = pd.read_csv(file_df_path, index_col=0)
+                file_df["root_file_exists"] = file_df["root_file_path"].apply(
+                    lambda x: check_if_exists(x)
+                )
+                file_df_list.append(file_df)
+
+            # This file_df should already exist. 
+            else:
+                raise UserWarning(f"run_id {run_id} has no analysis_id {analysis_id}")
+
+        root_files_df = pd.concat(file_df_list)
+
+        return root_files_df
+
+
+    def build_file_df_path(self, run_id):
+
+        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+        rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
+
+        file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{analysis_id:03d}.csv")
+
+        return file_df_path
 
     # TODO:
 
