@@ -228,9 +228,11 @@ class PostProcessing:
 
     def process_tracks_and_events(self):
 
+        # We groupby file_id so that we can write a different number of tracks and events 
+        # worth of root files to disk for each run_id.
         for file_num, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
 
-            print(len(files))
+            print(len(root_files_df_chunk))
             # print(files.head(1), "/n")
 
             tracks_df = get_track_data_from_files(self, root_files_df_chunk)
