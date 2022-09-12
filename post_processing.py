@@ -33,7 +33,9 @@ def main():
     * I need to build the clean-up and event-building into this process. Otherwise these
     files are going to get too large. Already 1.1G after 171 out of 5700 files.
     * Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df?
-    *
+    * Put a timestamp in the log files for clean-up. 
+    * Put a timestamp in the dfs somehow so we know when the analysis was conducted. 
+    * Get Sphynx working before moving on to documenting! This will be so useful. 
 
 
     Notes:
@@ -190,7 +192,7 @@ class PostProcessing:
 
             # This file_df should already exist. 
             else:
-                raise UserWarning(f"run_id {run_id} has no analysis_id {analysis_id}")
+                raise UserWarning(f"run_id {run_id} has no analysis_id {self.analysis_id}")
 
         root_files_df = pd.concat(file_df_list)
 
@@ -202,7 +204,7 @@ class PostProcessing:
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
         rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
 
-        file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{analysis_id:03d}.csv")
+        file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv")
 
         return file_df_path
 
