@@ -167,8 +167,8 @@ class PostProcessing:
         self.analysis_dir = self.build_analysis_dir()
         self.root_files_df = self.get_experiment_files()
 
-        # TEST.
-        print(self.root_files_df.head(100).to_string())
+        # TODO: Delete once done.
+        print(self.root_files_df.head(1).to_string())
         print(self.root_files_df.index)
 
         # Now gather tracks, clean them up, write some of them to disk, and write events to disk.
@@ -336,7 +336,7 @@ class PostProcessing:
         )
 
         intc_info = (
-            tracks.groupby(["run_id", "file_in_acq", "EventID"])
+            tracks.groupby(["run_id", "file_num", "EventID"])
             .agg(
                 TimeIntc_mean=("TimeIntc", "mean"),
                 TimeIntc_std=("TimeIntc", "std"),
