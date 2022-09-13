@@ -180,10 +180,12 @@ class PostProcessing:
         analysis_dir = base_path / Path(f"{self.experiment_name}_{self.analysis_id}")
 
         if analysis_dir.exists():
-            raise UserWarning(f"{analysis_dir} already exists.")
-        else:
-            analysis_dir.mkdir()
-            print(f"Made {analysis_dir}")
+            input(
+                f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
+            )
+
+        analysis_dir.mkdir()
+        print(f"Made {analysis_dir}")
 
         return analysis_dir
 
@@ -209,7 +211,7 @@ class PostProcessing:
                     f"run_id {run_id} has no analysis_id {self.analysis_id}"
                 )
 
-        root_files_df = pd.concat(file_df_list)
+        root_files_df = pd.concat(file_df_list).reset_index(drop=True)
 
         return root_files_df
 
@@ -228,19 +230,27 @@ class PostProcessing:
 
     def process_tracks_and_events(self):
 
-        # We groupby file_id so that we can write a different number of tracks and events 
+        # We groupby file_id so that we can write a different number of tracks and events
         # worth of root files to disk for each run_id.
-        for file_num, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
+        for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
 
-            print(len(root_files_df_chunk))
             # print(files.head(1), "/n")
 
             tracks_df = self.get_track_data_from_files(root_files_df_chunk)
 
+            # Write out to csv for first nft (command line argument).
+            if file_id < self.num_files_tracks:
+
+                self.write_tracks_df(file_id, tracks_df)
+
+
+
+
+            print(f"file_id: {file_id}")
+            print(len(root_files_df_chunk))
             print(len(tracks_df))
             print(tracks_df.index)
             print(tracks_df.head())
-
 
     def get_track_data_from_files(self, root_files_df):
 
@@ -248,7 +258,7 @@ class PostProcessing:
         # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
         # TODO: Get it to all work for a
 
-        condition = (root_files_df["root_file_exists"] == True)
+        condition = root_files_df["root_file_exists"] == True
 
         experiment_tracks_list = [
             build_tracks_for_single_file(root_file_path, run_id, file_id)
@@ -258,7 +268,7 @@ class PostProcessing:
                 root_files_df[condition]["file_num"],
             )
         ]
-        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop = True)
+        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
 
     def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
         """
@@ -288,10 +298,23 @@ class PostProcessing:
     def add_env_data(self, tracks_df):
 
         # TODO: Fill in this function.
+        # maybe import whatever does this from another module? Ehh maybe better to just have it all here.
         tracks_df["field"] = 10
         tracks_df["monitor_rate"] = 10
 
         return tracks_df
+
+    def write_tracks_df(self, file_id, tracks_df_chunk):
+        print("Writing track data to disk for file_id = {file_id}.")
+        tracks_path = self.analysis_dir / Path("tracks.csv")
+
+        if file_id == 0:
+            tracks_df_chunk.to_csv(tracks_path)
+        else:
+            # append data frame to existing CSV file.
+            tracks_df_chunk.to_csv(tracks_path, mode="a")
+
+        return None
 
 
 # def clean_track_data(self):
