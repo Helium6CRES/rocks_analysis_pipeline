@@ -239,7 +239,7 @@ class PostProcessing:
 
         # We groupby file_id so that we can write a different number of tracks and events
         # worth of root files to disk for each run_id.
-        for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
+        for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_id"]):
 
             tracks = self.get_track_data_from_files(root_files_df_chunk)
 
@@ -274,23 +274,22 @@ class PostProcessing:
 
         print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
 
-        # Step 1. Add aggregated event info to tracks. 
+        # Step 1. Add aggregated event info to tracks.
         tracks = self.add_event_info(tracks)
-        print("1\n",tracks.index)
+        print("1\n", tracks.index)
 
         # Step 2. DBSCAN clustering of events.
-        tracks = self.cluster_tracks(tracks) 
-        print("3\n",tracks.index)
+        tracks = self.cluster_tracks(tracks)
+        print("3\n", tracks.index)
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
-        print("3\n",events.index)
+        print("3\n", events.index)
 
-        return None
+        return events
 
     def get_track_data_from_files(self, root_files_df):
 
-        # TODO: Change the file_num to file_id.
         # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
         # TODO: Get it to all work for a
 
@@ -357,7 +356,7 @@ class PostProcessing:
             )
             .reset_index()
         )
-      
+
         tracks = pd.merge(
             tracks, intc_info, how="left", on=["run_id", "file_id", "EventID"]
         )
@@ -393,7 +392,7 @@ class PostProcessing:
 
         return condition_tot
 
-    def dbscan_clustering(self, df, features: list, eps :float, min_samples: int): 
+    def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
 
         # Normalize features.
         X_norm = StandardScaler().fit_transform(df[features])
@@ -403,27 +402,34 @@ class PostProcessing:
 
         return labels
 
+    def cluster_tracks(
+        self, tracks, eps=0.003, min_samples=1, features=["EventTimeIntc"]
+    ):
 
-    def cluster_tracks(self, tracks, eps = .003, min_samples = 1, features = ["EventTimeIntc"]):
-        
-        
-        exp_tracks_copy = tracks.copy() 
+        exp_tracks_copy = tracks.copy()
         exp_tracks_copy["event_label"] = 100
-        
-        for i, (name, group) in enumerate(exp_tracks_copy.groupby(["run_id", "file_id"])): 
+
+        for i, (name, group) in enumerate(
+            exp_tracks_copy.groupby(["run_id", "file_id"])
+        ):
 
             print(f"\n clustering: run_id: {name[0]},  file_id: {name[1]}")
-            # print(group)
-            
-            condition = ((exp_tracks_copy.run_id == name[0]) & (exp_tracks_copy.file_id == name[1]))
-            print(condition.sum())
-            print(condition.mean())
-            exp_tracks_copy.loc[condition,"event_label"] = self.dbscan_clustering( 
-                exp_tracks_copy[condition], features = list(features), eps  = eps, min_samples = min_samples)
-        exp_tracks_copy["EventID"] = exp_tracks_copy["event_label"] + 1
-        
-        return exp_tracks_copy
 
+            condition = (exp_tracks_copy.run_id == name[0]) & (
+                exp_tracks_copy.file_id == name[1]
+            )
+            print(f"tracks in file: {condition.sum()}")
+            print(f"fraction of total requested (nfe files): {condition.mean()}")
+
+            exp_tracks_copy.loc[condition, "event_label"] = self.dbscan_clustering(
+                exp_tracks_copy[condition],
+                features=list(features),
+                eps=eps,
+                min_samples=min_samples,
+            )
+        exp_tracks_copy["EventID"] = exp_tracks_copy["event_label"] + 1
+
+        return exp_tracks_copy
 
     def add_event_info(self, tracks_in: pd.DataFrame) -> pd.DataFrame:
 
@@ -460,16 +466,20 @@ class PostProcessing:
         tracks["EventSlope"] = tracks["EventFreqLength"] / tracks["EventTimeLength"]
 
         tracks["EventTrackCoverage"] = (
-            tracks.groupby(["run_id", "file_id", "EventID"])["TimeLength"].transform("sum")
+            tracks.groupby(["run_id", "file_id", "EventID"])["TimeLength"].transform(
+                "sum"
+            )
             / tracks["EventTimeLength"]
         )
 
-        tracks["EventMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])["MeanTrackSNR"].transform("mean")
+        tracks["EventMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MeanTrackSNR"
+        ].transform("mean")
 
         tracks["EventTrackTot"] = tracks.groupby(
             ["run_id", "file_id", "EventID"]
         ).EventSequenceID.transform("count")
-        
+
         tracks["EventFreqIntc"] = (
             tracks["EventEndFreq"] - tracks["EventEndTime"] * tracks["EventSlope"]
         )
