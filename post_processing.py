@@ -232,24 +232,51 @@ class PostProcessing:
 
     def process_tracks_and_events(self):
 
+        if self.num_files_events < self.num_files_tracks:
+            raise ValueError("num_files_events must be >= than num_files_tracks.")
+
         # We groupby file_id so that we can write a different number of tracks and events
         # worth of root files to disk for each run_id.
         for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_num"]):
 
-            # print(files.head(1), "/n")
+            tracks = self.get_track_data_from_files(root_files_df_chunk)
 
-            tracks_df = self.get_track_data_from_files(root_files_df_chunk)
-
-            # Write out to csv for first nft (command line argument).
+            # Write out tracks to csv for first nft file_ids (command line argument).
             if file_id < self.num_files_tracks:
 
-                self.write_tracks_df(file_id, tracks_df)
+                self.write_to_csv(file_id, tracks, file_name="tracks")
 
             print(f"file_id: {file_id}")
             print(len(root_files_df_chunk))
-            print(len(tracks_df))
-            print(tracks_df.index)
-            print(tracks_df.head())
+            print(len(tracks))
+            print(tracks.index)
+            print(tracks.head())
+
+            # Write out events to csv for first nfe file_ids (command line argument).
+            if file_id < self.num_files_events:
+
+                events = self.get_event_data_from_tracks(tracks)
+                self.write_to_csv(file_id, events, file_name="events")
+
+            else:
+                break
+
+            # START HERE. Figure out cleaning and event reconstruction.
+            # Keep it neat and clean.
+            # SHOULD I MAKE THIS ABLE TO RUN ON MULTIPLE NODES??
+
+    def get_event_data_from_tracks(self, tracks):
+
+        # Step 0. Clean up the tracks.
+        cleaned_tracks = self.clean_up_tracks(tracks)
+
+        print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
+
+        # Step 1. DBSCAN clustering of events.
+
+        # Step 2. Build event df.
+
+        return None
 
     def get_track_data_from_files(self, root_files_df):
 
@@ -267,7 +294,12 @@ class PostProcessing:
                 root_files_df[condition]["file_num"],
             )
         ]
-        return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
+
+        tracks_df = pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
+
+        tracks_df = self.add_track_info(tracks_df)
+
+        return tracks_df
 
     def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
         """
@@ -284,7 +316,7 @@ class PostProcessing:
 
             for key, value in tracks_root.items():
                 # Slice the key so it drops the redundant "fTracks."
-                tracks_df[key[9:]] = flat(value.array())
+                tracks_df[key[9:]] = self.flat(value.array())
 
         tracks_df["run_id"] = run_id
         tracks_df["file_id"] = file_id
@@ -293,6 +325,63 @@ class PostProcessing:
         tracks_df = self.add_env_data(tracks_df)
 
         return tracks_df
+
+    def add_track_info(self, tracks):
+
+        tracks["FreqIntc"] = (
+            tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
+        )
+        tracks["TimeIntc"] = (
+            tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
+        )
+
+        intc_info = (
+            tracks.groupby(["run_id", "file_in_acq", "EventID"])
+            .agg(
+                TimeIntc_mean=("TimeIntc", "mean"),
+                TimeIntc_std=("TimeIntc", "std"),
+                TimeLength_mean=("TimeLength", "mean"),
+                TimeLength_std=("TimeLength", "std"),
+                Slope_mean=("Slope", "mean"),
+                Slope_std=("Slope", "std"),
+            )
+            .reset_index()
+        )
+        # TODO: Change file_num to file_id here.
+        tracks = pd.merge(
+            tracks, intc_info, how="left", on=["run_id", "file_num", "EventID"]
+        )
+
+        return tracks
+
+    def clean_up_tracks(
+        self, tracks, cols=["TimeIntc", "TimeLength", "Slope"], cut_levels=[2, 2, 2]
+    ):
+
+        cut_condition = self.create_track_cleaning_cut(tracks, cols, cut_levels)
+
+        tracks = tracks[cut_condition]
+
+        return tracks
+
+    def create_track_cleaning_cut(self, tracks, cols, cut_levels):
+
+        # cols_mean = [col + "mean" for col in cols]
+        # cols_std = [col + "std" for col in cols]
+        conditions = [
+            (
+                (np.abs((tracks[col] - tracks[col + "_mean"]) / tracks[col + "_std"]))
+                < cut_level
+            )
+            for col, cut_level in zip(cols, cut_levels)
+        ]
+
+        # Hacky way to and the list of boolean conditions. Couldn't figure out how to vectorize it.
+        condition_tot = np.ones_like(conditions[0])
+        for condition in conditions:
+            condition_tot = condition_tot & condition
+
+        return condition_tot
 
     def add_env_data(self, tracks_df):
 
@@ -303,17 +392,34 @@ class PostProcessing:
 
         return tracks_df
 
-    def write_tracks_df(self, file_id, tracks_df_chunk):
-        print("Writing track data to disk for file_id = {file_id}.")
-        tracks_path = self.analysis_dir / Path("tracks.csv")
+    def write_to_csv(self, file_id, df_chunk, file_name):
+        print(f"Writing track data to disk for file_id = {file_id}.")
+        write_path = self.analysis_dir / Path(f"{file_name}.csv")
 
         if file_id == 0:
-            tracks_df_chunk.to_csv(tracks_path)
+            df_chunk.to_csv(write_path)
         else:
             # append data frame to existing CSV file.
-            tracks_df_chunk.to_csv(tracks_path, mode="a")
+            df_chunk.to_csv(write_path, mode="a")
 
         return None
+
+    def flat(self, jaggedarray: awkward.Array) -> np.ndarray:
+        """
+        Given jagged array (common in root), it returns a flattened array.
+
+        Args:
+            jaggedarray (awkward array): No specifications.
+
+        Returns:
+            array (np.ndarray): No specifications.
+
+        """
+        flatarray = np.array([])
+        for a in jaggedarray.tolist():
+            flatarray = np.append(flatarray, a)
+
+        return flatarray
 
 
 # def clean_track_data(self):
