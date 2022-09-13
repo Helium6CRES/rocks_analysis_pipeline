@@ -19,6 +19,8 @@ import yaml
 import uproot4
 import awkward
 import numpy as np
+from sklearn.cluster import DBSCAN
+from sklearn.preprocessing import StandardScaler
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
@@ -272,9 +274,17 @@ class PostProcessing:
 
         print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
 
-        # Step 1. DBSCAN clustering of events.
+        # Step 1. Add aggregated event info to tracks. 
+        tracks = self.add_event_info(tracks)
+        print("1\n",tracks.index)
 
-        # Step 2. Build event df.
+        # Step 2. DBSCAN clustering of events.
+        tracks = self.cluster_tracks(tracks) 
+        print("3\n",tracks.index)
+
+        # Step 3. Build event df.
+        events = self.build_events(tracks)
+        print("3\n",events.index)
 
         return None
 
@@ -383,6 +393,118 @@ class PostProcessing:
 
         return condition_tot
 
+    def dbscan_clustering(self, df, features: list, eps :float, min_samples: int): 
+
+        # Normalize features.
+        X_norm = StandardScaler().fit_transform(df[features])
+        # Compute DBSCAN
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_norm)
+        labels = db.labels_
+
+        return labels
+
+
+    def cluster_tracks(self, tracks, eps = .003, min_samples = 1, features = ["EventTimeIntc"]):
+        
+        
+        exp_tracks_copy = tracks.copy() 
+        exp_tracks_copy["event_label"] = 100
+        
+        for i, (name, group) in enumerate(exp_tracks_copy.groupby(["run_id", "file_id"])): 
+            
+            condition = ((exp_tracks_copy.run_id == name[0]) & (exp_tracks_copy.file_id == name[1]))
+            exp_tracks_copy.loc[condition,"event_label"] = dbscan_clustering( 
+                exp_tracks_copy[condition], features = list(features), eps  = eps, min_samples = min_samples)
+        exp_tracks_copy["EventID"] = exp_tracks_copy["event_label"] + 1
+        
+        return exp_tracks_copy
+
+
+    def add_event_info(self, tracks_in: pd.DataFrame) -> pd.DataFrame:
+
+        tracks = tracks_in.copy()
+
+        tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
+
+        tracks["FreqIntc"] = (
+            tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
+        )
+        tracks["TimeIntc"] = (
+            tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
+        )
+
+        tracks["EventStartTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "StartTimeInRunC"
+        ].transform("min")
+        tracks["EventEndTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "EndTimeInRunC"
+        ].transform("max")
+
+        tracks["EventStartFreq"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "StartFrequency"
+        ].transform("min")
+        tracks["EventEndFreq"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "EndFrequency"
+        ].transform("max")
+
+        tracks["EventTimeLength"] = tracks["EventEndTime"] - tracks["EventStartTime"]
+        tracks["EventFreqLength"] = tracks["EventEndFreq"] - tracks["EventStartFreq"]
+        tracks["EventNBins"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "NTrackBins"
+        ].transform("sum")
+        tracks["EventSlope"] = tracks["EventFreqLength"] / tracks["EventTimeLength"]
+
+        tracks["EventTrackCoverage"] = (
+            tracks.groupby(["run_id", "file_id", "EventID"])["TimeLength"].transform("sum")
+            / tracks["EventTimeLength"]
+        )
+
+        tracks["EventMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])["MeanTrackSNR"].transform("mean")
+
+        tracks["EventTrackTot"] = tracks.groupby(
+            ["run_id", "file_id", "EventID"]
+        ).EventSequenceID.transform("count")
+        
+        tracks["EventFreqIntc"] = (
+            tracks["EventEndFreq"] - tracks["EventEndTime"] * tracks["EventSlope"]
+        )
+        tracks["EventTimeIntc"] = (
+            tracks["EventStartTime"] - tracks["EventStartFreq"] / tracks["EventSlope"]
+        )
+
+        return tracks
+
+    def build_events(self, tracks: pd.DataFrame) -> pd.DataFrame:
+
+        # tracks = add_event_info(tracks_in)
+        event_cols = [
+            "run_id",
+            "file_id",
+            "EventID",
+            "EventStartTime",
+            "EventEndTime",
+            "EventStartFreq",
+            "EventEndFreq",
+            "EventTimeLength",
+            "EventFreqLength",
+            "EventTrackCoverage",
+            "EventMeanSNR",
+            "EventSlope",
+            "EventNBins",
+            "EventTrackTot",
+            "EventFreqIntc",
+            "EventTimeIntc",
+            "field",
+            "monitor_rate",
+        ]
+        events = (
+            tracks.groupby(["run_id", "file_id", "EventID"])
+            .first()
+            .reset_index()[event_cols]
+        )
+
+        return events
+
     def add_env_data(self, tracks_df):
 
         # TODO: Fill in this function.
@@ -393,7 +515,7 @@ class PostProcessing:
         return tracks_df
 
     def write_to_csv(self, file_id, df_chunk, file_name):
-        print(f"Writing track data to disk for file_id = {file_id}.")
+        print(f"Writing {file_name} data to disk for file_id = {file_id}.")
         write_path = self.analysis_dir / Path(f"{file_name}.csv")
 
         if file_id == 0:
