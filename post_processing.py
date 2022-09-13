@@ -411,6 +411,8 @@ class PostProcessing:
         exp_tracks_copy["event_label"] = 100
         
         for i, (name, group) in enumerate(exp_tracks_copy.groupby(["run_id", "file_id"])): 
+
+            print(f"\n clustering: run_id: {name[0]},  file_id: {name[1]}")
             
             condition = ((exp_tracks_copy.run_id == name[0]) & (exp_tracks_copy.file_id == name[1]))
             exp_tracks_copy.loc[condition,"event_label"] = self.dbscan_clustering( 
@@ -515,7 +517,7 @@ class PostProcessing:
         return tracks_df
 
     def write_to_csv(self, file_id, df_chunk, file_name):
-        print(f"Writing {file_name} data to disk for file_id = {file_id}.")
+        print(f"Writing {file_name} data to disk for file_id {file_id}.")
         write_path = self.analysis_dir / Path(f"{file_name}.csv")
 
         if file_id == 0:
