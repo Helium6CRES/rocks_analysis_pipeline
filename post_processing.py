@@ -120,37 +120,37 @@ def main():
     # *
     print("STOP NOW.")
 
-    analysis_id = args.analysis_id
-    run_ids = args.run_ids
-    experiment_name = args.experiment_name
+    # analysis_id = args.analysis_id
+    # run_ids = args.run_ids
+    # experiment_name = args.experiment_name
 
-    analysis_dir = build_analysis_dir(experiment_name, analysis_id)
+    # analysis_dir = build_analysis_dir(experiment_name, analysis_id)
 
-    file_df_experiment = get_experiment_files(run_ids, analysis_id)
+    # file_df_experiment = get_experiment_files(run_ids, analysis_id)
 
-    # TODO: Deal with file_num vs file_id
-    # TODO: Build files.csv, tracks.csv.
+    # # TODO: Deal with file_num vs file_id
+    # # TODO: Build files.csv, tracks.csv.
 
-    condition = file_df_experiment["root_file_exists"] == True
-    print("Fraction of root files;", condition.mean())
+    # condition = file_df_experiment["root_file_exists"] == True
+    # print("Fraction of root files;", condition.mean())
 
-    # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
+    # # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
 
-    print(len(file_df_experiment))
-    print(file_df_experiment.columns)
-    write_files_df(file_df_experiment, analysis_dir)
+    # print(len(file_df_experiment))
+    # print(file_df_experiment.columns)
+    # write_files_df(file_df_experiment, analysis_dir)
 
-    # Go through 50 files at a time.
-    n = 50  # chunk row size
-    list_file_df = [
-        file_df_experiment[i : i + n] for i in range(0, file_df_experiment.shape[0], n)
-    ]
+    # # Go through 50 files at a time.
+    # n = 50  # chunk row size
+    # list_file_df = [
+    #     file_df_experiment[i : i + n] for i in range(0, file_df_experiment.shape[0], n)
+    # ]
 
-    for chunk_idx, file_df_chunk in enumerate(list_file_df):
-        print(len(file_df_chunk))
-        tracks_df_chunk = get_experiment_tracks(file_df_chunk)
+    # for chunk_idx, file_df_chunk in enumerate(list_file_df):
+    #     print(len(file_df_chunk))
+    #     tracks_df_chunk = get_experiment_tracks(file_df_chunk)
 
-        write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
+    #     write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
 
     return None
 
