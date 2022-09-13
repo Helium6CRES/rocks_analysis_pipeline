@@ -300,7 +300,7 @@ class PostProcessing:
             for root_file_path, run_id, file_id in zip(
                 root_files_df[condition]["root_file_path"],
                 root_files_df[condition]["run_id"],
-                root_files_df[condition]["file_num"],
+                root_files_df[condition]["file_id"],
             )
         ]
 
