@@ -7,6 +7,7 @@ import pandas as pd
 import datetime
 from glob import glob
 import subprocess as sp
+import shutil
 from shutil import copyfile
 import psycopg2
 from psycopg2 import Error
@@ -183,6 +184,7 @@ class PostProcessing:
             input(
                 f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
             )
+            shutil.rmtree(str(analysis_dir))
 
         analysis_dir.mkdir()
         print(f"Made {analysis_dir}")
@@ -242,9 +244,6 @@ class PostProcessing:
             if file_id < self.num_files_tracks:
 
                 self.write_tracks_df(file_id, tracks_df)
-
-
-
 
             print(f"file_id: {file_id}")
             print(len(root_files_df_chunk))
