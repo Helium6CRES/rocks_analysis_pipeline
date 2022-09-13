@@ -413,8 +413,11 @@ class PostProcessing:
         for i, (name, group) in enumerate(exp_tracks_copy.groupby(["run_id", "file_id"])): 
 
             print(f"\n clustering: run_id: {name[0]},  file_id: {name[1]}")
+            # print(group)
             
             condition = ((exp_tracks_copy.run_id == name[0]) & (exp_tracks_copy.file_id == name[1]))
+            print(condition.sum())
+            print(condition.mean())
             exp_tracks_copy.loc[condition,"event_label"] = self.dbscan_clustering( 
                 exp_tracks_copy[condition], features = list(features), eps  = eps, min_samples = min_samples)
         exp_tracks_copy["EventID"] = exp_tracks_copy["event_label"] + 1
