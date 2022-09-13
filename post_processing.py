@@ -280,7 +280,7 @@ class PostProcessing:
 
     def get_track_data_from_files(self, root_files_df):
 
-        # TODO: Change the run_num to file_id.
+        # TODO: Change the file_num to file_id.
         # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
         # TODO: Get it to all work for a
 
@@ -336,7 +336,7 @@ class PostProcessing:
         )
 
         intc_info = (
-            tracks.groupby(["run_id", "file_num", "EventID"])
+            tracks.groupby(["run_id", "file_id", "EventID"])
             .agg(
                 TimeIntc_mean=("TimeIntc", "mean"),
                 TimeIntc_std=("TimeIntc", "std"),
@@ -347,9 +347,9 @@ class PostProcessing:
             )
             .reset_index()
         )
-        # TODO: Change file_num to file_id here.
+      
         tracks = pd.merge(
-            tracks, intc_info, how="left", on=["run_id", "file_num", "EventID"]
+            tracks, intc_info, how="left", on=["run_id", "file_id", "EventID"]
         )
 
         return tracks
@@ -521,7 +521,7 @@ def get_experiment_files(run_ids, analysis_id):
 
 
 def get_experiment_tracks(file_df_experiment):
-    # TODO: Change the run_num to file_id.
+    # TODO: Change the run_num to file_id (needs to match in the file_df creation!)
 
     condition = file_df_experiment["root_file_exists"] == True
 
