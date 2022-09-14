@@ -5,14 +5,14 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 ## Notes as I build this out: 
 
 * Currently the following things work: 
-	* Getting started. 
+	* Get set up: 
 		* Log on to rocks. 
 		* `cd /data/eliza4/he6_cres`
 		* `pip3 install -r requirements.txt`
 		* Notes: 
 			* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
-			* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3. 
-
+			* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
+			* The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing.  
 
 	* Run katydid on a list of run_ids: 
 		* Log on to rocks. 
