@@ -54,9 +54,12 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 
 * qsub_katydid.py
 	* Working well as far as I can tell. 
+	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data. 
 * post_processing.py
 	* There is an issue writing the tracks_df to disk right now. I think it has to do with how I'm dealing with files with no identified tracks. Need to debug this. 
 	* Once this works ok I will need to get it split up into different chunks and then have a recombining script. This would be a lot for one machine to do for 5000 files. 
 	* Figure out how to grab the root files and put them in the local directory then put them into a sparse spec. 
+* class ExperimentResults
+	* One function that takes flags for events, tracks, sparse spec and outputs one plot.
 
 
