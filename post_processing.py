@@ -336,7 +336,7 @@ class PostProcessing:
 
         tracks_df = self.add_env_data(tracks_df)
 
-        return tracks_df
+        return tracks_df.reset_index(drop=True)
 
     def add_track_info(self, tracks):
 
