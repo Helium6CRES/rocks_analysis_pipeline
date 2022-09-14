@@ -19,6 +19,8 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 		* `cd /data/eliza4/he6_cres`
 		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 -b "2-12_dbscan_high_energy.yaml" -fn 10`
 			* The above will run at most fn files for each run_id listed using the base config file provided. 
+			* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
+			* A job log for each run_id will be created. Example: rid_0440_009.txt
 
 	* Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. 
 		* Log on to rocks. 
