@@ -217,7 +217,7 @@ class PostProcessing:
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
 
-        write_to_csv(0, root_files_df, file_name = "root_files")
+        self.write_to_csv(0, root_files_df, file_name = "root_files")
 
         return root_files_df
 
