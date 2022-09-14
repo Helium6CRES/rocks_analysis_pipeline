@@ -180,7 +180,7 @@ class PostProcessing:
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
-        analysis_dir = base_path / Path(f"{self.experiment_name}_{self.analysis_id}")
+        analysis_dir = base_path / Path(f"{self.experiment_name}_aid_{self.analysis_id}")
 
         if analysis_dir.exists():
             input(
@@ -216,6 +216,8 @@ class PostProcessing:
                 )
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
+
+        write_to_csv(0, root_files_df, file_name = "root_files")
 
         return root_files_df
 
@@ -279,6 +281,7 @@ class PostProcessing:
         print("1\n", tracks.index)
 
         # Step 2. DBSCAN clustering of events.
+        # TODO: Make sure it actually 
         tracks = self.cluster_tracks(tracks)
         print("3\n", tracks.index)
 
