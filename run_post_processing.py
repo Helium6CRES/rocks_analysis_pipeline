@@ -277,7 +277,7 @@ class PostProcessing:
 
             self.write_to_csv(self.file_id, tracks, file_name="tracks")
 
-        print(f"file_id: {file_id}")
+        print(f"file_id: {self.file_id}")
         print(len(root_files_df_chunk))
         print(len(tracks))
         print(tracks.index)
