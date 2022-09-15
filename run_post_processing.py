@@ -154,15 +154,30 @@ class PostProcessing:
         self.experiment_name = experiment_name
         self.num_files_tracks = num_files_tracks
         self.num_files_events = num_files_events
-        self.file_id = num_files_events
+        self.file_id = file_id
         self.stage = stage
 
-        print(self.__dict__)
+        print(f"PostProcessing attributes: {self.__dict__}")
 
-        self.analysis_dir = self.build_analysis_dir()
-        self.root_files_df = self.get_experiment_files()
+        if self.stage == 0: 
 
-        print(self.__dict__)
+            print("PostProcessing stage 0: set-up.")
+            self.analysis_dir = self.build_analysis_dir()
+            self.root_files_df = self.get_experiment_files()
+
+            print("PostProcessing stage 0: set-up. DONE")
+
+        elif self.stage == 1: 
+            print("PostProcessing stage 1: processing.")
+            # Process all the files.
+            # Start by opening and reading in the file_df. 
+            # Ehh actually then all nodes will be opening the same file at once. Well it's an issue either way... 
+            print("PostProcessing stage 1: processing. DONE")
+            
+        elif self.stage == 2: 
+            print("PostProcessing stage 2: clean-up.")
+            # clean up
+            print("PostProcessing stage 2: clean-up. DONE")
 
         # TODO: Delete once done.
         print(self.root_files_df.head(1).to_string())
