@@ -187,6 +187,8 @@ class PostProcessing:
         elif self.stage == 2:
             print("PostProcessing stage 2: clean-up.")
             # clean up
+
+            self.merge_csvs()
             print("PostProcessing stage 2: clean-up. DONE")
 
         # TODO: Delete once done.
@@ -282,7 +284,7 @@ class PostProcessing:
         print(len(tracks))
         print(tracks.index)
         print(tracks.head())
-        
+
         # Force a write to the log.
         sys.stdout.flush()
 
@@ -568,6 +570,36 @@ class PostProcessing:
         df_chunk.to_csv(write_path)
 
         return None
+
+
+    def merge_csvs(self):
+
+        tracks_path_list = [self.analysis_dir / Path("tracks_{}.csv") for i in range(self.num_files_tracks)] 
+        events_path_list = [self.analysis_dir / Path("events_{}.csv") for i in range(self.num_files_events)] 
+
+        tracks_path_exists = [path.exists() for path in tracks_path_list]
+        events_path_exists = [path.exists() for path in events_path_list]
+
+        if not all(tracks_path_exists):
+            raise UserWarning(f"Not all {self.num_files_tracks} tracks csvs are present for merging csvs.")
+
+        if not all(events_path_exists):
+            raise UserWarning(f"Not all {self.num_files_events} events csvs are present for merging csvs.")
+
+        tracks_dfs = [pd.read_csv(tracks_path) for tracks_path in tracks_path_list ]
+        tracks_df = pd.concat(tracks_dfs)
+        print(tracks_df.head())
+
+        events_dfs = [pd.read_csv(events_path) for events_path in events_path_list]
+        events_df = pd.concat(events_dfs)
+        print(events_df.head())
+
+        tracks_df.to_csv(self.analysis_dir / Path("tracks.csv"))
+        events_df.to_csv(self.analysis_dir / Path("events.csv"))
+
+        return None
+
+
 
     def flat(self, jaggedarray: awkward.Array) -> np.ndarray:
         """
