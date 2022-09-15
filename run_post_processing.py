@@ -576,17 +576,18 @@ class PostProcessing:
     def merge_csvs(self):
 
         tracks_path_list = [
-            self.analysis_dir / Path("tracks_{}.csv")
+            self.analysis_dir / Path(f"tracks_{i}.csv")
             for i in range(self.num_files_tracks)
         ]
         events_path_list = [
-            self.analysis_dir / Path("events_{}.csv")
+            self.analysis_dir / Path(f"events_{i}.csv")
             for i in range(self.num_files_events)
         ]
 
         tracks_path_exists = [path.is_file() for path in tracks_path_list]
         events_path_exists = [path.is_file() for path in events_path_list]
 
+        print(tracks_path_list)
         print(tracks_path_exists)
         print(not all(tracks_path_exists))
 
