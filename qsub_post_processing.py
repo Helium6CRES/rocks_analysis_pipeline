@@ -178,7 +178,7 @@ def qsub_job(experiment_name, analysis_id, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/"{experiment_name}_aid_{analysis_id}".txt",
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/{experiment_name}_aid_{analysis_id}.txt",
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
@@ -797,8 +797,12 @@ def build_file_df_path(run_id, analysis_id):
 
 def set_permissions():
 
-    set_group = sp.run(["chgrp", "-R", "he6_cres", "/data/eliza4/he6_cres/katydid_analysis/"])
-    set_permission = sp.run(["chmod", "-R", "774", "/data/eliza4/he6_cres/katydid_analysis/"])
+    set_group = sp.run(
+        ["chgrp", "-R", "he6_cres", "/data/eliza4/he6_cres/katydid_analysis/"]
+    )
+    set_permission = sp.run(
+        ["chmod", "-R", "774", "/data/eliza4/he6_cres/katydid_analysis/"]
+    )
 
     return None
 
