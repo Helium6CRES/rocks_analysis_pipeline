@@ -172,7 +172,6 @@ class PostProcessing:
 
         elif self.stage == 1:
 
-            
             print("PostProcessing stage 1: processing.")
             # Process all the files with given file_id.
 
@@ -268,7 +267,9 @@ class PostProcessing:
 
         # We groupby file_id so that we can write a different number of tracks and events
         # worth of root files to disk for each run_id.
-        root_files_df_chunk = self.root_files_df[self.root_files_df.file_id == self.file_id]
+        root_files_df_chunk = self.root_files_df[
+            self.root_files_df.file_id == self.file_id
+        ]
         # for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_id"]):
 
         tracks = self.get_track_data_from_files(root_files_df_chunk)
@@ -290,14 +291,11 @@ class PostProcessing:
             events = self.get_event_data_from_tracks(tracks)
             self.write_to_csv(self.file_id, events, file_name="events")
 
-        else:
-            break
+        return None
 
-        return None 
-
-            # START HERE. Figure out cleaning and event reconstruction.
-            # Keep it neat and clean.
-            # SHOULD I MAKE THIS ABLE TO RUN ON MULTIPLE NODES??
+        # START HERE. Figure out cleaning and event reconstruction.
+        # Keep it neat and clean.
+        # SHOULD I MAKE THIS ABLE TO RUN ON MULTIPLE NODES??
 
     def get_event_data_from_tracks(self, tracks):
 
