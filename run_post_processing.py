@@ -185,15 +185,15 @@ class PostProcessing:
             print("PostProcessing stage 1: processing. DONE")
 
         elif self.stage == 2:
+
             print("PostProcessing stage 2: clean-up.")
-            # clean up
+            # Start by opening and reading in the file_df.
+            # self.root_files_df = self.load_root_files_df()
 
             self.merge_csvs()
             print("PostProcessing stage 2: clean-up. DONE")
 
-        # TODO: Delete once done.
-        print(self.root_files_df.head(1).to_string())
-        print(self.root_files_df.index)
+        return None
 
     def get_analysis_dir(self):
 
@@ -603,11 +603,17 @@ class PostProcessing:
 
         tracks_dfs = [pd.read_csv(tracks_path) for tracks_path in tracks_path_list]
         tracks_df = pd.concat(tracks_dfs)
-        print(tracks_df.head())
+        lens = [len(df) for df in tracks_dfs]
+        print(lens)
+        print(sum(lens))
+        print(len(tracks_df))
 
         events_dfs = [pd.read_csv(events_path) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
-        print(events_df.head())
+        lens = [len(df) for df in events_dfs]
+        print(lens)
+        print(sum(lens))
+        print(len(events_df))
 
         tracks_df.to_csv(self.analysis_dir / Path("tracks.csv"))
         events_df.to_csv(self.analysis_dir / Path("events.csv"))
