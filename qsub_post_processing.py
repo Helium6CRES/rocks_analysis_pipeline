@@ -119,7 +119,7 @@ def main():
     if args.stage == 0:
         cmd = base_post_processing_cmd.format(
             rids_formatted,
-            args.aid,
+            args.analysis_id,
             args.name,
             args.num_files_tracks,
             args.num_files_events,
@@ -136,7 +136,7 @@ def main():
 
             cmd = base_post_processing_cmd.format(
                 rids_formatted,
-                args.aid,
+                args.analysis_id,
                 args.name,
                 args.num_files_tracks,
                 args.num_files_events,
@@ -149,7 +149,7 @@ def main():
     if args.stage == 2:
         cmd = base_post_processing_cmd.format(
             rids_formatted,
-            args.aid,
+            args.analysis_id,
             args.name,
             args.num_files_tracks,
             args.num_files_events,
@@ -811,8 +811,8 @@ def build_file_df_path(run_id, analysis_id):
 
 def set_permissions():
 
-    set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
-    set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
+    set_group = sp.run(["chgrp", "-R", "he6_cres", "/data/eliza4/he6_cres/katydid_analysis/"])
+    set_permission = sp.run(["chmod", "-R", "774", "/data/eliza4/he6_cres/katydid_analysis/"])
 
     return None
 
