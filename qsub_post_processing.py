@@ -114,7 +114,7 @@ def main():
 
     # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
 
-    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fn {} -stage {}'
+    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {}'
     rids_formatted = " ".join((str(rid) for rid in args.run_ids))
     if args.stage == 0:
         cmd = base_post_processing_cmd.format(
@@ -160,7 +160,7 @@ def main():
         qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
 
 
-def qsub_job(name, cmd, tlim):
+def qsub_job(experiment_name, analysis_id, cmd, tlim):
     """
     ./qsub.py --job 'arbitrary command' [options]
 
@@ -178,7 +178,7 @@ def qsub_job(name, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/rid_{run_id:04d}_{analysis_id:03d}.txt",
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/"{experiment_name}_aid_{analysis_id}".txt",
         # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
@@ -187,23 +187,9 @@ def qsub_job(name, cmd, tlim):
     print("\n\n", batch_cmd, "\n\n")
     sp.run(batch_cmd, shell=True)
 
-    post_processing = PostProcessing(
-        args.run_ids,
-        args.analysis_id,
-        args.experiment_name,
-        args.num_files_tracks,
-        args.num_files_events,
-    )
+    print("DONE.")
 
-    # NEXT (9/12/22):
-    # * Work on getting the nft, nfe working.
-    # * Build the cleaning method out. And the writing of the events to disk.
-    #   * Make the defualt of that -1 meaning all of them and the default for nft to be 1 or something?
-    # * keep it moving.
-    # * Work on visualziation stuff on the local machine.
-    # * Get the utility functions like the database call into another module for cleanliness.
-    # *
-    print("STOP NOW.")
+    return None
 
     # analysis_id = args.analysis_id
     # run_ids = args.run_ids

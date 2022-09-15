@@ -88,12 +88,28 @@ def main():
         help="number of files for which to save cleaned-up event data per run_id.",
     )
 
+    arg(
+        "-fid",
+        "--file_id",
+        type=int,
+        help="file_id to be processed. Each file_id (across all run_ids) are sent out to a different node.",
+    )
+    arg(
+        "-stage",
+        "--stage",
+        type=int,
+        help="""0: set-up. The root file df will be made and the results directory will be build.
+                1: processing. The tracks and events will be extracted from root files and written 
+                    to disk in the results directory. 
+                2: clean-up. The many different csvs worth of tracks and events will be combined into 
+                    single files. 
+            """,
+    )
+
     args = par.parse_args()
 
     # Print summary of experiment:
-    print(
-        f"Experiment Summary\n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n"
-    )
+    print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -102,15 +118,7 @@ def main():
     # Done at the beginning and end of main.
     set_permissions()
 
-
-    # Step 0: Build the directory structure out for the experiment results and write the root_file_df to it. 
-
-    
-
-
-
-
-
+    # Step 0: Build the directory structure out for the experiment results and write the root_file_df to it.
 
     post_processing = PostProcessing(
         args.run_ids,
@@ -118,56 +126,27 @@ def main():
         args.experiment_name,
         args.num_files_tracks,
         args.num_files_events,
+        args.file_id,
+        args.stage,
     )
 
-    # NEXT (9/12/22):
-    # * Work on getting the nft, nfe working.
-    # * Build the cleaning method out. And the writing of the events to disk.
-    #   * Make the defualt of that -1 meaning all of them and the default for nft to be 1 or something?
-    # * keep it moving.
-    # * Work on visualziation stuff on the local machine.
-    # * Get the utility functions like the database call into another module for cleanliness.
-    # *
-    print("STOP NOW.")
-
-    # analysis_id = args.analysis_id
-    # run_ids = args.run_ids
-    # experiment_name = args.experiment_name
-
-    # analysis_dir = build_analysis_dir(experiment_name, analysis_id)
-
-    # file_df_experiment = get_experiment_files(run_ids, analysis_id)
-
-    # # TODO: Deal with file_num vs file_id
-    # # TODO: Build files.csv, tracks.csv.
-
-    # condition = file_df_experiment["root_file_exists"] == True
-    # print("Fraction of root files;", condition.mean())
-
-    # # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
-
-    # print(len(file_df_experiment))
-    # print(file_df_experiment.columns)
-    # write_files_df(file_df_experiment, analysis_dir)
-
-    # # Go through 50 files at a time.
-    # n = 50  # chunk row size
-    # list_file_df = [
-    #     file_df_experiment[i : i + n] for i in range(0, file_df_experiment.shape[0], n)
-    # ]
-
-    # for chunk_idx, file_df_chunk in enumerate(list_file_df):
-    #     print(len(file_df_chunk))
-    #     tracks_df_chunk = get_experiment_tracks(file_df_chunk)
-
-    #     write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
+    # Current time to nearest second.
+    now = datetime.datetime.now().replace(microsecond=0)
+    print(f"DONE.\n at UTC time: {now}")
 
     return None
 
 
 class PostProcessing:
     def __init__(
-        self, run_ids, analysis_id, experiment_name, num_files_tracks, num_files_events
+        self,
+        run_ids,
+        analysis_id,
+        experiment_name,
+        num_files_tracks,
+        num_files_events,
+        file_id,
+        stage,
     ):
 
         self.run_ids = run_ids
@@ -175,9 +154,15 @@ class PostProcessing:
         self.experiment_name = experiment_name
         self.num_files_tracks = num_files_tracks
         self.num_files_events = num_files_events
+        self.file_id = num_files_events
+        self.stage = stage
+
+        print(self.__dict__)
 
         self.analysis_dir = self.build_analysis_dir()
         self.root_files_df = self.get_experiment_files()
+
+        print(self.__dict__)
 
         # TODO: Delete once done.
         print(self.root_files_df.head(1).to_string())
@@ -190,12 +175,15 @@ class PostProcessing:
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
-        analysis_dir = base_path / Path(f"{self.experiment_name}_aid_{self.analysis_id}")
+        analysis_dir = base_path / Path(
+            f"{self.experiment_name}_aid_{self.analysis_id}"
+        )
 
         if analysis_dir.exists():
-            input(
-                f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
-            )
+            # Getting rid of because it'll be in a node (no input possible).
+            # input(
+            #     f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
+            # )
             shutil.rmtree(str(analysis_dir))
 
         analysis_dir.mkdir()
@@ -227,7 +215,7 @@ class PostProcessing:
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
 
-        self.write_to_csv(0, root_files_df, file_name = "root_files")
+        self.write_to_csv(0, root_files_df, file_name="root_files")
 
         return root_files_df
 
@@ -291,7 +279,7 @@ class PostProcessing:
         print("1\n", tracks.index)
 
         # Step 2. DBSCAN clustering of events.
-        # TODO: Make sure it actually 
+        # TODO: Make sure it actually
         tracks = self.cluster_tracks(tracks)
         print("3\n", tracks.index)
 
