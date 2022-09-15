@@ -120,14 +120,14 @@ def main():
         cmd = base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
-            args.name,
+            args.experiment_name,
             args.num_files_tracks,
             args.num_files_events,
             0,
             args.stage,
         )
         print(cmd)
-        qsub_job(args.name, args.analysis_id, cmd, tlim)
+        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
 
     if args.stage == 1:
 
@@ -137,27 +137,27 @@ def main():
             cmd = base_post_processing_cmd.format(
                 rids_formatted,
                 args.analysis_id,
-                args.name,
+                args.experiment_name,
                 args.num_files_tracks,
                 args.num_files_events,
                 file_id,
                 args.stage,
             )
         print(cmd)
-        qsub_job(args.name, args.analysis_id, cmd, tlim)
+        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
 
     if args.stage == 2:
         cmd = base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
-            args.name,
+            args.experiment_name,
             args.num_files_tracks,
             args.num_files_events,
             0,
             args.stage,
         )
         print(cmd)
-        qsub_job(args.name, args.analysis_id, cmd, tlim)
+        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
 
 
 def qsub_job(name, cmd, tlim):
