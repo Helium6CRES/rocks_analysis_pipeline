@@ -607,6 +607,7 @@ class PostProcessing:
         print(lens)
         print(sum(lens))
         print(len(tracks_df))
+        print(tracks_df.index)
 
         events_dfs = [pd.read_csv(events_path) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
@@ -614,9 +615,16 @@ class PostProcessing:
         print(lens)
         print(sum(lens))
         print(len(events_df))
+        print(events_df.index)
 
         tracks_df.to_csv(self.analysis_dir / Path("tracks.csv"))
         events_df.to_csv(self.analysis_dir / Path("events.csv"))
+
+        for track_path in tracks_path_list:
+            track_path.unlink()
+
+        for event_path in events_path_list:
+            event_path.unlink()
 
         return None
 
