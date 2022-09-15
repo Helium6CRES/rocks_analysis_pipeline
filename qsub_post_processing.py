@@ -117,23 +117,24 @@ def main():
     base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {}'
     rids_formatted = " ".join((str(rid) for rid in args.run_ids))
     if args.stage == 0:
+        file_id = -1
         cmd = base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,
             args.num_files_tracks,
             args.num_files_events,
-            0,
+            file_id,
             args.stage,
         )
         print(cmd)
-        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
+        qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 1:
 
         files_to_process = args.num_files_events
         print(f"Submitting {files_to_process} jobs.")
-        
+
         for file_id in range(files_to_process):
 
             cmd = base_post_processing_cmd.format(
@@ -146,25 +147,26 @@ def main():
                 args.stage,
             )
             print(cmd)
-            qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
+            qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 2:
+        file_id = -1
         cmd = base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,
             args.num_files_tracks,
             args.num_files_events,
-            0,
+            file_id,
             args.stage,
         )
         print(cmd)
-        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
+        qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     # Done at the beginning and end of qsub main.
     set_permissions()
 
-def qsub_job(experiment_name, analysis_id, cmd, tlim):
+def qsub_job(experiment_name, analysis_id, file_id, cmd, tlim):
     """
     ./qsub.py --job 'arbitrary command' [options]
 
@@ -177,7 +179,7 @@ def qsub_job(experiment_name, analysis_id, cmd, tlim):
         "-m n",  # don't send email notifications
         "-w e",  # verify syntax
         "-V",  # inherit environment variables
-        f"-N {experiment_name}_aid_{analysis_id}",  # job name
+        f"-N {experiment_name}_aid_{analysis_id}_fid_{file_id}",  # job name
         f"-l h_rt={tlim}",  # time limit
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
