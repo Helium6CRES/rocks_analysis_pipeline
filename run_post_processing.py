@@ -167,7 +167,8 @@ class PostProcessing:
             print("PostProcessing stage 0: set-up.")
             self.build_analysis_dir()
             self.root_files_df = self.get_experiment_files()
-
+            # Force a write to the log.
+            sys.stdout.flush()
             print("PostProcessing stage 0: set-up. DONE")
 
         elif self.stage == 1:
@@ -281,6 +282,9 @@ class PostProcessing:
         print(len(tracks))
         print(tracks.index)
         print(tracks.head())
+        
+        # Force a write to the log.
+        sys.stdout.flush()
 
         # Write out events to csv for first nfe file_ids (command line argument).
         if self.file_id < self.num_files_events:
