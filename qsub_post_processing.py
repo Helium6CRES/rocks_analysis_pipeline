@@ -132,6 +132,8 @@ def main():
     if args.stage == 1:
 
         files_to_process = args.num_files_events
+        print(f"Submitting {files_to_process} jobs.")
+        
         for file_id in range(files_to_process):
 
             cmd = base_post_processing_cmd.format(
@@ -143,8 +145,8 @@ def main():
                 file_id,
                 args.stage,
             )
-        print(cmd)
-        qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
+            print(cmd)
+            qsub_job(args.experiment_name, args.analysis_id, cmd, tlim)
 
     if args.stage == 2:
         cmd = base_post_processing_cmd.format(

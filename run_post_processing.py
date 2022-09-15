@@ -272,7 +272,7 @@ class PostProcessing:
         tracks = self.get_track_data_from_files(root_files_df_chunk)
 
         # Write out tracks to csv for first nft file_ids (command line argument).
-        if file_id < self.num_files_tracks:
+        if self.file_id < self.num_files_tracks:
 
             self.write_to_csv(file_id, tracks, file_name="tracks")
 
@@ -283,7 +283,7 @@ class PostProcessing:
         print(tracks.head())
 
         # Write out events to csv for first nfe file_ids (command line argument).
-        if file_id < self.num_files_events:
+        if self.file_id < self.num_files_events:
 
             events = self.get_event_data_from_tracks(tracks)
             self.write_to_csv(self.file_id, events, file_name="events")
