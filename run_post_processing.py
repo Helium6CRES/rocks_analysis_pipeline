@@ -274,7 +274,7 @@ class PostProcessing:
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
 
-            self.write_to_csv(file_id, tracks, file_name="tracks")
+            self.write_to_csv(self.file_id, tracks, file_name="tracks")
 
         print(f"file_id: {file_id}")
         print(len(root_files_df_chunk))
