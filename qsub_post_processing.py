@@ -131,7 +131,7 @@ def main():
 
     if args.stage == 1:
 
-        files_to_process = max(args.num_files_events, args.num_files_tracks)
+        files_to_process = args.num_files_events
         for file_id in range(files_to_process):
 
             cmd = base_post_processing_cmd.format(

@@ -157,24 +157,34 @@ class PostProcessing:
         self.file_id = file_id
         self.stage = stage
 
+        self.analysis_dir = self.get_analysis_dir()
+        self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
+
         print(f"PostProcessing attributes: {self.__dict__}")
 
-        if self.stage == 0: 
+        if self.stage == 0:
 
             print("PostProcessing stage 0: set-up.")
-            self.analysis_dir = self.build_analysis_dir()
+            self.build_analysis_dir()
             self.root_files_df = self.get_experiment_files()
 
             print("PostProcessing stage 0: set-up. DONE")
 
-        elif self.stage == 1: 
-            print("PostProcessing stage 1: processing.")
-            # Process all the files.
-            # Start by opening and reading in the file_df. 
-            # Ehh actually then all nodes will be opening the same file at once. Well it's an issue either way... 
-            print("PostProcessing stage 1: processing. DONE")
+        elif self.stage == 1:
+
             
-        elif self.stage == 2: 
+            print("PostProcessing stage 1: processing.")
+            # Process all the files with given file_id.
+
+            # Start by opening and reading in the file_df.
+            self.root_files_df = self.load_root_files_df()
+
+            # Now gather tracks, clean them up, build events. Write csvs to disk.
+            self.process_tracks_and_events()
+            # Ehh actually then all nodes will be opening the same file at once. Well it's an issue either way...
+            print("PostProcessing stage 1: processing. DONE")
+
+        elif self.stage == 2:
             print("PostProcessing stage 2: clean-up.")
             # clean up
             print("PostProcessing stage 2: clean-up. DONE")
@@ -183,19 +193,20 @@ class PostProcessing:
         print(self.root_files_df.head(1).to_string())
         print(self.root_files_df.index)
 
-        # Now gather tracks, clean them up, write some of them to disk, and write events to disk.
-        self.process_tracks_and_events()
-
-    def build_analysis_dir(self):
+    def get_analysis_dir(self):
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
         analysis_dir = base_path / Path(
             f"{self.experiment_name}_aid_{self.analysis_id}"
         )
+        return analysis_dir
 
-        if analysis_dir.exists():
+    def build_analysis_dir(self):
+
+        if self.analysis_dir.exists():
             # Getting rid of because it'll be in a node (no input possible).
+            print("WARNING: Deleting current experiment directory: {}")
             # input(
             #     f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
             # )
@@ -229,8 +240,7 @@ class PostProcessing:
                 )
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
-
-        self.write_to_csv(0, root_files_df, file_name="root_files")
+        root_files_df.to_csv(self.root_files_df_path)
 
         return root_files_df
 
@@ -247,6 +257,10 @@ class PostProcessing:
 
         return file_df_path
 
+    def load_root_files_df(self):
+
+        return pd.read_csv(self.root_files_df_path)
+
     def process_tracks_and_events(self):
 
         if self.num_files_events < self.num_files_tracks:
@@ -254,29 +268,32 @@ class PostProcessing:
 
         # We groupby file_id so that we can write a different number of tracks and events
         # worth of root files to disk for each run_id.
-        for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_id"]):
+        root_files_df_chunk = self.root_files_df[self.root_files_df.file_id == self.file_id]
+        # for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_id"]):
 
-            tracks = self.get_track_data_from_files(root_files_df_chunk)
+        tracks = self.get_track_data_from_files(root_files_df_chunk)
 
-            # Write out tracks to csv for first nft file_ids (command line argument).
-            if file_id < self.num_files_tracks:
+        # Write out tracks to csv for first nft file_ids (command line argument).
+        if file_id < self.num_files_tracks:
 
-                self.write_to_csv(file_id, tracks, file_name="tracks")
+            self.write_to_csv(file_id, tracks, file_name="tracks")
 
-            print(f"file_id: {file_id}")
-            print(len(root_files_df_chunk))
-            print(len(tracks))
-            print(tracks.index)
-            print(tracks.head())
+        print(f"file_id: {file_id}")
+        print(len(root_files_df_chunk))
+        print(len(tracks))
+        print(tracks.index)
+        print(tracks.head())
 
-            # Write out events to csv for first nfe file_ids (command line argument).
-            if file_id < self.num_files_events:
+        # Write out events to csv for first nfe file_ids (command line argument).
+        if file_id < self.num_files_events:
 
-                events = self.get_event_data_from_tracks(tracks)
-                self.write_to_csv(file_id, events, file_name="events")
+            events = self.get_event_data_from_tracks(tracks)
+            self.write_to_csv(self.file_id, events, file_name="events")
 
-            else:
-                break
+        else:
+            break
+
+        return None 
 
             # START HERE. Figure out cleaning and event reconstruction.
             # Keep it neat and clean.
@@ -547,13 +564,9 @@ class PostProcessing:
 
     def write_to_csv(self, file_id, df_chunk, file_name):
         print(f"Writing {file_name} data to disk for file_id {file_id}.")
-        write_path = self.analysis_dir / Path(f"{file_name}.csv")
+        write_path = self.analysis_dir / Path(f"{file_name}_{file_id}.csv")
 
-        if file_id == 0:
-            df_chunk.to_csv(write_path)
-        else:
-            # append data frame to existing CSV file.
-            df_chunk.to_csv(write_path, mode="a")
+        df_chunk.to_csv(write_path)
 
         return None
 
