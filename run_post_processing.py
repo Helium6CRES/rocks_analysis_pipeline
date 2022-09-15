@@ -204,17 +204,14 @@ class PostProcessing:
     def build_analysis_dir(self):
 
         if self.analysis_dir.exists():
-            # Getting rid of because it'll be in a node (no input possible).
-            print("WARNING: Deleting current experiment directory: {}")
-            # input(
-            #     f"CAREFUL!! Press enter to delete and rebuild the following directory:\n{analysis_dir}"
-            # )
-            shutil.rmtree(str(analysis_dir))
 
-        analysis_dir.mkdir()
-        print(f"Made {analysis_dir}")
+            print(f"WARNING: Deleting current experiment directory: {self.analysis_dir}")
+            shutil.rmtree(str(self.analysis_dir))
 
-        return analysis_dir
+        self.analysis_dir.mkdir()
+        print(f"Made {self.analysis_dir}")
+
+        return None
 
     def get_experiment_files(self):
 
