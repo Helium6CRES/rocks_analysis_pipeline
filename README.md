@@ -54,6 +54,9 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 
 ## TODOs: 
 
+* general: 
+	* put start and stop print statements for each job that gets written out to a log file. 
+	* Get sphynx documnetation going. 
 * qsub_katydid.py
 	* Working well as far as I can tell. 
 	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data. 
