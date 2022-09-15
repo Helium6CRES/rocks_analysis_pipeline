@@ -88,12 +88,22 @@ def main():
         help="number of files for which to save cleaned-up event data per run_id.",
     )
 
+    arg(
+        "-stage",
+        "--stage",
+        type=int,
+        help="""0: set-up. The root file df will be made and the results directory will be build.
+                1: processing. The tracks and events will be extracted from root files and written 
+                    to disk in the results directory. 
+                2: clean-up. The many different csvs worth of tracks and events will be combined into 
+                    single files. 
+            """,
+    )
+    arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
+
     args = par.parse_args()
 
-    # Print summary of experiment:
-    print(
-        f"Experiment Summary\n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n"
-    )
+    tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -101,6 +111,81 @@ def main():
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
+
+    # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
+
+    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fn {} -stage {}'
+    rids_formatted = " ".join((str(rid) for rid in args.run_ids))
+    if args.stage == 0:
+        cmd = base_post_processing_cmd.format(
+            rids_formatted,
+            args.aid,
+            args.name,
+            args.num_files_tracks,
+            args.num_files_events,
+            0,
+            args.stage,
+        )
+        print(cmd)
+        qsub_job(args.name, args.analysis_id, cmd, tlim)
+
+    if args.stage == 1:
+
+        files_to_process = max(args.num_files_events, args.num_files_tracks)
+        for file_id in range(files_to_process):
+
+            cmd = base_post_processing_cmd.format(
+                rids_formatted,
+                args.aid,
+                args.name,
+                args.num_files_tracks,
+                args.num_files_events,
+                file_id,
+                args.stage,
+            )
+        print(cmd)
+        qsub_job(args.name, args.analysis_id, cmd, tlim)
+
+    if args.stage == 2:
+        cmd = base_post_processing_cmd.format(
+            rids_formatted,
+            args.aid,
+            args.name,
+            args.num_files_tracks,
+            args.num_files_events,
+            0,
+            args.stage,
+        )
+        print(cmd)
+        qsub_job(args.name, args.analysis_id, cmd, tlim)
+
+
+def qsub_job(name, cmd, tlim):
+    """
+    ./qsub.py --job 'arbitrary command' [options]
+
+    NOTE: redirecting the log file to a sub-folder is a little tricky
+    https://stackoverflow.com/questions/15089315/redirect-output-to-different-files-for-sun-grid-engine-array-jobs-sge
+    """
+    qsub_opts = [
+        "-S /bin/bash",  # use bash
+        "-cwd",  # run from current working directory
+        "-m n",  # don't send email notifications
+        "-w e",  # verify syntax
+        "-V",  # inherit environment variables
+        f"-N run_id_{run_id}",  # job name
+        f"-l h_rt={tlim}",  # time limit
+        "-q all.q",  # queue name (cenpa only uses one queue)
+        "-j yes",  # join stderr and stdout
+        "-b y",  # Look for series of bytes.
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/rid_{run_id:04d}_{analysis_id:03d}.txt",
+        # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
+    ]
+    qsub_str = " ".join([str(s) for s in qsub_opts])
+    batch_cmd = "qsub {} {}".format(qsub_str, cmd)
+
+    print("\n\n", batch_cmd, "\n\n")
+    sp.run(batch_cmd, shell=True)
 
     post_processing = PostProcessing(
         args.run_ids,
@@ -110,7 +195,47 @@ def main():
         args.num_files_events,
     )
 
+    # NEXT (9/12/22):
+    # * Work on getting the nft, nfe working.
+    # * Build the cleaning method out. And the writing of the events to disk.
+    #   * Make the defualt of that -1 meaning all of them and the default for nft to be 1 or something?
+    # * keep it moving.
+    # * Work on visualziation stuff on the local machine.
+    # * Get the utility functions like the database call into another module for cleanliness.
+    # *
+    print("STOP NOW.")
 
+    # analysis_id = args.analysis_id
+    # run_ids = args.run_ids
+    # experiment_name = args.experiment_name
+
+    # analysis_dir = build_analysis_dir(experiment_name, analysis_id)
+
+    # file_df_experiment = get_experiment_files(run_ids, analysis_id)
+
+    # # TODO: Deal with file_num vs file_id
+    # # TODO: Build files.csv, tracks.csv.
+
+    # condition = file_df_experiment["root_file_exists"] == True
+    # print("Fraction of root files;", condition.mean())
+
+    # # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
+
+    # print(len(file_df_experiment))
+    # print(file_df_experiment.columns)
+    # write_files_df(file_df_experiment, analysis_dir)
+
+    # # Go through 50 files at a time.
+    # n = 50  # chunk row size
+    # list_file_df = [
+    #     file_df_experiment[i : i + n] for i in range(0, file_df_experiment.shape[0], n)
+    # ]
+
+    # for chunk_idx, file_df_chunk in enumerate(list_file_df):
+    #     print(len(file_df_chunk))
+    #     tracks_df_chunk = get_experiment_tracks(file_df_chunk)
+
+    #     write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
 
     return None
 
@@ -140,7 +265,9 @@ class PostProcessing:
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
-        analysis_dir = base_path / Path(f"{self.experiment_name}_aid_{self.analysis_id}")
+        analysis_dir = base_path / Path(
+            f"{self.experiment_name}_aid_{self.analysis_id}"
+        )
 
         if analysis_dir.exists():
             input(
@@ -177,7 +304,7 @@ class PostProcessing:
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
 
-        self.write_to_csv(0, root_files_df, file_name = "root_files")
+        self.write_to_csv(0, root_files_df, file_name="root_files")
 
         return root_files_df
 
@@ -241,7 +368,7 @@ class PostProcessing:
         print("1\n", tracks.index)
 
         # Step 2. DBSCAN clustering of events.
-        # TODO: Make sure it actually 
+        # TODO: Make sure it actually
         tracks = self.cluster_tracks(tracks)
         print("3\n", tracks.index)
 
@@ -712,48 +839,5 @@ def flat(jaggedarray: awkward.Array) -> np.ndarray:
     return flatarray
 
 
-## OLD (PROBABLY TRASH)
-
-    # NEXT (9/12/22):
-    # * Work on getting the nft, nfe working.
-    # * Build the cleaning method out. And the writing of the events to disk.
-    #   * Make the defualt of that -1 meaning all of them and the default for nft to be 1 or something?
-    # * keep it moving.
-    # * Work on visualziation stuff on the local machine.
-    # * Get the utility functions like the database call into another module for cleanliness.
-    # *
-    # print("STOP NOW.")
-
-    # analysis_id = args.analysis_id
-    # run_ids = args.run_ids
-    # experiment_name = args.experiment_name
-
-    # analysis_dir = build_analysis_dir(experiment_name, analysis_id)
-
-    # file_df_experiment = get_experiment_files(run_ids, analysis_id)
-
-    # # TODO: Deal with file_num vs file_id
-    # # TODO: Build files.csv, tracks.csv.
-
-    # condition = file_df_experiment["root_file_exists"] == True
-    # print("Fraction of root files;", condition.mean())
-
-    # # file_df_experiment[condition].apply(lambda row: sanity_check(row), axis = 1)
-
-    # print(len(file_df_experiment))
-    # print(file_df_experiment.columns)
-    # write_files_df(file_df_experiment, analysis_dir)
-
-    # # Go through 50 files at a time.
-    # n = 50  # chunk row size
-    # list_file_df = [
-    #     file_df_experiment[i : i + n] for i in range(0, file_df_experiment.shape[0], n)
-    # ]
-
-    # for chunk_idx, file_df_chunk in enumerate(list_file_df):
-    #     print(len(file_df_chunk))
-    #     tracks_df_chunk = get_experiment_tracks(file_df_chunk)
-
-    #     write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir)
 if __name__ == "__main__":
     main()
