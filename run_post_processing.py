@@ -159,6 +159,8 @@ class PostProcessing:
 
         self.analysis_dir = self.get_analysis_dir()
         self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
+        self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
+        self.events_df_path = self.analysis_dir / Path(f"events.csv")
 
         print(f"PostProcessing attributes: {self.__dict__}")
 
@@ -191,6 +193,7 @@ class PostProcessing:
             # self.root_files_df = self.load_root_files_df()
 
             self.merge_csvs()
+            self.sanity_check()
             print("PostProcessing stage 2: clean-up. DONE")
 
         return None
@@ -604,21 +607,23 @@ class PostProcessing:
         tracks_dfs = [pd.read_csv(tracks_path) for tracks_path in tracks_path_list]
         tracks_df = pd.concat(tracks_dfs)
         lens = [len(df) for df in tracks_dfs]
-        print(lens)
-        print(sum(lens))
-        print(len(tracks_df))
-        print(tracks_df.index)
+        print("lengths: ", lens)
+        print("sum: ", sum(lens))
+        print("len single file: ", len(tracks_df))
+        print("index: ", tracks_df.index)
+        print("cols: ", tracks_df.columns)
 
         events_dfs = [pd.read_csv(events_path) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
         lens = [len(df) for df in events_dfs]
-        print(lens)
-        print(sum(lens))
-        print(len(events_df))
-        print(events_df.index)
+        print("lengths: ", lens)
+        print("sum: ", sum(lens))
+        print("len single file: ", len(events_df))
+        print("index: ", events_df.index)
+        print("cols: ", events_df.columns)
 
-        tracks_df.to_csv(self.analysis_dir / Path("tracks.csv"))
-        events_df.to_csv(self.analysis_dir / Path("events.csv"))
+        tracks_df.to_csv(self.tracks_df_path)
+        events_df.to_csv(self.events_df_path)
 
         for track_path in tracks_path_list:
             track_path.unlink()
@@ -627,6 +632,27 @@ class PostProcessing:
             event_path.unlink()
 
         return None
+
+    def sanity_check(self):
+
+        desired_path_list = [self.root_files_df_path, self.tracks_df_path, self.events_df_path]
+        real_path_list = self.analysis_dir.glob("*.csv")
+        remove_list = list(set(real_path_list) - set(desired_path_list))
+
+        if len(remove_list) == 0: 
+            print(f"Sanity check passed. The following are the only files in the analysis dir: \n {desired_path_list}")
+        else: 
+            print("\nWARNING. sanity_check() failed! ")
+            print("Cleaning up. Removing the following files: \n")
+            for path in remove_list:
+                print(str(path))
+                path.unlink()
+
+        # Force a write to the log.
+        sys.stdout.flush()
+
+        return None
+
 
     def flat(self, jaggedarray: awkward.Array) -> np.ndarray:
         """
