@@ -65,7 +65,7 @@ def main():
 
     for run_id in args.runids:
         default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -ai {} -b "{}" -fn {} '.format(
-            run_id, args.noise_run_id analysis_id, args.base_config, args.file_num
+            run_id, args.noise_run_id, analysis_id, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
         qsub_job(run_id, analysis_id, cmd, tlim)
