@@ -8,17 +8,7 @@ from glob import glob
 
 def main():
     """
-    helper script to run arbitrary jobs from command line on the rocks cluster.
-
-    check running jobs: qstat -u wisecg
-
-    Notes on SGE, qsub, qstat, etc:
-    -- https://cenpa.npl.washington.edu/display/CENPA/qsub
-    -- https://www.uibk.ac.at/zid/systeme/hpc-systeme/common/tutorials/sge-howto.html
-
-    Example usage:
-    $ python3 qsub.py --job [-t] 'python3 my_amazing_script.py'
-    $ ./qsub.py -c --job 'python3 /home/wisecg/he6_files.py -c 01'
+    DOCUMENT
     """
     par = argparse.ArgumentParser()
     arg, st = par.add_argument, "store_true"
@@ -54,8 +44,6 @@ def main():
 
     # If the analysis_id is set to -1 then a new directory is built.
     # Else you will conduct a clean-up.
-    # TODO. Maybe it should be this file that builds the df... and checks to see if all ok...
-    # Then the other script just looks and runs it on the ones that aren't there...
     if args.analysis_id == -1:
         # Get the analysis index to use for the list of jobs.
         analysis_id = get_analysis_id(args.runids)
@@ -94,8 +82,7 @@ def qsub_job(run_id, analysis_id, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/rid_{run_id:04d}_{analysis_id:03d}.txt",
-        # "-t {}-{}".format(1,len(run_ids)) # job array mode.  example: 128 jobs w/ label $SGE_TASK_ID
+        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{analysis_id:03d}.txt",
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
     batch_cmd = "qsub {} {}".format(qsub_str, cmd)
