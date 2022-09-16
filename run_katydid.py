@@ -48,6 +48,12 @@ def main():
     arg = par.add_argument
     arg("-id", "--run_id", type=int, help="run_id to run katydid on.")
     arg(
+        "-nid",
+        "--noise_run_id",
+        type=int,
+        help="run_id to use for noise floor in katydid run.",
+    )
+    arg(
         "-aid",
         "--analysis_id",
         type=int,
@@ -93,7 +99,11 @@ def main():
     else:
         print("Analysis Type: New analysis.")
         file_df = build_full_file_df(
-            args.run_id, args.analysis_id, args.base_config, args.file_num
+            args.run_id,
+            args.noise_run_id,
+            args.analysis_id,
+            args.base_config,
+            args.file_num,
         )
 
     # Finish printing analysis summary.
@@ -151,7 +161,6 @@ def run_katydid(file_df):
             f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
         )
 
-    # TODO: input noise file path.
     config_dict["spec1"]["filename"] = file_df["rocks_noise_file_path"]
     config_dict["spec2"]["filename"] = file_df["rocks_file_path"]
 
@@ -206,7 +215,7 @@ def run_katydid(file_df):
     return None
 
 
-def build_full_file_df(run_id, analysis_id, base_config, file_num):
+def build_full_file_df(run_id, noise_run_id, analysis_id, base_config, file_num):
 
     file_df = create_base_file_df(run_id)
     file_df["analysis_id"] = analysis_id
@@ -223,8 +232,11 @@ def build_full_file_df(run_id, analysis_id, base_config, file_num):
     file_df["base_config_path"] = get_base_config_path(base_config)
     file_df["output_dir"] = build_dir_structure(run_id, analysis_id)
 
-    # TODO: Change this to work with external noise path. Is it needed though?
-    file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
+    # TODO: FIXING THIS NOW. 9/16/22
+    file_df["noise_file_path"] = get_noise_fp(noise_run_id)
+    file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
+        lambda x: process_fp(x)
+    )
 
     file_df["root_file_path"] = file_df.apply(
         lambda row: build_root_file_path(row), axis=1
@@ -408,6 +420,28 @@ def create_base_file_df(run_id: int):
     return file_df
 
 
+def get_noise_fp(noise_run_id: int):
+    """
+    DOCUMENT
+    """
+    query_he6_db = """
+                    SELECT f.run_id, f.file_path, 
+                    FROM he6cres_runs.spec_files as f
+                    WHERE f.run_id = {}
+                    ORDER BY f.created_at DESC
+                    LIMIT 1
+                  """.format(
+        noise_run_id
+    )
+
+    file_df = he6cres_db_query(query_he6_db)
+
+    noise_file_path = file_df["file_path"].iloc[0]
+    print(f"Noise path: {noise_file_path}")
+
+    return noise_file_path
+
+
 def run_chunk():
     """ """
     pass
@@ -460,7 +494,6 @@ def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
         cursor.execute(query)
         cols = [desc[0] for desc in cursor.description]
         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
-
 
     except (Exception, Error) as error:
         print("Error while connecting to he6cres_db", error)

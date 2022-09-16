@@ -16,6 +16,13 @@ def main():
     arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
     arg("-rids", "--runids", nargs="+", type=int, help="run ids to analyze")
     arg(
+        "-nid",
+        "--noise_run_id",
+        type=int,
+        help="run_id to use for noise floor in katydid run.",
+    )
+
+    arg(
         "-b",
         "--base_config",
         type=str,
@@ -57,8 +64,8 @@ def main():
     )
 
     for run_id in args.runids:
-        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -ai {} -b "{}" -fn {} '.format(
-            run_id, analysis_id, args.base_config, args.file_num
+        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -ai {} -b "{}" -fn {} '.format(
+            run_id, args.noise_run_id analysis_id, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
         qsub_job(run_id, analysis_id, cmd, tlim)
