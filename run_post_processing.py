@@ -597,6 +597,7 @@ class PostProcessing:
         tracks_dfs = [pd.read_csv(tracks_path, index = 0) for tracks_path in tracks_path_list]
         tracks_df = pd.concat(tracks_dfs)
         lens = [len(df) for df in tracks_dfs]
+        print("\nCombining set of tracks_dfs.\n")
         print("lengths: ", lens)
         print("sum: ", sum(lens))
         print("len single file: ", len(tracks_df))
@@ -606,6 +607,8 @@ class PostProcessing:
         events_dfs = [pd.read_csv(events_path, index = 0) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
         lens = [len(df) for df in events_dfs]
+        
+        print("\nCombining set of events_dfs.\n")
         print("lengths: ", lens)
         print("sum: ", sum(lens))
         print("len single file: ", len(events_df))
