@@ -236,7 +236,7 @@ class PostProcessing:
 
                 file_df = pd.read_csv(file_df_path)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                    lambda x: check_if_exists(x)
+                    lambda x: self.check_if_exists(x)
                 )
                 file_df_list.append(file_df)
 
@@ -607,7 +607,7 @@ class PostProcessing:
         events_dfs = [pd.read_csv(events_path, index = 0) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
         lens = [len(df) for df in events_dfs]
-        
+
         print("\nCombining set of events_dfs.\n")
         print("lengths: ", lens)
         print("sum: ", sum(lens))
@@ -668,6 +668,9 @@ class PostProcessing:
             flatarray = np.append(flatarray, a)
 
         return flatarray
+
+    def check_if_exists(self, fp):
+        return Path(fp).is_file()   
 
 
 def set_permissions():
