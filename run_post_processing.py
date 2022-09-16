@@ -331,7 +331,7 @@ class PostProcessing:
         condition = root_files_df["root_file_exists"] == True
 
         experiment_tracks_list = [
-            build_tracks_for_single_file(root_file_path, run_id, file_id)
+            self.build_tracks_for_single_file(root_file_path, run_id, file_id)
             for root_file_path, run_id, file_id in zip(
                 root_files_df[condition]["root_file_path"],
                 root_files_df[condition]["run_id"],
@@ -594,7 +594,9 @@ class PostProcessing:
                 f"Not all {self.num_files_events} events csvs are present for merging csvs."
             )
 
-        tracks_dfs = [pd.read_csv(tracks_path, index = 0) for tracks_path in tracks_path_list]
+        tracks_dfs = [
+            pd.read_csv(tracks_path, index=0) for tracks_path in tracks_path_list
+        ]
         tracks_df = pd.concat(tracks_dfs)
         lens = [len(df) for df in tracks_dfs]
         print("\nCombining set of tracks_dfs.\n")
@@ -604,7 +606,9 @@ class PostProcessing:
         print("index: ", tracks_df.index)
         print("cols: ", tracks_df.columns)
 
-        events_dfs = [pd.read_csv(events_path, index = 0) for events_path in events_path_list]
+        events_dfs = [
+            pd.read_csv(events_path, index=0) for events_path in events_path_list
+        ]
         events_df = pd.concat(events_dfs)
         lens = [len(df) for df in events_dfs]
 
@@ -670,7 +674,7 @@ class PostProcessing:
         return flatarray
 
     def check_if_exists(self, fp):
-        return Path(fp).is_file()   
+        return Path(fp).is_file()
 
 
 def set_permissions():
