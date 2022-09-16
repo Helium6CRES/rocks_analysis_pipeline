@@ -423,9 +423,10 @@ def create_base_file_df(run_id: int):
 def get_noise_fp(noise_run_id: int):
     """
     DOCUMENT
+    Note: just takes the first file in this run_id (assumption is it's a one file acq)
     """
     query_he6_db = """
-                    SELECT f.run_id, f.file_path, 
+                    SELECT f.run_id, f.file_path 
                     FROM he6cres_runs.spec_files as f
                     WHERE f.run_id = {}
                     ORDER BY f.created_at DESC
