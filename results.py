@@ -262,9 +262,9 @@ class ExperimentResults:
         self.events_path = self.experiment_dir_loc / Path("events.csv")
 
         print("\nCollecting root_files, tracks, and events.")
-        self.root_files = pd.read_csv(self.root_files_path)
-        self.tracks = pd.read_csv(self.tracks_path)
-        self.events = pd.read_csv(self.events_path)
+        self.root_files = pd.read_csv(self.root_files_path, index_col =0)
+        self.tracks = pd.read_csv(self.tracks_path, index_col =0)
+        self.events = pd.read_csv(self.events_path, index_col =0)
 
         # TODO: Are empty files being missed if we use the below?
         self.run_ids = sorted(self.events["run_id"].unique().tolist())

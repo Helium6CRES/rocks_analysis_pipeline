@@ -8,6 +8,7 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 	* Get set up: 
 		* Log on to rocks. 
 		* `cd /data/eliza4/he6_cres`
+		* Note: May need to upgrade pip. 
 		* `pip3 install -r requirements.txt`
 		* Notes: 
 			* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
@@ -79,6 +80,8 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 	* Fix indexing of events and tracks df. 
 	* Why are there these random (clearly unphysical) events that cross the whole second of data? Need a cut to deal with this.  
 	* Add the clean-up settings to the list of arguments?
+	* Are the files with no tracks or events being dealt with intelligently?
+	* Check to see if an experiment with this name exists.
 * results.py
 	* Check to make sure this works on other people's machines. 
 
