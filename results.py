@@ -206,7 +206,7 @@ class ExperimentResults:
                             ],
                             markersize=0.5,
                             alpha=config["events"]["alpha"],
-                            label="EventID = {}".format(EventID),
+                            label="EventID = {} (tracks)".format(EventID),
                         )
 
                         first_track_in_event = False
@@ -291,8 +291,7 @@ class ExperimentResults:
 
     def copy_remote_experiment_dir(self):
         print(
-            f"Copying analysis directory from rocks. This may take a few minutes \
-            depending on the size of {str(self.experiment_dir_rocks)} the speed of the connection"
+            f"Copying analysis directory from rocks. This may take a few minutes depending on the size of {str(self.experiment_dir_rocks)} the speed of the connection"
         )
         scp_run_list = [
             "scp",

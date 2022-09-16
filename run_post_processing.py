@@ -114,7 +114,7 @@ def main():
     # Force a write to the log.
     sys.stdout.flush()
 
-    # Deal with permissions (chmod 770, group he6_cres).
+    # Deal with permissions (chmod 774, group he6_cres).
     # Done at the beginning and end of main.
     set_permissions()
 
@@ -135,7 +135,7 @@ def main():
 
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
-    print(f"DONE. at UTC time: {now}")
+    print(f"Post Processing Stage {args.stage} DONE. at UTC time: {now}")
 
     return None
 
@@ -304,10 +304,6 @@ class PostProcessing:
 
         return None
 
-        # START HERE. Figure out cleaning and event reconstruction.
-        # Keep it neat and clean.
-        # SHOULD I MAKE THIS ABLE TO RUN ON MULTIPLE NODES??
-
     def get_event_data_from_tracks(self, tracks):
 
         # Step 0. Clean up the tracks.
@@ -331,9 +327,6 @@ class PostProcessing:
         return events
 
     def get_track_data_from_files(self, root_files_df):
-
-        # TODO: Wait how to organize this? Because I don't want to have to call this again when doing the cleaning...
-        # TODO: Get it to all work for a
 
         condition = root_files_df["root_file_exists"] == True
 
@@ -417,8 +410,6 @@ class PostProcessing:
 
     def create_track_cleaning_cut(self, tracks, cols, cut_levels):
 
-        # cols_mean = [col + "mean" for col in cols]
-        # cols_std = [col + "std" for col in cols]
         conditions = [
             (
                 (np.abs((tracks[col] - tracks[col + "_mean"]) / tracks[col + "_std"]))
@@ -564,8 +555,8 @@ class PostProcessing:
 
     def add_env_data(self, tracks_df):
 
-        # TODO: Fill in this function.
-        # maybe import whatever does this from another module? Ehh maybe better to just have it all here.
+        # TODO: Fill in this function. Needs to query db and get this
+        # data for each file by using the time in the file name (remember to convert to UTC).
         tracks_df["field"] = 10
         tracks_df["monitor_rate"] = 10
 
@@ -593,10 +584,6 @@ class PostProcessing:
         tracks_path_exists = [path.is_file() for path in tracks_path_list]
         events_path_exists = [path.is_file() for path in events_path_list]
 
-        print(tracks_path_list)
-        print(tracks_path_exists)
-        print(not all(tracks_path_exists))
-
         if not all(tracks_path_exists):
             raise UserWarning(
                 f"Not all {self.num_files_tracks} tracks csvs are present for merging csvs."
@@ -607,7 +594,7 @@ class PostProcessing:
                 f"Not all {self.num_files_events} events csvs are present for merging csvs."
             )
 
-        tracks_dfs = [pd.read_csv(tracks_path) for tracks_path in tracks_path_list]
+        tracks_dfs = [pd.read_csv(tracks_path, index = 0) for tracks_path in tracks_path_list]
         tracks_df = pd.concat(tracks_dfs)
         lens = [len(df) for df in tracks_dfs]
         print("lengths: ", lens)
@@ -616,7 +603,7 @@ class PostProcessing:
         print("index: ", tracks_df.index)
         print("cols: ", tracks_df.columns)
 
-        events_dfs = [pd.read_csv(events_path) for events_path in events_path_list]
+        events_dfs = [pd.read_csv(events_path, index = 0) for events_path in events_path_list]
         events_df = pd.concat(events_dfs)
         lens = [len(df) for df in events_dfs]
         print("lengths: ", lens)
@@ -638,13 +625,19 @@ class PostProcessing:
 
     def sanity_check(self):
 
-        desired_path_list = [self.root_files_df_path, self.tracks_df_path, self.events_df_path]
+        desired_path_list = [
+            self.root_files_df_path,
+            self.tracks_df_path,
+            self.events_df_path,
+        ]
         real_path_list = self.analysis_dir.glob("*.csv")
         remove_list = list(set(real_path_list) - set(desired_path_list))
 
-        if len(remove_list) == 0: 
-            print(f"Sanity check passed. The following are the only files in the analysis dir: \n {desired_path_list}")
-        else: 
+        if len(remove_list) == 0:
+            print(
+                f"Sanity check passed. The following are the only files in the analysis dir: \n {desired_path_list}"
+            )
+        else:
             print("\nWARNING. sanity_check() failed! ")
             print("Cleaning up. Removing the following files: \n")
             for path in remove_list:
@@ -655,7 +648,6 @@ class PostProcessing:
         sys.stdout.flush()
 
         return None
-
 
     def flat(self, jaggedarray: awkward.Array) -> np.ndarray:
         """
@@ -675,194 +667,12 @@ class PostProcessing:
         return flatarray
 
 
-# def clean_track_data(self):
-
-#     return None
-
-
-# def get event_data(self):
-
-# TODO:
-
-# print(len(tracks_df_experiment))
-# print(tracks_df_experiment.head().columns)
-# print(tracks_df_experiment.head(100).to_string())
-
-# Now build these two things into a an instance of a data class.
-
-# Then pickle the object and put it somewhere.
-
-# Then work on data cleaning and visualization and stuff.
-
-
-def sanity_check(file_df):
-    print("\n")
-    print(file_df["run_id"], file_df["file_num"])
-    rootfile = uproot4.open(file_df["root_file_path"])
-
-    print(rootfile.keys())
-    if "multiTrackEvents;1" in rootfile.keys():
-        print("Yes tracks.")
-        print("{}".format(rootfile["multiTrackEvents;1"]["Event"]["fTracks"]))
-    else:
-        print("No tracks.")
-    print("\n")
-
-    return None
-
-
-def write_files_df(file_df_experiment, analysis_dir):
-
-    files_path = analysis_dir / Path("files.csv")
-
-    file_df_experiment.to_csv(files_path)
-
-    return None
-
-
-def write_tracks_df(chunk_idx, tracks_df_chunk, analysis_dir):
-
-    tracks_path = analysis_dir / Path("tracks.csv")
-    if chunk_idx == 0:
-        # append data frame to CSV file
-        tracks_df_chunk.to_csv(tracks_path)
-    else:
-        # append data frame to CSV file
-        tracks_df_chunk.to_csv(tracks_path, mode="a")
-
-    return None
-
-
-def build_analysis_dir(experiment_name, analysis_id):
-
-    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
-
-    analysis_dir = base_path / Path(f"{experiment_name}_{analysis_id}")
-
-    if analysis_dir.exists():
-        raise UserWarning(f"{analysis_dir} already exists.")
-    else:
-        analysis_dir.mkdir()
-        print(f"Made {analysis_dir}")
-
-    return analysis_dir
-
-
-def get_experiment_files(run_ids, analysis_id):
-
-    # Step 0: Make sure that all of the listed rids/aid exists.
-    file_df_list = []
-    for run_id in run_ids:
-        file_df_path = build_file_df_path(run_id, analysis_id)
-
-        if file_df_path.is_file():
-            print(f"Collecting file_df: {str(file_df_path)} \n")
-
-            file_df = pd.read_csv(file_df_path, index_col=0)
-            file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                lambda x: check_if_exists(x)
-            )
-            file_df_list.append(file_df)
-
-        # New analysis.
-        else:
-            raise UserWarning(f"run_id {run_id} has no analysis_id {analysis_id}")
-
-    file_df_experiment = pd.concat(file_df_list)
-
-    return file_df_experiment
-
-
-def get_experiment_tracks(file_df_experiment):
-    # TODO: Change the run_num to file_id (needs to match in the file_df creation!)
-
-    condition = file_df_experiment["root_file_exists"] == True
-
-    experiment_tracks_list = [
-        build_tracks_for_single_file(root_file_path, run_id, file_id)
-        for root_file_path, run_id, file_id in zip(
-            file_df_experiment[condition]["root_file_path"],
-            file_df_experiment[condition]["run_id"],
-            file_df_experiment[condition]["file_num"],
-        )
-    ]
-    return pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
-
-
-# TODO: MAKE A DATA CLASS?
-# TODO: file_num, file_id, file_in_acq. These need to be made consistent.
-
-
-def build_tracks_for_single_file(root_file_path, run_id, file_id):
-    """ """
-
-    tracks_df = pd.DataFrame()
-
-    rootfile = uproot4.open(root_file_path)
-
-    if "multiTrackEvents;1" in rootfile.keys():
-
-        tracks_root = rootfile["multiTrackEvents;1"]["Event"]["fTracks"]
-
-        for key, value in tracks_root.items():
-            # Slice the key so it drops the redundant "fTracks."
-            tracks_df[key[9:]] = flat(value.array())
-
-    tracks_df["run_id"] = run_id
-    tracks_df["file_id"] = file_id
-    tracks_df["root_file_path"] = root_file_path
-
-    tracks_df = add_env_data(run_id, file_id, tracks_df)
-
-    return tracks_df
-
-
-def add_env_data(run_id, file_id, tracks_df):
-
-    # TODO: Fill in this function.
-    tracks_df["field"] = 10
-    tracks_df["monitor_rate"] = 10
-
-    return tracks_df
-
-
-# TODO: Duplicate function. Refactor.
-def build_file_df_path(run_id, analysis_id):
-    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
-    rid_ai_dir = base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{analysis_id:03d}")
-
-    file_df_path = rid_ai_dir / Path(f"rid_df_{run_id:04d}_{analysis_id:03d}.csv")
-    return file_df_path
-
-
 def set_permissions():
 
     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
 
     return None
-
-
-def check_if_exists(fp):
-    return Path(fp).is_file()
-
-
-def flat(jaggedarray: awkward.Array) -> np.ndarray:
-    """
-    Given jagged array (common in root), it returns a flattened array.
-
-    Args:
-        jaggedarray (awkward array): No specifications.
-
-    Returns:
-        array (np.ndarray): No specifications.
-
-    """
-    flatarray = np.array([])
-    for i in jaggedarray.tolist():
-        flatarray = np.append(flatarray, i)
-
-    return flatarray
 
 
 if __name__ == "__main__":

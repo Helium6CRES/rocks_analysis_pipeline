@@ -84,7 +84,7 @@ def qsub_job(run_id, analysis_id, cmd, tlim):
         "-m n",  # don't send email notifications
         "-w e",  # verify syntax
         "-V",  # inherit environment variables
-        f"-N run_id_{run_id}",  # job name
+        f"-N run_id_{run_id}_{analysis_id}",  # job name
         f"-l h_rt={tlim}",  # time limit
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
