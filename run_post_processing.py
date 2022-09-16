@@ -130,9 +130,12 @@ def main():
         args.stage,
     )
 
+    # Done at the beginning and end of main.
+    set_permissions()
+
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
-    print(f"DONE.\n at UTC time: {now}")
+    print(f"DONE. at UTC time: {now}")
 
     return None
 
