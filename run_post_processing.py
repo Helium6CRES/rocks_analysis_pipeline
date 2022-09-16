@@ -595,9 +595,9 @@ class PostProcessing:
             )
 
         tracks_dfs = [
-            pd.read_csv(tracks_path, index=0) for tracks_path in tracks_path_list
+            pd.read_csv(tracks_path, index_col=0) for tracks_path in tracks_path_list
         ]
-        tracks_df = pd.concat(tracks_dfs)
+        tracks_df = pd.concat(tracks_dfs, ignore_index = True)
         lens = [len(df) for df in tracks_dfs]
         print("\nCombining set of tracks_dfs.\n")
         print("lengths: ", lens)
@@ -607,9 +607,9 @@ class PostProcessing:
         print("cols: ", tracks_df.columns)
 
         events_dfs = [
-            pd.read_csv(events_path, index=0) for events_path in events_path_list
+            pd.read_csv(events_path, index_col=0) for events_path in events_path_list
         ]
-        events_df = pd.concat(events_dfs)
+        events_df = pd.concat(events_dfs, ignore_index = True)
         lens = [len(df) for df in events_dfs]
 
         print("\nCombining set of events_dfs.\n")
