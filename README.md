@@ -67,15 +67,15 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 
 * general: 
 	* put start and stop print statements for each job that gets written out to a log file. 
-	* Get sphynx documnetation going. 
+	* Get sphynx documnetation going. Make it pretty. 
 	* Delete all unused or commented out code and .py files. 
 	* Make sure permissions things are ok for other people...
 * run_katydid.py
-	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data. 
+	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data.  
 	* Change the job_logs dir to be under  `job_logs/katydid`. 
 	* The time that is printed to the log for how long katydid took on one file doesn't align with how long the jobs take to run? Why is this?
 	* I don't like the way this is organized rn. I would be nice to build it into a class the way the post processing is. 
-	* The copies of the .yaml isn't getting deleted rn.
+	* The copies of the .yaml isn't getting deleted rn. FIXED (I think, need to verify)
 * run_post_processing.py
 	* Fix indexing of events and tracks df. 
 	* Why are there these random (clearly unphysical) events that cross the whole second of data? Need a cut to deal with this.  
@@ -84,5 +84,6 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 	* Check to see if an experiment with this name exists.
 * results.py
 	* Check to make sure this works on other people's machines. 
+	* Add the visualization tool into the class that shows the different relationships between variables (in demo nb rn.)
 
 
