@@ -812,10 +812,15 @@ class PostProcessing:
 
         return flatarray
 
-    def check_if_exists(self, fp):
-        return Path(fp).is_file()
 
 
+if __name__ == "__main__":
+    main()
+
+
+# def check_if_exists(self, fp):
+#     return Path(fp).is_file()
+    
 # def set_permissions():
 
 #     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
@@ -863,5 +868,4 @@ class PostProcessing:
 #     pst_now = datetime.datetime.now(tz).replace(microsecond=0).replace(tzinfo=None)
 #     return pst_now
 
-if __name__ == "__main__":
-    main()
+

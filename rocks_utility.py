@@ -10,15 +10,19 @@ import pandas.io.sql as psql
 import subprocess as sp
 from pathlib import Path
 
-def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]: 
-    
+
+def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
+
+    connection = False
     try:
         # Connect to an existing database
-        connection = psycopg2.connect(user="postgres",
-                                      password="chirality",
-                                      host="10.66.192.47",
-                                      port="5432",
-                                      database="he6cres_db")
+        connection = psycopg2.connect(
+            user="postgres",
+            password="chirality",
+            host="wombat.npl.washington.edu",
+            port="5544",
+            database="he6cres_db",
+        )
 
         # Create a cursor to perform database operations
         cursor = connection.cursor()
@@ -28,11 +32,10 @@ def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]:
         cols = [desc[0] for desc in cursor.description]
         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
 
-        
     except (Exception, Error) as error:
         print("Error while connecting to he6cres_db", error)
         query_result = None
-        
+
     finally:
         if connection:
             cursor.close()
@@ -40,8 +43,9 @@ def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]:
 
     return query_result
 
+
 def get_pst_time():
-    tz = pytz.timezone('US/Pacific')
+    tz = pytz.timezone("US/Pacific")
     pst_now = datetime.datetime.now(tz).replace(microsecond=0).replace(tzinfo=None)
     return pst_now
 
@@ -52,6 +56,7 @@ def set_permissions():
     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
 
     return None
+
 
 def check_if_exists(fp):
     return Path(fp).is_file()
