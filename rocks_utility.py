@@ -8,6 +8,7 @@ import datetime
 import typing
 import pandas.io.sql as psql
 import subprocess as sp
+from pathlib import Path
 
 def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]: 
     
@@ -51,3 +52,6 @@ def set_permissions():
     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
 
     return None
+
+def check_if_exists(fp):
+    return Path(fp).is_file()
