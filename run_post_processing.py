@@ -658,8 +658,8 @@ class PostProcessing:
             dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
             # Note that I also need to make sure the field probe was locked!
-            query = """SELECT n.field_id, n.created_at, n.field
-                       FROM he6cres_runs.field as n 
+            query = """SELECT n.nmr_id, n.created_at, n.field
+                       FROM he6cres_runs.nmr as n 
                        WHERE n.created_at >= '{}'::timestamp
                            AND n.created_at <= '{}'::timestamp + interval '1 minute'
                            AND n.locked = TRUE
