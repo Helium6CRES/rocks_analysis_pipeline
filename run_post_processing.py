@@ -632,7 +632,7 @@ class PostProcessing:
                     )
 
                 # Get monitor_rate during run.
-                monitor_rate = get_nearest(monitor_log, file_path.utc_time.iloc[0]).rate
+                monitor_rate = self.get_nearest(monitor_log, file_path.utc_time.iloc[0]).rate
 
                 condition = (root_files_df["run_id"] == rid) & (
                     root_files_df["file_id"] == fid
@@ -678,7 +678,7 @@ class PostProcessing:
                     )
 
                 # Get field during second of data
-                field = get_nearest(field_log, file_path.utc_time.iloc[0]).field
+                field = self.get_nearest(field_log, file_path.utc_time.iloc[0]).field
 
                 # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table.
                 condition = (root_files_df["run_id"] == rid) & (
