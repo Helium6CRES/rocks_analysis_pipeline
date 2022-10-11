@@ -60,3 +60,10 @@ def set_permissions():
 
 def check_if_exists(fp):
     return Path(fp).is_file()
+
+def log_file_break(): 
+    print("\n\n")
+    print("################################################################")
+    print("\n\n")
+    return None
+

@@ -35,6 +35,7 @@ from rocks_utility import (
     get_pst_time,
     set_permissions,
     check_if_exists,
+    log_file_break
 )
 
 # Import options.
@@ -181,7 +182,7 @@ class PostProcessing:
         self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
         self.events_df_path = self.analysis_dir / Path(f"events.csv")
 
-        print(f"PostProcessing attributes:\n")
+        print(f"PostProcessing instance attributes:\n")
         for key, value in self.__dict__.items():
             print(f"{key}: {value}")
 
@@ -197,9 +198,8 @@ class PostProcessing:
             # Write the root_files_df to disk for use in the subsequent stages.
             self.root_files_df.to_csv(self.root_files_df_path)
 
-            # Force a write to the log.
-            sys.stdout.flush()
             print("\nPostProcessing stage 0: set-up. DONE\n")
+            log_file_break()
 
         elif self.stage == 1:
 
@@ -213,6 +213,7 @@ class PostProcessing:
             self.process_tracks_and_events()
             # Ehh actually then all nodes will be opening the same file at once. Well it's an issue either way...
             print("PostProcessing stage 1: processing. DONE")
+            log_file_break()
 
         elif self.stage == 2:
 
@@ -223,6 +224,7 @@ class PostProcessing:
             self.merge_csvs()
             self.sanity_check()
             print("PostProcessing stage 2: clean-up. DONE")
+            log_file_break()
 
         return None
 
