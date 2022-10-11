@@ -4,6 +4,9 @@ import sys
 import time
 import argparse
 import pandas as pd
+import pandas.io.sql as psql
+from datetime import datetime
+import numpy as np
 import datetime
 from glob import glob
 import subprocess as sp
@@ -13,7 +16,7 @@ import psycopg2
 from psycopg2 import Error
 import typing
 from typing import List
-import pandas.io.sql as psql
+
 from pathlib import Path
 import yaml
 import uproot4
@@ -256,7 +259,6 @@ class PostProcessing:
                 )
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
-        
 
         return root_files_df
 
@@ -568,21 +570,21 @@ class PostProcessing:
     def add_env_data(self, root_files_df):
 
         # Step 0: Make sure the root_files_df has a tz aware dt column.
-        root_file_paths["pst_time"] = root_file_paths["root_file_path"].apply(
+        root_files_df["pst_time"] = root_files_df["root_file_path"].apply(
             lambda x: get_utc_time(x)
         )
-        root_file_paths["pst_time"] = root_file_paths["pst_time"].dt.tz_localize(
+        root_files_df["pst_time"] = root_files_df["pst_time"].dt.tz_localize(
             "US/Pacific"
         )
-        root_file_paths["utc_time"] = root_file_paths["pst_time"].dt.tz_convert("UTC")
+        root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
-        # Step 1: Add the monitor rate/field data to each file. 
-        root_file_paths = add_monitor_rate(root_file_paths)
-        root_file_paths = add_field(root_file_paths)
+        # Step 1: Add the monitor rate/field data to each file.
+        root_files_df = add_monitor_rate(root_files_df)
+        root_files_df = add_field(root_files_df)
 
-        return root_file_paths
+        return root_files_df
 
-    def get_utc_time_from_root_file_path(root_file_path):
+    def get_utc_time(root_file_path):
         # USED in add_env_data()
         time_str = root_file_path[-28:-9]
         datetime_object = datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
@@ -596,19 +598,19 @@ class PostProcessing:
 
         return df.loc[[minidx]].iloc[0]
 
-    def add_monitor_rate(root_file_paths):
+    def add_monitor_rate(root_files_df):
         # USED in add_env_data()
-        root_file_paths["monitor_rate"] = np.nan
+        root_files_df["monitor_rate"] = np.nan
 
         # Step 0. Group by run_id.
-        for rid, root_file_paths_gb in root_file_paths.groupby(["run_id"]):
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
 
             # Step 1. Find the extreme times present in the given run_id.
             # The idea is that we want to be careful about the amount of queries we do to get this info.
             # Here we only do one query per run_id (instead of one per file)
 
-            dt_max = root_file_paths_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_file_paths_gb.utc_time.min().floor("min").tz_localize(None)
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
             # There is an issue here right now but this will be useful later.
             query = """SELECT m.monitor_id, m.created_at, m.rate
@@ -622,7 +624,7 @@ class PostProcessing:
             monitor_log = he6cres_db_query(query)
             monitor_log["created_at"] = monitor_log["created_at"].dt.tz_localize("UTC")
 
-            for fid, file_path in root_file_paths_gb.groupby(["file_id"]):
+            for fid, file_path in root_files_df_gb.groupby(["file_id"]):
 
                 if len(file_path) != 1:
                     raise UserWarning(
@@ -632,56 +634,62 @@ class PostProcessing:
                 # Get monitor_rate during run.
                 monitor_rate = get_nearest(monitor_log, file_path.utc_time.iloc[0]).rate
 
-                condition = (root_file_paths["run_id"] == rid) & (
-                    root_file_paths["file_id"] == fid
+                condition = (root_files_df["run_id"] == rid) & (
+                    root_files_df["file_id"] == fid
                 )
-                root_file_paths["monitor_rate"][condition] = monitor_rate
+                root_files_df["monitor_rate"][condition] = monitor_rate
 
-        if root_file_paths["monitor_rate"].isnull().values.any():
+        if root_files_df["monitor_rate"].isnull().values.any():
             raise UserWarning(f"Some monitor_rate data was not collected.")
 
-        return root_file_paths
+        return root_files_df
 
-    def add_field(root_file_paths):
-    
-        root_file_paths["field"] = np.nan
-        
+    def add_field(root_files_df):
+
+        root_files_df["field"] = np.nan
+
         # Step 0. Group by run_id.
-        for rid, root_file_paths_gb in root_file_paths.groupby(["run_id"]): 
-            
-            # Step 1. Find the extreme times present in the given run_id. 
-            # The idea is that we want to be careful about the amount of queries we do to get this info. 
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the extreme times present in the given run_id.
+            # The idea is that we want to be careful about the amount of queries we do to get this info.
             # Here we only do one query per run_id (instead of one per file)
-            dt_max = root_file_paths_gb.utc_time.max().floor('min').tz_localize(None)
-            dt_min = root_file_paths_gb.utc_time.min().floor('min').tz_localize(None)
-            
-            # Note that I also need to make sure the field probe was locked! 
-            query = '''SELECT n.field_id, n.created_at, n.field
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            # Note that I also need to make sure the field probe was locked!
+            query = """SELECT n.field_id, n.created_at, n.field
                        FROM he6cres_runs.field as n 
                        WHERE n.created_at >= '{}'::timestamp
                            AND n.created_at <= '{}'::timestamp + interval '1 minute'
                            AND n.locked = TRUE
-                    '''.format(dt_min, dt_max)
+                    """.format(
+                dt_min, dt_max
+            )
 
             field_log = he6cres_db_query(query)
-            field_log["created_at"] = field_log["created_at"].dt.tz_localize('UTC')
-            
-            for fid, file_path in root_file_paths_gb.groupby(["file_id"]):
+            field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
+
+            for fid, file_path in root_files_df_gb.groupby(["file_id"]):
 
                 if len(file_path) != 1:
-                    raise UserWarning(f"There should be only one file with run_id = {rid} and file_id = {fid}.")
-                
-                # Get field during second of data 
+                    raise UserWarning(
+                        f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                    )
+
+                # Get field during second of data
                 field = get_nearest(field_log, file_path.utc_time.iloc[0]).field
-                
-                # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table. 
-                condition = ((root_file_paths["run_id"] == rid) & (root_file_paths["file_id"] == fid))
-                root_file_paths["field"][condition] = field
-        
-        if root_file_paths["field"].isnull().values.any():
+
+                # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table.
+                condition = (root_files_df["run_id"] == rid) & (
+                    root_files_df["file_id"] == fid
+                )
+                root_files_df["field"][condition] = field
+
+        if root_files_df["field"].isnull().values.any():
             raise UserWarning(f"Some rate data was not collected.")
-                
-        return root_file_paths
+
+        return root_files_df
 
     def write_to_csv(self, file_id, df_chunk, file_name):
         print(f"Writing {file_name} data to disk for file_id {file_id}.")
@@ -807,7 +815,7 @@ def set_permissions():
 
 
 # Simplify to not have an insert capability.
-# TOD0: Put this in a utility module and have the run_katydid.py use it as well. 
+# TOD0: Put this in a utility module and have the run_katydid.py use it as well.
 def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
 
     connection = False
@@ -839,6 +847,7 @@ def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
             connection.close()
 
     return query_result
+
 
 if __name__ == "__main__":
     main()
