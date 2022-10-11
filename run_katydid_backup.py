@@ -17,16 +17,27 @@ import yaml
 import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
-# Local imports. 
-from .utility import he6cres_db_query, get_pst_time, set_permissions
-
-# Import settings. 
 pd.set_option("display.max_columns", 100)
 
 
 def main():
     """
-    DOCUMENT
+
+    TODOS:
+    * Need to source .bashrc for root to work properly. WORKS
+    * Need to have the permissions such that the folders are writeable by others in
+    our group.
+    * Currently we can make directories and make config files and verrrrrrry useful data frame columns.
+    * Deal with group permissions. We need to be sure that root files that are built can be accessed/edited by all users in our group.
+    * Get katydid working in a place we can all use it.
+    * Write first copy of config file to root analysis dir.
+    * WINSTON NEEDS TO FIGURE OUT PERMISSIONS!!!! Katydid isnt working for other users. JK
+    * make it work and get it running.
+    * Build out a way for people to interact with all these root files in a nice way.
+    This is where the python post processing comes in and we pickle the file in rocks.
+    Then anyone can open that pickle file and be on there way to working on an analysis.
+    * sp.run("chmod shit that deals with permissions WINSTON!!!!")
+    * Write first copy of config file to root analysis dir.
 
     """
 
