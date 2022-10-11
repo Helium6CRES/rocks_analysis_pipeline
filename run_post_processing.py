@@ -114,11 +114,7 @@ def main():
 
     args = par.parse_args()
 
-    # Current time to nearest second.
-    # now = datetime.datetime.now().replace(microsecond=0)
-    tz = pytz.timezone('US/Pacific')
-    pst_now = datetime.datetime.now(tz).replace(microsecond=0)
-    print(f"\nPost Processing Stage {args.stage} STARTING at PST time: {pst_now}\n")
+    print(f"\nPost Processing Stage {args.stage} STARTING at PST time: {get_pst_time()}\n")
 
     # Print summary of experiment:
     print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
@@ -147,7 +143,7 @@ def main():
 
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
-    print(f"\nPost Processing Stage {args.stage} DONE at UTC time: {now}\n")
+    print(f"\nPost Processing Stage {args.stage} DONE at PST time: {get_pst_time()}\n")
 
     return None
 
@@ -854,6 +850,10 @@ def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
 
     return query_result
 
+def get_pst_time():
+    tz = pytz.timezone('US/Pacific')
+    pst_now = datetime.datetime.now(tz).replace(microsecond=0).replace(tzinfo=None)
+    return pst_now
 
 if __name__ == "__main__":
     main()
