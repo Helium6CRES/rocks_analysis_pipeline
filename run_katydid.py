@@ -146,7 +146,7 @@ class RunKatydid:
 
         # Clean up.
         if self.file_df_path.is_file():
-            print(f"Analysis Type: Clean up. {self.file_df_path} already exists.")
+            print(f"Analysis Type: Clean up. {self.file_df_path} already exists.\n")
 
             file_df = pd.read_csv(file_df_path)
 
@@ -157,7 +157,7 @@ class RunKatydid:
 
         # New analysis.
         else:
-            print(f"Analysis Type: New analysis. Building file_df: {self.file_df_path}")
+            print(f"Analysis Type: New analysis. \nBuilding file_df.\n")
             file_df = self.build_full_file_df()
         return file_df
 
@@ -210,7 +210,7 @@ class RunKatydid:
 
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
-        print(f"Built file_df_path here: {self.file_df_path}")
+        print(f"Built file_df: {self.file_df_path}")
         file_df.to_csv(self.file_df_path)
 
         return file_df
