@@ -5,7 +5,7 @@ import time
 import argparse
 import pandas as pd
 import pandas.io.sql as psql
-from datetime import datetime
+# from datetime import datetime
 import numpy as np
 import datetime
 from glob import glob
@@ -587,7 +587,7 @@ class PostProcessing:
     def get_utc_time(self, root_file_path):
         # USED in add_env_data()
         time_str = root_file_path[-28:-9]
-        datetime_object = datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
+        datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
 
         return datetime_object
 
