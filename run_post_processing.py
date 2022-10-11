@@ -35,7 +35,7 @@ from rocks_utility import (
     get_pst_time,
     set_permissions,
     check_if_exists,
-    log_file_break
+    log_file_break,
 )
 
 # Import options.
@@ -123,7 +123,9 @@ def main():
 
     args = par.parse_args()
 
-    print(f"\nPost Processing Stage {args.stage} STARTING at PST time: {get_pst_time()}\n")
+    print(
+        f"\nPost Processing Stage {args.stage} STARTING at PST time: {get_pst_time()}\n"
+    )
 
     # Print summary of experiment:
     print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
@@ -153,6 +155,7 @@ def main():
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
     print(f"\nPost Processing Stage {args.stage} DONE at PST time: {get_pst_time()}\n")
+    log_file_break()
 
     return None
 
@@ -198,9 +201,6 @@ class PostProcessing:
             # Write the root_files_df to disk for use in the subsequent stages.
             self.root_files_df.to_csv(self.root_files_df_path)
 
-            print("\nPostProcessing stage 0: set-up. DONE\n")
-            log_file_break()
-
         elif self.stage == 1:
 
             print("PostProcessing stage 1: processing.")
@@ -211,9 +211,6 @@ class PostProcessing:
 
             # Now gather tracks, clean them up, build events. Write csvs to disk.
             self.process_tracks_and_events()
-            # Ehh actually then all nodes will be opening the same file at once. Well it's an issue either way...
-            print("PostProcessing stage 1: processing. DONE")
-            log_file_break()
 
         elif self.stage == 2:
 
@@ -223,8 +220,6 @@ class PostProcessing:
 
             self.merge_csvs()
             self.sanity_check()
-            print("PostProcessing stage 2: clean-up. DONE")
-            log_file_break()
 
         return None
 
@@ -814,14 +809,13 @@ class PostProcessing:
         return flatarray
 
 
-
 if __name__ == "__main__":
     main()
 
 
 # def check_if_exists(self, fp):
 #     return Path(fp).is_file()
-    
+
 # def set_permissions():
 
 #     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
@@ -868,5 +862,3 @@ if __name__ == "__main__":
 #     tz = pytz.timezone('US/Pacific')
 #     pst_now = datetime.datetime.now(tz).replace(microsecond=0).replace(tzinfo=None)
 #     return pst_now
-
-

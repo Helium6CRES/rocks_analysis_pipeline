@@ -23,6 +23,7 @@ from rocks_utility import (
     get_pst_time,
     set_permissions,
     check_if_exists,
+    log_file_break
 )
 
 # Import settings.
@@ -67,8 +68,6 @@ def main():
         help="Number of files in run id to analyze (<= number of files in run_id)",
     )
 
-    # !!! 10/11/22: Refactoring to make this main more readable.
-
     args = par.parse_args()
 
     print(f"\nRunning Katydid. STARTING at PST time: {get_pst_time()}\n")
@@ -95,7 +94,7 @@ def main():
     set_permissions()
 
     print(f"\nRunning Katydid on {args.run_id} DONE at PST time: {get_pst_time()}\n")
-
+    log_file_break()
     return None
 
 
@@ -126,7 +125,6 @@ class RunKatydid:
         # Clean up any half baked root files.
         self.clean_up_root_dir(self.file_df)
 
-        # Deal with permissions (chmod 770, group he6_cres).
         set_permissions()
 
         return None
