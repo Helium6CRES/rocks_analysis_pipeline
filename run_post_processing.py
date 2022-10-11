@@ -117,7 +117,7 @@ def main():
     # Current time to nearest second.
     # now = datetime.datetime.now().replace(microsecond=0)
     tz = pytz.timezone('US/Pacific')
-    pst_now = datetime.now(tz).replace(microsecond=0)
+    pst_now = datetime.datetime.now(tz).replace(microsecond=0)
     print(f"\nPost Processing Stage {args.stage} STARTING at PST time: {pst_now}\n")
 
     # Print summary of experiment:
