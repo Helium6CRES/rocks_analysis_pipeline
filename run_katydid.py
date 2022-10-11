@@ -148,7 +148,7 @@ class RunKatydid:
         if self.file_df_path.is_file():
             print(f"Analysis Type: Clean up. {self.file_df_path} already exists.\n")
 
-            file_df = pd.read_csv(file_df_path)
+            file_df = pd.read_csv(self.file_df_path)
 
             # Check to see which root files already exist.
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
