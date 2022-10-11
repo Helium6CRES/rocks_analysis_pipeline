@@ -158,13 +158,7 @@ class RunKatydid:
         # New analysis.
         else:
             print(f"Analysis Type: New analysis. Building file_df: {self.file_df_path}")
-            file_df = self.build_full_file_df(
-                args.run_id,
-                args.noise_run_id,
-                args.analysis_id,
-                args.base_config,
-                args.file_num,
-            )
+            file_df = self.build_full_file_df()
         return file_df
 
     def build_file_df_path(self):
