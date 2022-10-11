@@ -4,7 +4,9 @@ import sys
 import time
 import argparse
 import pandas as pd
+
 import pandas.io.sql as psql
+
 # from datetime import datetime
 import numpy as np
 import datetime
@@ -29,6 +31,7 @@ import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Import options.
 pd.set_option("display.max_columns", 100)
+pd.options.mode.chained_assignment = None  # Comment if debugging.
 
 
 def main():
@@ -111,6 +114,10 @@ def main():
 
     args = par.parse_args()
 
+    # Current time to nearest second.
+    now = datetime.datetime.now().replace(microsecond=0)
+    print(f"\nPost Processing Stage {args.stage} STARTING at UTC time: {now}\n")
+
     # Print summary of experiment:
     print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
 
@@ -138,7 +145,7 @@ def main():
 
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
-    print(f"Post Processing Stage {args.stage} DONE. at UTC time: {now}")
+    print(f"\nPost Processing Stage {args.stage} DONE at UTC time: {now}\n")
 
     return None
 
@@ -343,13 +350,18 @@ class PostProcessing:
         # For ease have the function just take the root_files_df?
         condition = root_files_df["root_file_exists"] == True
 
+        # experiment_tracks_list = [
+        #     self.build_tracks_for_single_file(root_file_path, run_id, file_id)
+        #     for root_file_path, run_id, file_id in zip(
+        #         root_files_df[condition]["root_file_path"],
+        #         root_files_df[condition]["run_id"],
+        #         root_files_df[condition]["file_id"],
+        #     )
+        # ]
+
         experiment_tracks_list = [
-            self.build_tracks_for_single_file(root_file_path, run_id, file_id)
-            for root_file_path, run_id, file_id in zip(
-                root_files_df[condition]["root_file_path"],
-                root_files_df[condition]["run_id"],
-                root_files_df[condition]["file_id"],
-            )
+            self.build_tracks_for_single_file(root_files_df_row)
+            for root_files_df_row in root_files_df[condition]
         ]
 
         tracks_df = pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
@@ -358,14 +370,14 @@ class PostProcessing:
 
         return tracks_df
 
-    def build_tracks_for_single_file(self, root_file_path, run_id, file_id):
+    def build_tracks_for_single_file(self, root_files_df_row):
         """
         DOCUMENT.
         """
 
         tracks_df = pd.DataFrame()
 
-        rootfile = uproot4.open(root_file_path)
+        rootfile = uproot4.open(root_files_df_row["root_file_path"])
 
         if "multiTrackEvents;1" in rootfile.keys():
 
@@ -375,12 +387,11 @@ class PostProcessing:
                 # Slice the key so it drops the redundant "fTracks."
                 tracks_df[key[9:]] = self.flat(value.array())
 
-        tracks_df["run_id"] = run_id
-        tracks_df["file_id"] = file_id
-        tracks_df["root_file_path"] = root_file_path
-
-        # TODO: CHANGE THIS.
-        # tracks_df = self.add_env_data(tracks_df)
+        tracks_df["run_id"] = root_files_df_row["run_id"]
+        tracks_df["file_id"] = root_files_df_row["file_id"]
+        tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
+        tracks_df["field"] = root_files_df_row["field"]
+        tracks_df["monitor_rate"] = root_files_df_row["monitor_rate"]
 
         return tracks_df.reset_index(drop=True)
 
@@ -632,7 +643,9 @@ class PostProcessing:
                     )
 
                 # Get monitor_rate during run.
-                monitor_rate = self.get_nearest(monitor_log, file_path.utc_time.iloc[0]).rate
+                monitor_rate = self.get_nearest(
+                    monitor_log, file_path.utc_time.iloc[0]
+                ).rate
 
                 condition = (root_files_df["run_id"] == rid) & (
                     root_files_df["file_id"] == fid
