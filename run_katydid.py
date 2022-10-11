@@ -176,7 +176,7 @@ class RunKatydid:
 
     def build_full_file_df(self):
 
-        file_df = create_base_file_df(self.run_id)
+        file_df = self.create_base_file_df(self.run_id)
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
@@ -213,6 +213,23 @@ class RunKatydid:
         # DELETE: file_df_path = build_file_df_path(run_id, analysis_id)
         print(f"built file_df_path here: {self.file_df_path}")
         file_df.to_csv(self.file_df_path)
+
+        return file_df
+
+    def create_base_file_df(self, run_id: int):
+        # DOCUMENT. 
+        query_he6_db = """
+                        SELECT r.run_id, f.spec_id, f.file_path, r.true_field
+                        FROM he6cres_runs.run_log as r
+                        RIGHT JOIN he6cres_runs.spec_files as f
+                        ON r.run_id = f.run_id
+                        WHERE r.run_id = {}
+                        ORDER BY r.created_at DESC
+                      """.format(
+            run_id
+        )
+
+        file_df = he6cres_db_query(query_he6_db)
 
         return file_df
 
