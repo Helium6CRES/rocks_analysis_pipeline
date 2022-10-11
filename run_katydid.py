@@ -23,7 +23,6 @@ from rocks_utility import he6cres_db_query, get_pst_time, set_permissions
 # Import settings. 
 pd.set_option("display.max_columns", 100)
 
-
 def main():
     """
     DOCUMENT
@@ -266,12 +265,12 @@ def clean_up_root_dir(file_df):
     return None
 
 
-def set_permissions():
+# def set_permissions():
 
-    set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
-    set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
+#     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
+#     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
 
-    return None
+#     return None
 
 
 def root_file_check(file_df):
@@ -463,38 +462,38 @@ def run_chunk():
     # df_chunk.apply(run_katydid, axis=1)
 
 
-# Simplify to not have an insert capability.
-def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
+# # Simplify to not have an insert capability.
+# def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
 
-    connection = False
-    try:
-        # Connect to an existing database
-        connection = psycopg2.connect(
-            user="postgres",
-            password="chirality",
-            host="wombat.npl.washington.edu",
-            port="5544",
-            database="he6cres_db",
-        )
+#     connection = False
+#     try:
+#         # Connect to an existing database
+#         connection = psycopg2.connect(
+#             user="postgres",
+#             password="chirality",
+#             host="wombat.npl.washington.edu",
+#             port="5544",
+#             database="he6cres_db",
+#         )
 
-        # Create a cursor to perform database operations
-        cursor = connection.cursor()
+#         # Create a cursor to perform database operations
+#         cursor = connection.cursor()
 
-        # Execute a sql_command
-        cursor.execute(query)
-        cols = [desc[0] for desc in cursor.description]
-        query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
+#         # Execute a sql_command
+#         cursor.execute(query)
+#         cols = [desc[0] for desc in cursor.description]
+#         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
 
-    except (Exception, Error) as error:
-        print("Error while connecting to he6cres_db", error)
-        query_result = None
+#     except (Exception, Error) as error:
+#         print("Error while connecting to he6cres_db", error)
+#         query_result = None
 
-    finally:
-        if connection:
-            cursor.close()
-            connection.close()
+#     finally:
+#         if connection:
+#             cursor.close()
+#             connection.close()
 
-    return query_result
+#     return query_result
 
 
 if __name__ == "__main__":
