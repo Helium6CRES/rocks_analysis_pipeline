@@ -205,13 +205,12 @@ class RunKatydid:
         )
 
         # Trim the df according to the file_num arg.
-        if file_num != -1:
-            file_df = file_df[:file_num]
+        if self.file_num != -1:
+            file_df = file_df[:self.file_num]
 
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
-        # DELETE: file_df_path = build_file_df_path(run_id, analysis_id)
-        print(f"built file_df_path here: {self.file_df_path}")
+        print(f"Built file_df_path here: {self.file_df_path}")
         file_df.to_csv(self.file_df_path)
 
         return file_df
