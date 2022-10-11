@@ -192,7 +192,7 @@ class RunKatydid:
         file_df["dbscan_radius_0"] = dbscan_r[0]
         file_df["dbscan_radius_1"] = dbscan_r[1]
 
-        file_df["base_config_path"] = self.get_base_config_path(base_config)
+        file_df["base_config_path"] = self.get_base_config_path()
         file_df["output_dir"] = self.build_dir_structure()
 
         file_df["noise_file_path"] = self.get_noise_fp()
@@ -256,15 +256,15 @@ class RunKatydid:
 
         return dbscan_radius
 
-    def get_base_config_path(self, base_config):
+    def get_base_config_path(self):
 
         base_path = Path("/data/eliza4/he6_cres/katydid_analysis/base_configs")
-        base_config = base_path / Path(base_config)
+        base_config_full = base_path / Path(self.base_config)
 
-        if not base_config.is_file():
+        if not base_config_full.is_file():
             raise UserWarning("base config doesn't exist. ")
 
-        return str(base_config)
+        return str(base_config_full)
 
     def build_dir_structure(self):
 
