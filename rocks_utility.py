@@ -7,6 +7,7 @@ import numpy as np
 import datetime
 import typing
 import pandas.io.sql as psql
+import subprocess as sp
 
 def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]: 
     
