@@ -203,7 +203,7 @@ class PostProcessing:
 
         elif self.stage == 1:
 
-            print("PostProcessing stage 1: processing.")
+            print("\nPostProcessing stage 1: cleaning and clustering.")
             # Process all the files with given file_id.
 
             # Start by opening and reading in the file_df.
@@ -214,7 +214,7 @@ class PostProcessing:
 
         elif self.stage == 2:
 
-            print("PostProcessing stage 2: clean-up.")
+            print("\nPostProcessing stage 2: clean-up.")
             # Start by opening and reading in the file_df.
             # self.root_files_df = self.load_root_files_df()
 
@@ -298,7 +298,6 @@ class PostProcessing:
         root_files_df_chunk = self.root_files_df[
             self.root_files_df.file_id == self.file_id
         ]
-        # for file_id, root_files_df_chunk in self.root_files_df.groupby(["file_id"]):
 
         tracks = self.get_track_data_from_files(root_files_df_chunk)
 
@@ -307,11 +306,7 @@ class PostProcessing:
 
             self.write_to_csv(self.file_id, tracks, file_name="tracks")
 
-        print(f"file_id: {self.file_id}")
-        print(len(root_files_df_chunk))
-        print(len(tracks))
-        print(tracks.index)
-        print(tracks.head())
+        print(f"\nProcessing file_id: {self.file_id}")
 
         # Force a write to the log.
         sys.stdout.flush()
@@ -329,27 +324,25 @@ class PostProcessing:
         # Step 0. Clean up the tracks.
         cleaned_tracks = self.clean_up_tracks(tracks)
 
-        print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
+        # print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
 
         # Step 1. Add aggregated event info to tracks.
         tracks = self.add_event_info(tracks)
-        print("1\n", tracks.index)
+        # print("1\n", tracks.index)
 
         # Step 2. DBSCAN clustering of events.
         # TODO: Make sure it actually
         tracks = self.cluster_tracks(tracks)
-        print("3\n", tracks.index)
+        # print("3\n", tracks.index)
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
-        print("3\n", events.index)
+        # print("3\n", events.index)
 
         return events
 
     def get_track_data_from_files(self, root_files_df):
-        # TODO (10/11/22): Add the nmr and rate retrieval from the root_files_df here.
-        # Build that into the build_tracks_for single_file.
-        # For ease have the function just take the root_files_df?
+
         condition = root_files_df["root_file_exists"] == True
 
         experiment_tracks_list = [
@@ -464,13 +457,13 @@ class PostProcessing:
             exp_tracks_copy.groupby(["run_id", "file_id"])
         ):
 
-            print(f"\n clustering: run_id: {name[0]},  file_id: {name[1]}")
+            print(f"\nClustering: run_id: {name[0]},  file_id: {name[1]}")
 
             condition = (exp_tracks_copy.run_id == name[0]) & (
                 exp_tracks_copy.file_id == name[1]
             )
-            print(f"tracks in file: {condition.sum()}")
-            print(f"fraction of total requested (nfe files): {condition.mean()}")
+            print(f"Tracks in file: {condition.sum()}")
+            print(f"Fraction of total tracks in dataset: {condition.mean()}")
 
             exp_tracks_copy.loc[condition, "event_label"] = self.dbscan_clustering(
                 exp_tracks_copy[condition],
@@ -737,9 +730,9 @@ class PostProcessing:
         print("\nCombining set of tracks_dfs.\n")
         print("lengths: ", lens)
         print("sum: ", sum(lens))
-        print("len single file: ", len(tracks_df))
-        print("index: ", tracks_df.index)
-        print("cols: ", tracks_df.columns)
+        print("len single file (sanity check): ", len(tracks_df))
+        print("tracks index: ", tracks_df.index)
+        print("tracks cols: ", tracks_df.columns)
 
         events_dfs = [
             pd.read_csv(events_path, index_col=0) for events_path in events_path_list
@@ -750,9 +743,9 @@ class PostProcessing:
         print("\nCombining set of events_dfs.\n")
         print("lengths: ", lens)
         print("sum: ", sum(lens))
-        print("len single file: ", len(events_df))
-        print("index: ", events_df.index)
-        print("cols: ", events_df.columns)
+        print("len single file (sanity check): ", len(events_df))
+        print("events index: ", events_df.index)
+        print("events cols: ", events_df.columns)
 
         tracks_df.to_csv(self.tracks_df_path)
         events_df.to_csv(self.events_df_path)
@@ -776,9 +769,9 @@ class PostProcessing:
         remove_list = list(set(real_path_list) - set(desired_path_list))
 
         if len(remove_list) == 0:
-            print(
-                f"Sanity check passed. The following are the only files in the analysis dir: \n {desired_path_list}"
-            )
+            print(f"\nSanity check passed. Only files in the analysis dir are: \n")
+            for path in desired_path_list: 
+                print(str(path))
         else:
             print("\nWARNING. sanity_check() failed! ")
             print("Cleaning up. Removing the following files: \n")
