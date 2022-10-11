@@ -74,7 +74,7 @@ def main():
     print(f"\nRunning Katydid. STARTING at PST time: {get_pst_time()}\n")
 
     # Print summary of katydid running.
-    print(f"Processing: \n run_id: {args.run_id}.\n")
+    print(f"\nProcessing: run_id: {args.run_id}.\n")
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -158,7 +158,7 @@ class RunKatydid:
         # New analysis.
         else:
             print(f"Analysis Type: New analysis. Building file_df: {self.file_df_path}")
-            file_df = build_full_file_df(
+            file_df = self.build_full_file_df(
                 args.run_id,
                 args.noise_run_id,
                 args.analysis_id,
@@ -408,7 +408,8 @@ class RunKatydid:
         sys.stdout.flush()
 
         return None
-        
+
+
 if __name__ == "__main__":
     main()
 
@@ -753,7 +754,7 @@ if __name__ == "__main__":
 #     Note: just takes the first file in this run_id (assumption is it's a one file acq)
 #     """
 #     query_he6_db = """
-#                     SELECT f.run_id, f.file_path 
+#                     SELECT f.run_id, f.file_path
 #                     FROM he6cres_runs.spec_files as f
 #                     WHERE f.run_id = {}
 #                     ORDER BY f.created_at DESC
@@ -833,6 +834,3 @@ if __name__ == "__main__":
 # #             connection.close()
 
 # #     return query_result
-
-
-
