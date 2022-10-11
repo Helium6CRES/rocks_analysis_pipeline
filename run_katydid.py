@@ -84,7 +84,13 @@ def main():
     set_permissions()
 
     # Begin running Katydid.
-    run_katydid = RunKatydid(args.run_id, args.analysis_id)
+    run_katydid = RunKatydid(
+        args.run_id,
+        args.analysis_id,
+        args.noise_run_id,
+        args.base_config,
+        args.file_num,
+    )
 
     set_permissions()
 
@@ -144,7 +150,7 @@ class RunKatydid:
 
             file_df = pd.read_csv(file_df_path)
 
-            # Check to see which root files already exist. 
+            # Check to see which root files already exist.
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
                 lambda x: check_if_exists(x)
             )
