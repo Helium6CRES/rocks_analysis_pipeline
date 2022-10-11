@@ -18,7 +18,7 @@ import sys
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports. 
-from .utility import he6cres_db_query, get_pst_time, set_permissions
+from rocks_utility import he6cres_db_query, get_pst_time, set_permissions
 
 # Import settings. 
 pd.set_option("display.max_columns", 100)
