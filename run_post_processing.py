@@ -361,7 +361,7 @@ class PostProcessing:
 
         experiment_tracks_list = [
             self.build_tracks_for_single_file(root_files_df_row)
-            for root_files_df_row in root_files_df[condition]
+            for root_files_df_row in root_files_df[condition].iterrows()
         ]
 
         tracks_df = pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
@@ -374,7 +374,9 @@ class PostProcessing:
         """
         DOCUMENT.
         """
-
+        print(root_files_df_row)
+        print(root_files_df_row["root_file_path"])
+        
         tracks_df = pd.DataFrame()
 
         rootfile = uproot4.open(root_files_df_row["root_file_path"])
