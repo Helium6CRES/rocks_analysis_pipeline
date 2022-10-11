@@ -17,14 +17,12 @@ def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]:
 
         # Create a cursor to perform database operations
         cursor = connection.cursor()
-        print("Successfully connected to he6cres_db") 
 
         # Execute a sql_command
         cursor.execute(query)
         cols = [desc[0] for desc in cursor.description]
         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
 
-        print("Query executed.")
         
     except (Exception, Error) as error:
         print("Error while connecting to he6cres_db", error)
@@ -34,6 +32,5 @@ def he6cres_db_query(query: str ) -> typing.Union[None, pd.DataFrame]:
         if connection:
             cursor.close()
             connection.close()
-            print("Connection to he6cres_db is closed")
 
     return query_result

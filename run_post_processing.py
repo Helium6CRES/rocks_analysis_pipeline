@@ -560,6 +560,9 @@ class PostProcessing:
         tracks_df["field"] = 10
         tracks_df["monitor_rate"] = 10
 
+        # Notes: 
+        # * This is just one file at a time right now. Need to adjust that so we can reduce the number of queries.  
+
         return tracks_df
 
     def write_to_csv(self, file_id, df_chunk, file_name):
