@@ -571,7 +571,7 @@ class PostProcessing:
 
         # Step 0: Make sure the root_files_df has a tz aware dt column.
         root_files_df["pst_time"] = root_files_df["root_file_path"].apply(
-            lambda x: get_utc_time(x)
+            lambda x: self.get_utc_time(x)
         )
         root_files_df["pst_time"] = root_files_df["pst_time"].dt.tz_localize(
             "US/Pacific"
@@ -579,26 +579,26 @@ class PostProcessing:
         root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
         # Step 1: Add the monitor rate/field data to each file.
-        root_files_df = add_monitor_rate(root_files_df)
-        root_files_df = add_field(root_files_df)
+        root_files_df = self.add_monitor_rate(root_files_df)
+        root_files_df = self.add_field(root_files_df)
 
         return root_files_df
 
-    def get_utc_time(root_file_path):
+    def get_utc_time(self, root_file_path):
         # USED in add_env_data()
         time_str = root_file_path[-28:-9]
         datetime_object = datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
 
         return datetime_object
 
-    def get_nearest(df, dt):
+    def get_nearest(self, df, dt):
         # USED in add_env_data()
         # created_at column is the dt column.
         minidx = (dt - df["created_at"]).abs().idxmin()
 
         return df.loc[[minidx]].iloc[0]
 
-    def add_monitor_rate(root_files_df):
+    def add_monitor_rate(self, root_files_df):
         # USED in add_env_data()
         root_files_df["monitor_rate"] = np.nan
 
@@ -644,7 +644,7 @@ class PostProcessing:
 
         return root_files_df
 
-    def add_field(root_files_df):
+    def add_field(self, root_files_df):
 
         root_files_df["field"] = np.nan
 
