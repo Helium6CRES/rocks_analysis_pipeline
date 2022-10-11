@@ -7,7 +7,7 @@ import pandas as pd
 
 import pandas.io.sql as psql
 
-# from datetime import datetime
+import pytz
 import numpy as np
 import datetime
 from glob import glob
@@ -115,8 +115,10 @@ def main():
     args = par.parse_args()
 
     # Current time to nearest second.
-    now = datetime.datetime.now().replace(microsecond=0)
-    print(f"\nPost Processing Stage {args.stage} STARTING at UTC time: {now}\n")
+    # now = datetime.datetime.now().replace(microsecond=0)
+    tz = pytz.timezone('US/Pacific')
+    pst_now = datetime.now(tz).replace(microsecond=0)
+    print(f"\nPost Processing Stage {args.stage} STARTING at PST time: {pst_now}\n")
 
     # Print summary of experiment:
     print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
@@ -284,7 +286,7 @@ class PostProcessing:
 
     def load_root_files_df(self):
 
-        return pd.read_csv(self.root_files_df_path)
+        return pd.read_csv(self.root_files_df_path, index_col=0)
 
     def process_tracks_and_events(self):
 
@@ -350,15 +352,6 @@ class PostProcessing:
         # For ease have the function just take the root_files_df?
         condition = root_files_df["root_file_exists"] == True
 
-        # experiment_tracks_list = [
-        #     self.build_tracks_for_single_file(root_file_path, run_id, file_id)
-        #     for root_file_path, run_id, file_id in zip(
-        #         root_files_df[condition]["root_file_path"],
-        #         root_files_df[condition]["run_id"],
-        #         root_files_df[condition]["file_id"],
-        #     )
-        # ]
-
         experiment_tracks_list = [
             self.build_tracks_for_single_file(root_files_df_row)
             for index, root_files_df_row in root_files_df[condition].iterrows()
@@ -374,8 +367,6 @@ class PostProcessing:
         """
         DOCUMENT.
         """
-        print(root_files_df_row)
-        print(root_files_df_row["root_file_path"])
 
         tracks_df = pd.DataFrame()
 
