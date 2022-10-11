@@ -181,7 +181,9 @@ class PostProcessing:
         self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
         self.events_df_path = self.analysis_dir / Path(f"events.csv")
 
-        print(f"PostProcessing attributes:\n {self.__dict__}\n")
+        print(f"PostProcessing attributes:\n")
+        for key, value in self.__dict__.items():
+            print(f"{key}: {value}")
 
         if self.stage == 0:
 
@@ -194,8 +196,6 @@ class PostProcessing:
 
             # Write the root_files_df to disk for use in the subsequent stages.
             self.root_files_df.to_csv(self.root_files_df_path)
-
-            print(self.root_files_df.head())
 
             # Force a write to the log.
             sys.stdout.flush()
@@ -257,7 +257,6 @@ class PostProcessing:
             file_df_path = self.build_file_df_path(run_id)
 
             if file_df_path.is_file():
-                print(f"Collecting file_df: {str(file_df_path)} \n")
 
                 file_df = pd.read_csv(file_df_path)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
