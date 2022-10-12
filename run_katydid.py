@@ -144,7 +144,7 @@ class RunKatydid:
 
         # Clean up.
         if self.file_df_path.is_file():
-            print(f"Analysis Type: Clean up. {self.file_df_path} already exists.\n")
+            print(f"Analysis Type: Clean up. \nfile_df {self.file_df_path} already exists.\n")
 
             file_df = pd.read_csv(self.file_df_path)
 

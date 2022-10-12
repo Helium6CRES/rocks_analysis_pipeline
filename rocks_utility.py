@@ -11,18 +11,38 @@ import subprocess as sp
 from pathlib import Path
 
 
-def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
+def he6cres_db_connection_local():
+
+    # Connect to the he6cres_db from a machine on the CENPA vpn.
+    connection = psycopg2.connect(
+        user="postgres",
+        password="chirality",
+        host="10.66.192.47",
+        port="5432",
+        database="he6cres_db",
+    )
+    return connection
+
+def he6cres_db_connection_rocks():
+
+    # Connect to the he6cres_db from rocks.
+    connection = psycopg2.connect(
+        user="postgres",
+        password="chirality",
+        host="wombat.npl.washington.edu",
+        port="5544",
+        database="he6cres_db",
+    )
+    return connection
+
+def he6cres_db_query(query: str, local = False) -> typing.Union[None, pd.DataFrame]:
 
     connection = False
     try:
-        # Connect to an existing database
-        connection = psycopg2.connect(
-            user="postgres",
-            password="chirality",
-            host="wombat.npl.washington.edu",
-            port="5544",
-            database="he6cres_db",
-        )
+        if not local: 
+            connection = he6cres_db_connection_rocks()
+        else: 
+            connection = he6cres_db_connection_local()
 
         # Create a cursor to perform database operations
         cursor = connection.cursor()

@@ -19,6 +19,7 @@ class ExperimentResults:
         experiment_name,
         analysis_id,
         include_root_files=True,
+        max_root_files_to_grab=10,
         rebuild_experiment_dir=False,
         rocks_username="drewbyron",
         rocks_IP="172.25.100.1",
@@ -29,6 +30,7 @@ class ExperimentResults:
         self.experiment_name = experiment_name
         self.analysis_id = analysis_id
         self.include_root_files = include_root_files
+        self.max_root_files_to_grab = max_root_files_to_grab
         self.rebuild_experiment_dir = rebuild_experiment_dir
         self.rocks_username = rocks_username
         self.rocks_IP = rocks_IP
@@ -61,7 +63,6 @@ class ExperimentResults:
 
             self.root_file_dir = self.experiment_dir_loc / Path("root_files")
 
-            # TODO: Fix this. Won't work rn...
             self.root_files_loc = (
                 self.tracks.groupby(["root_file_path"])
                 .first()[["run_id", "file_id"]]
@@ -88,7 +89,10 @@ class ExperimentResults:
 
             if len(remote_paths_missing) != 0:
 
-                self.copy_from_rocks(remote_paths_missing, local_paths_missing)
+                self.copy_from_rocks(
+                    remote_paths_missing[: self.max_root_files_to_grab],
+                    local_paths_missing[: self.max_root_files_to_grab],
+                )
             else:
                 print(
                     f"All {len(remote_paths)} root files are already present here: {self.root_file_dir}"
@@ -262,9 +266,9 @@ class ExperimentResults:
         self.events_path = self.experiment_dir_loc / Path("events.csv")
 
         print("\nCollecting root_files, tracks, and events.")
-        self.root_files = pd.read_csv(self.root_files_path, index_col =0)
-        self.tracks = pd.read_csv(self.tracks_path, index_col =0)
-        self.events = pd.read_csv(self.events_path, index_col =0)
+        self.root_files = pd.read_csv(self.root_files_path, index_col=0)
+        self.tracks = pd.read_csv(self.tracks_path, index_col=0)
+        self.events = pd.read_csv(self.events_path, index_col=0)
 
         # TODO: Are empty files being missed if we use the below?
         self.run_ids = sorted(self.events["run_id"].unique().tolist())

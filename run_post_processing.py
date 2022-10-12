@@ -135,7 +135,7 @@ def main():
     )
 
     # Print summary of experiment:
-    print(f"Processing: \n run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
+    print(f"Processing: \n file_id: {args.file_id} run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -262,7 +262,7 @@ class PostProcessing:
 
             if file_df_path.is_file():
 
-                file_df = pd.read_csv(file_df_path)
+                file_df = pd.read_csv(file_df_path, index_col = 0)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
                     lambda x: check_if_exists(x)
                 )
