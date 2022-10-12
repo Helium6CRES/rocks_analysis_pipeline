@@ -592,6 +592,9 @@ class PostProcessing:
         root_files_df = self.add_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
 
+        # Step 3. Add the set_field by rounding to nearest 100th place. 
+        root_files_df["set_field"] = root_files_df['field'].round(decimals = 2)
+
         return root_files_df
 
     def get_utc_time(self, root_file_path):

@@ -61,13 +61,19 @@ class ExperimentResults:
 
         if self.include_root_files:
 
+            # Changing this to retrieve "empty" files.
             self.root_file_dir = self.experiment_dir_loc / Path("root_files")
 
             self.root_files_loc = (
-                self.tracks.groupby(["root_file_path"])
+                self.root_files.groupby(["root_file_path"])
                 .first()[["run_id", "file_id"]]
                 .reset_index()
             )
+            # Impose a limit on the number of root files to grab.
+            self.root_files_loc = self.root_files_loc[
+                self.root_files_loc["file_id"] < self.max_root_files_to_grab
+            ]
+
             self.root_files_loc["root_file_path"] = self.root_files_loc[
                 "root_file_path"
             ].apply(lambda row: self.make_path(row))
@@ -89,10 +95,7 @@ class ExperimentResults:
 
             if len(remote_paths_missing) != 0:
 
-                self.copy_from_rocks(
-                    remote_paths_missing[: self.max_root_files_to_grab],
-                    local_paths_missing[: self.max_root_files_to_grab],
-                )
+                self.copy_from_rocks(remote_paths_missing, local_paths_missing)
             else:
                 print(
                     f"All {len(remote_paths)} root files are already present here: {self.root_file_dir}"
@@ -131,10 +134,14 @@ class ExperimentResults:
         if config["sparse_spec"]["show"]:
             self.viz_sparse_spec(ax, run_id, file_id, config)
 
+        set_field = self.root_files[
+            (self.root_files.run_id == run_id) & (self.root_files.file_id == file_id)
+        ]["set_field"].iloc[0]
+        print(set_field)
         # Finish the plot.
         ax.set_ylabel("MHz")
         ax.set_xlabel("Time (s)")
-        ax.set_title(f"run_id: {run_id}, file_id: {file_id}")
+        ax.set_title(f"run_id: {run_id}, file_id: {file_id}, set_field: {set_field}")
         plt.show()
 
         return None
@@ -274,7 +281,6 @@ class ExperimentResults:
             "alpha": 1.0,
         },
     ):
-        
 
         scatt_types = ["tracks", "events"]
         if scatt_type not in scatt_types:
@@ -286,7 +292,7 @@ class ExperimentResults:
             df = self.events
 
         if fix_field:
-            condition = (df.set_field == field_value)
+            condition = df.set_field == field_value
             df = df[condition]
 
         plt.close("all")
@@ -314,7 +320,11 @@ class ExperimentResults:
         ax1.set_xlabel("{}".format(column_1))
 
         # Histogram.
-        ax1.hist(df[column_1], bins=scatt_settings["hist_bins"], color=scatt_settings["colors"][1])
+        ax1.hist(
+            df[column_1],
+            bins=scatt_settings["hist_bins"],
+            color=scatt_settings["colors"][1],
+        )
 
         plt.show()
 
@@ -324,7 +334,11 @@ class ExperimentResults:
         ax2.set_xlabel("{}".format(column_2))
 
         # Histogram.
-        ax2.hist(df[column_2], bins=scatt_settings["hist_bins"], color=scatt_settings["colors"][1])
+        ax2.hist(
+            df[column_2],
+            bins=scatt_settings["hist_bins"],
+            color=scatt_settings["colors"][1],
+        )
 
         plt.show()
 
@@ -336,7 +350,7 @@ class ExperimentResults:
         self.tracks_path = self.experiment_dir_loc / Path("tracks.csv")
         self.events_path = self.experiment_dir_loc / Path("events.csv")
 
-        print("\nCollecting root_files, tracks, and events.")
+        print("\nCollecting root_files, tracks, and events.\n")
         # TODO: Root_files index is still messed up.
         self.root_files = pd.read_csv(self.root_files_path, index_col=0)
         self.tracks = pd.read_csv(self.tracks_path, index_col=0)
@@ -353,7 +367,7 @@ class ExperimentResults:
         if self.experiment_dir_loc.exists():
 
             if self.rebuild_experiment_dir:
-                print("Rebuilding local experiment dir")
+                print("Rebuilding local experiment dir.")
                 shutil.rmtree(str(self.experiment_dir_loc))
                 self.copy_remote_experiment_dir()
 
@@ -367,7 +381,7 @@ class ExperimentResults:
 
     def copy_remote_experiment_dir(self):
         print(
-            f"Copying analysis directory from rocks. This may take a few minutes depending on the size of {str(self.experiment_dir_rocks)} the speed of the connection"
+            f"\nCopying analysis directory from rocks. This may take a few minutes.\n"
         )
         scp_run_list = [
             "scp",
