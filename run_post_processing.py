@@ -45,21 +45,28 @@ pd.options.mode.chained_assignment = None  # Comment out if debugging.
 
 def main():
     """
+    Main for the post processing of the katydid output. SAY MORE
+
+    Args: (from command line)
+        run_ids (List[int]): all run_ids to be post processed. There needs
+            to already be root files for these run_ids in the associated 
+            analysis directory.
+        analysis_id (int): analysis_id for which to collect track and event
+            data for. 
+        ...
+
+    Returns: 
+        None
+
+    Raises: 
+        None
+
+
+
 
     TODOS:
-    * Build this into a class. It's going to be much easier to read and interact with.
-    * I need to build the clean-up and event-building into this process. Otherwise these
-    files are going to get too large. Already 1.1G after 171 out of 5700 files.
-    * Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df?
-    * Put a timestamp in the log files for clean-up.
-    * Put a timestamp in the dfs somehow so we know when the analysis was conducted.
-    * Get Sphynx working before moving on to documenting! This will be so useful.
-    * Make an option to delete a currently existing experiment directory with a user enter.
-
-
-    Notes:
     * This will only work with katydid files that have track/event objects in the trees.
-    * Should it just take a analysis id? No then it isn't well defined...
+
     """
 
     umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
@@ -242,7 +249,7 @@ class PostProcessing:
             shutil.rmtree(str(self.analysis_dir))
 
         self.analysis_dir.mkdir()
-        print(f"Made {self.analysis_dir}")
+        print(f"\nMade: {self.analysis_dir}")
 
         return None
 
@@ -298,6 +305,8 @@ class PostProcessing:
         root_files_df_chunk = self.root_files_df[
             self.root_files_df.file_id == self.file_id
         ]
+        if len(root_files_df_chunk) == 0: 
+            raise UserWarning(f"There is no file_id = {self.file_id} in aid = {self.analysis_id}")
 
         tracks = self.get_track_data_from_files(root_files_df_chunk)
 
