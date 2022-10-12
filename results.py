@@ -137,7 +137,7 @@ class ExperimentResults:
         set_field = self.root_files[
             (self.root_files.run_id == run_id) & (self.root_files.file_id == file_id)
         ]["set_field"].iloc[0]
-        print(set_field)
+
         # Finish the plot.
         ax.set_ylabel("MHz")
         ax.set_xlabel("Time (s)")

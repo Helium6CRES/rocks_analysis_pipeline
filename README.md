@@ -69,9 +69,16 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 
 * general: 
 	* put start and stop print statements for each job that gets written out to a log file. 
-	* Get sphynx documnetation going. Make it pretty. 
+	* Get sphynx documnetation going. Make it pretty. Use this resource to get started: https://keep.google.com/u/0/#NOTE/1QBoOz6T-t5-MZk35VD79ZzVyOxJDCackSwkSVI6s3UmufJrvEmYfLYvjO9rP
 	* Delete all unused or commented out code and .py files. 
 	* Make sure permissions things are ok for other people...
+	* Add a datetime timestamp to all of the writes to the logs. This will be very useful for debugging. 
+	* Print statements are all over the place. Make it so that the logs are readable (once things work well). 
+	* Delete all commented code that isn't being used. 
+	* Document and make a nice readme with some gifs illustrating what this does. 
+	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field... 
+	* add utility functions module with get time now, database query,...
+	* Make a new demo ipynb, suggest a workflow (ipynb and saved dirs together on a harddrive)
 * run_katydid.py
 	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data.  
 	* Change the job_logs dir to be under  `job_logs/katydid`. 
@@ -79,13 +86,20 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 	* I don't like the way this is organized rn. I would be nice to build it into a class the way the post processing is. 
 	* The copies of the .yaml isn't getting deleted rn. FIXED (I think, need to verify)
 * run_post_processing.py
+	* Indexing of the root_files df is still off. 
 	* Fix indexing of events and tracks df. 
 	* Why are there these random (clearly unphysical) events that cross the whole second of data? Need a cut to deal with this.  
 	* Add the clean-up settings to the list of arguments?
 	* Are the files with no tracks or events being dealt with intelligently?
 	* Check to see if an experiment with this name exists.
+	* Organize all of the files in the class so that it's clear which ones are used where. Organize by stage. 
 * results.py
 	* Check to make sure this works on other people's machines. 
 	* Add the visualization tool into the class that shows the different relationships between variables (in demo nb rn.)
 
 
+## Testing this on 100 files: 
+
+* All but one file worked the first time through katydid, the clean-up didn't help. The file must have a weirdness
+	* Weird file: Freq_data_2022-08-18-06-29-23_010.root
+* Now running the post processing. This meant submitting 100 jobs. 
