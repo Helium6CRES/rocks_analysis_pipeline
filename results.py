@@ -43,7 +43,7 @@ class ExperimentResults:
         self.experiment_dir_loc = self.local_dir / self.experiment_dir_name
 
         # Grab the plot_settings or else set to default:
-        self.plt_settings = {
+        self.viz_settings = {
             "figsize": (12, 6),
             "colors": ["b", "r", "g", "c", "m", "k"],
         }
@@ -115,14 +115,14 @@ class ExperimentResults:
             "events": {"show": True, "alpha": 1.0},
             "sparse_spec": {"show": True, "frac_pts": 1.0, "mrk_sz": 0.1, "alpha": 0.1},
         },
-        plt_settings=None,
+        viz_settings=None,
     ):
 
-        if plt_settings is not None:
-            self.plt_settings.update((k, plt_settings[k]) for k in plt_settings.keys())
+        if viz_settings is not None:
+            self.viz_settings.update((k, viz_settings[k]) for k in viz_settings.keys())
 
         plt.close("all")
-        fig, ax = plt.subplots(figsize=self.plt_settings["figsize"])
+        fig, ax = plt.subplots(figsize=self.viz_settings["figsize"])
 
         if config["events"]["show"]:
             self.viz_events(ax, run_id, file_id, config)
@@ -158,8 +158,8 @@ class ExperimentResults:
                 time_coor,
                 freq_coor * 1e-6,
                 "o-",
-                color=self.plt_settings["colors"][
-                    int(event.EventID) % len(self.plt_settings["colors"])
+                color=self.viz_settings["colors"][
+                    int(event.EventID) % len(self.viz_settings["colors"])
                 ],
                 markersize=0.5,
                 alpha=config["events"]["alpha"],
@@ -205,8 +205,8 @@ class ExperimentResults:
                             time_coor,
                             freq_coor * 1e-6,
                             "o-",
-                            color=self.plt_settings["colors"][
-                                i % len(self.plt_settings["colors"])
+                            color=self.viz_settings["colors"][
+                                i % len(self.viz_settings["colors"])
                             ],
                             markersize=0.5,
                             alpha=config["events"]["alpha"],
@@ -219,8 +219,8 @@ class ExperimentResults:
                             time_coor,
                             freq_coor * 1e-6,
                             "o-",
-                            color=self.plt_settings["colors"][
-                                i % len(self.plt_settings["colors"])
+                            color=self.viz_settings["colors"][
+                                i % len(self.viz_settings["colors"])
                             ],
                             markersize=0.5,
                             alpha=config["events"]["alpha"],
@@ -259,6 +259,77 @@ class ExperimentResults:
 
         return None
 
+    def scatter(
+        self,
+        scatt_type,
+        column_1,
+        column_2,
+        fix_field=False,
+        field_value=0,
+        scatt_settings={
+            "figsize": (12, 4),
+            "colors": ["b", "r", "g", "c", "m", "k"],
+            "hist_bins": 200,
+            "markersize": 0.4,
+            "alpha": 1.0,
+        },
+    ):
+        
+
+        scatt_types = ["tracks", "events"]
+        if scatt_type not in scatt_types:
+            raise ValueError(f"Invalid scatt_type. Expected one of: {scatt_types}")
+
+        if scatt_type == "tracks":
+            df = self.tracks
+        if scatt_type == "events":
+            df = self.events
+
+        if fix_field:
+            condition = (df.set_field == field_value)
+            df = df[condition]
+
+        plt.close("all")
+        fig0, ax0 = plt.subplots(figsize=scatt_settings["figsize"])
+
+        ax0.set_title("Scatter: {} vs {}".format(column_1, column_2))
+        ax0.set_xlabel("{}".format(column_1))
+        ax0.set_ylabel("{}".format(column_2))
+
+        # Scatter Plots
+        ax0.plot(
+            df[column_1],
+            df[column_2],
+            "o",
+            markersize=scatt_settings["markersize"],
+            alpha=scatt_settings["alpha"],
+            color=scatt_settings["colors"][0],
+        )
+
+        plt.show()
+
+        fig1, ax1 = plt.subplots(figsize=scatt_settings["figsize"])
+
+        ax1.set_title("Histogram. x_col: {}".format(column_1))
+        ax1.set_xlabel("{}".format(column_1))
+
+        # Histogram.
+        ax1.hist(df[column_1], bins=scatt_settings["hist_bins"], color=scatt_settings["colors"][1])
+
+        plt.show()
+
+        fig2, ax2 = plt.subplots(figsize=scatt_settings["figsize"])
+
+        ax2.set_title("Histogram. y_col: {}".format(column_2))
+        ax2.set_xlabel("{}".format(column_2))
+
+        # Histogram.
+        ax2.hist(df[column_2], bins=scatt_settings["hist_bins"], color=scatt_settings["colors"][1])
+
+        plt.show()
+
+        return None
+
     def build_result_attributes(self):
 
         self.root_files_path = self.experiment_dir_loc / Path("root_files.csv")
@@ -266,6 +337,7 @@ class ExperimentResults:
         self.events_path = self.experiment_dir_loc / Path("events.csv")
 
         print("\nCollecting root_files, tracks, and events.")
+        # TODO: Root_files index is still messed up.
         self.root_files = pd.read_csv(self.root_files_path, index_col=0)
         self.tracks = pd.read_csv(self.tracks_path, index_col=0)
         self.events = pd.read_csv(self.events_path, index_col=0)

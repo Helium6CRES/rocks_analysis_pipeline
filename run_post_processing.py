@@ -333,8 +333,6 @@ class PostProcessing:
         # Step 0. Clean up the tracks.
         cleaned_tracks = self.clean_up_tracks(tracks)
 
-        # print("cleaned_tracks: ", cleaned_tracks.index, cleaned_tracks.head())
-
         # Step 1. Add aggregated event info to tracks.
         tracks = self.add_event_info(tracks)
         # print("1\n", tracks.index)
@@ -392,12 +390,18 @@ class PostProcessing:
 
     def add_track_info(self, tracks):
 
+        # Organize this function a bit. 
+
         tracks["FreqIntc"] = (
             tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
         )
         tracks["TimeIntc"] = (
             tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
         )
+
+        tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
+
+        tracks["set_field"] = tracks['field'].round(decimals = 2)
 
         intc_info = (
             tracks.groupby(["run_id", "file_id", "EventID"])
@@ -488,14 +492,14 @@ class PostProcessing:
 
         tracks = tracks_in.copy()
 
-        tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
-
-        tracks["FreqIntc"] = (
-            tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
-        )
-        tracks["TimeIntc"] = (
-            tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
-        )
+        
+        # tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
+        # tracks["FreqIntc"] = (
+        #     tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
+        # )
+        # tracks["TimeIntc"] = (
+        #     tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
+        # )
 
         tracks["EventStartTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "StartTimeInRunC"
