@@ -567,6 +567,7 @@ class PostProcessing:
             "EventFreqIntc",
             "EventTimeIntc",
             "field",
+            "set_field", 
             "monitor_rate",
         ]
         events = (
