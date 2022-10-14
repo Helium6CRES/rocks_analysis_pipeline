@@ -356,9 +356,9 @@ class ExperimentResults:
         self.tracks = pd.read_csv(self.tracks_path, index_col=0)
         self.events = pd.read_csv(self.events_path, index_col=0)
 
-        # TODO: Are empty files being missed if we use the below?
-        self.run_ids = sorted(self.events["run_id"].unique().tolist())
-        self.file_ids = sorted(self.events["file_id"].unique().tolist())
+        # TODO: Are empty files being missed if we use the below? Yes![CHANGED.]
+        self.run_ids = sorted(self.root_files["run_id"].unique().tolist())
+        self.file_ids = sorted(self.root_files["file_id"].unique().tolist())
 
         return None
 

@@ -79,6 +79,8 @@ This repo contains scripts for running katydid on the CENPA cluster (rocks) and 
 	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field... 
 	* add utility functions module with get time now, database query,...
 	* Make a new demo ipynb, suggest a workflow (ipynb and saved dirs together on a harddrive)
+	* Cleam up the demo nb and add instructions on how to use it (copy it and move to different directory). 
+	* Make some progress on documenting what is actually done at each stage and how things are passed around. This will save me (and others) a ton of headaches. 
 * run_katydid.py
 	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data.  
 	* Change the job_logs dir to be under  `job_logs/katydid`. 

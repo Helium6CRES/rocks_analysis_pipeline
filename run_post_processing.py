@@ -22,7 +22,7 @@ from typing import List
 from pathlib import Path
 import yaml
 import uproot4
-import awkward
+# import awkward
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
@@ -801,7 +801,7 @@ class PostProcessing:
 
         return None
 
-    def flat(self, jaggedarray: awkward.Array) -> np.ndarray:
+    def flat(self, jaggedarray) -> np.ndarray:
         """
         Given jagged array (common in root), it returns a flattened array.
 
