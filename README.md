@@ -11,13 +11,13 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 
 #### Look at track and event classification overlaid on top of raw data: 
 
-<p align="center"><img width="50%" src="/demo/readme_imgs/sparse_spec.png" />              <img width="50%" src="/demo/readme_imgs/track_overlay.png" /><img width="80%" src="/demo/readme_imgs/event_overlay.png" /></p>
+<p align="center"><img width="42%" src="/demo/readme_imgs/sparse_spec.png" />              <img width="42%" src="/demo/readme_imgs/track_overlay.png" /><img width="80%" src="/demo/readme_imgs/event_overlay.png" /></p>
 
 #### Inertactively look at relationships between extracted cres event features: 
 
-<p align="center"><img width="15%" src="/demo/readme_imgs/display_options_1.png" />              <img width="75%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
+<p align="center"><img width="19%" src="/demo/readme_imgs/display_options_1.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
 
-<p align="center"><img width="15%" src="/demo/readme_imgs/display_options_2.png" />              <img width="75%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
+<p align="center"><img width="19%" src="/demo/readme_imgs/display_options_2.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
 --------------------------------------------------------------------------------
 
 ## Instructions for running an analysis on rocks: 
