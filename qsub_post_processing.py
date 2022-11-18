@@ -21,7 +21,10 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
+# Local imports.
+sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
+
 
 # Local imports.
 from rocks_utility import set_permissions

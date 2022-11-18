@@ -23,8 +23,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 * Log on to rocks. 
 * `cd /data/eliza4/he6_cres`
 * Note: May need to upgrade pip. 
-	* For Winston and I this worked: `pip3 install --upgrade pip`
-	* For Heather the above didn't work and she needed to do the following: 
+	* For Winston and I this worked: `pip3 install --upgrade pip` 
 * `pip3 install -r rocks_analysis_pipeline/requirements.txt`
 * Notes: 
 	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
@@ -32,6 +31,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing.  
 
 ### Run katydid:
+
 * **Overview:** Run katydid on a list of run_ids.
 * **Step 0:** Run katydid for the first time on a list of run_ids: 
 	* Log on to rocks. 
@@ -83,8 +83,10 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 
 ## Testing: 
 
-* Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
-	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
+* Getting back into this and finishing up the documentation. Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
+	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
+	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 2
+	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 0
 
 
 ## TODOs: 
