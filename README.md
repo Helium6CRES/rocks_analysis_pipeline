@@ -9,10 +9,12 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 --------------------------------------------------------------------------------
 ### Run an analysis then make interactive plots of cres track features!
 
-<p align="center"><img width="40%" src="/demo/readme_imgs/plot_stuff.png" />              <img width="50%" src="/demo/readme_imgs/s.png" /></p>
+#### 
+<p align="center"><img width="20%" src="/demo/readme_imgs/sparse_spec.png" />              <img width="20%" src="/demo/readme_imgs/track_overlay.png" /><img width="20%" src="/demo/readme_imgs/event_overlay.png" /></p>
 
-<p align="center"><img width="40%" src="/demo/readme_imgs/plot_stuff_1.png" />              <img width="50%" src="/demo/readme_imgs/s.png" /></p>
+<p align="center"><img width="40%" src="/demo/readme_imgs/display_options_1.png" />              <img width="50%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
 
+<p align="center"><img width="40%" src="/demo/readme_imgs/display_options_2.png" />              <img width="50%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
 --------------------------------------------------------------------------------
 
 ## Instructions for running an analysis on rocks: 
@@ -87,6 +89,8 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
 	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 2
 	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 0
+	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 1
+
 
 
 ## TODOs: 
