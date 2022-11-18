@@ -4,17 +4,20 @@
 --------------------------------------------------------------------------------
 # rocks_analysis_pipeline
 
-This repo contains scripts for running katydid, a C++ based analysis tool adapted from Project 8 that extracts physically relevant features from spectrograms, on the CENPA cluster (rocks) and then conducting the post processing of these tracks and events.
+This repo contains scripts for running katydid, a C++ based analysis tool adapted from Project 8 that extracts physically relevant features from spectrograms, on the CENPA cluster (rocks) and then conducts the post processing of these tracks and events.
 
 --------------------------------------------------------------------------------
 ### Run an analysis then make interactive plots of cres track features!
 
-#### 
-<p align="center"><img width="20%" src="/demo/readme_imgs/sparse_spec.png" />              <img width="20%" src="/demo/readme_imgs/track_overlay.png" /><img width="20%" src="/demo/readme_imgs/event_overlay.png" /></p>
+#### Look at track and event classification overlaid on top of raw data: 
 
-<p align="center"><img width="40%" src="/demo/readme_imgs/display_options_1.png" />              <img width="50%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
+<p align="center"><img width="40%" src="/demo/readme_imgs/sparse_spec.png" />              <img width="40%" src="/demo/readme_imgs/track_overlay.png" /><img width="40%" src="/demo/readme_imgs/event_overlay.png" /></p>
 
-<p align="center"><img width="40%" src="/demo/readme_imgs/display_options_2.png" />              <img width="50%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
+#### Inertactively look at relationships between extracted cres event features: 
+
+<p align="center"><img width="20%" src="/demo/readme_imgs/display_options_1.png" />              <img width="70%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
+
+<p align="center"><img width="20%" src="/demo/readme_imgs/display_options_2.png" />              <img width="70%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
 --------------------------------------------------------------------------------
 
 ## Instructions for running an analysis on rocks: 
