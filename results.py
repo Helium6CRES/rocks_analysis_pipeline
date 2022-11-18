@@ -141,7 +141,7 @@ class ExperimentResults:
         # Finish the plot.
         ax.set_ylabel("MHz")
         ax.set_xlabel("Time (s)")
-        ax.set_title(f"run_id: {run_id}, file_id: {file_id}, set_field: {set_field}")
+        ax.set_title(f"run_id: {run_id}, file_id: {file_id}, set_field: {set_field} (T)")
         plt.show()
 
         return None

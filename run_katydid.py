@@ -15,6 +15,9 @@ import pandas.io.sql as psql
 from pathlib import Path
 import yaml
 import sys
+
+# Local imports.
+sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports.
@@ -245,6 +248,10 @@ class RunKatydid:
     def get_dbscan_radius(
         self, approx_slope: float, dbscan_base_radius: List[float] = [5.0e-4, 40e6]
     ) -> List[float]:
+    """
+    This does work. I just checked the math. Use the fact that dbscan_base_radius[1]/dbscan_base_radius[0]
+    = base_slope.
+    """
 
         dbscan_radius = [
             dbscan_base_radius[1] / approx_slope,

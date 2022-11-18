@@ -130,7 +130,7 @@ def main():
             file_id,
             args.stage,
         )
-        print(cmd)
+
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 1:
@@ -149,7 +149,7 @@ def main():
                 file_id,
                 args.stage,
             )
-            print(cmd)
+
             qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 2:
@@ -163,7 +163,7 @@ def main():
             file_id,
             args.stage,
         )
-        print(cmd)
+
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     # Done at the beginning and end of qsub main.
