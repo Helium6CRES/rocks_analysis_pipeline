@@ -26,7 +26,7 @@ from rocks_utility import (
     get_pst_time,
     set_permissions,
     check_if_exists,
-    log_file_break
+    log_file_break,
 )
 
 # Import settings.
@@ -147,7 +147,9 @@ class RunKatydid:
 
         # Clean up.
         if self.file_df_path.is_file():
-            print(f"Analysis Type: Clean up. \nfile_df {self.file_df_path} already exists.\n")
+            print(
+                f"Analysis Type: Clean up. \nfile_df {self.file_df_path} already exists.\n"
+            )
 
             file_df = pd.read_csv(self.file_df_path)
 
@@ -207,7 +209,7 @@ class RunKatydid:
 
         # Trim the df according to the file_num arg.
         if self.file_num != -1:
-            file_df = file_df[:self.file_num]
+            file_df = file_df[: self.file_num]
 
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
@@ -217,7 +219,7 @@ class RunKatydid:
         return file_df
 
     def create_base_file_df(self, run_id: int):
-        # DOCUMENT. 
+        # DOCUMENT.
         query_he6_db = """
                         SELECT r.run_id, f.spec_id, f.file_path, r.true_field
                         FROM he6cres_runs.run_log as r
@@ -248,10 +250,10 @@ class RunKatydid:
     def get_dbscan_radius(
         self, approx_slope: float, dbscan_base_radius: List[float] = [5.0e-4, 40e6]
     ) -> List[float]:
-    """
-    This does work. I just checked the math. Use the fact that dbscan_base_radius[1]/dbscan_base_radius[0]
-    = base_slope.
-    """
+        """
+        This does work. I just checked the math. Use the fact that dbscan_base_radius[1]/dbscan_base_radius[0]
+        = base_slope.
+        """
 
         dbscan_radius = [
             dbscan_base_radius[1] / approx_slope,

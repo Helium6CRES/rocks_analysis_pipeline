@@ -18,34 +18,35 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 ## Instructions for running an analysis on rocks: 
 
 
-* **Get set up:** 
+### Get set up: 
+
+* Log on to rocks. 
+* `cd /data/eliza4/he6_cres`
+* Note: May need to upgrade pip. 
+	* For Winston and I this worked: `pip3 install --upgrade pip`
+	* For Heather the above didn't work and she needed to do the following: 
+* `pip3 install -r rocks_analysis_pipeline/requirements.txt`
+* Notes: 
+	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
+	* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
+	* The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing.  
+
+### Run katydid:
+* **Overview:** Run katydid on a list of run_ids.
+* **Step 0:** Run katydid for the first time on a list of run_ids: 
 	* Log on to rocks. 
 	* `cd /data/eliza4/he6_cres`
-	* Note: May need to upgrade pip. 
-		* For Winston and I this worked: `pip3 install --upgrade pip`
-		* For Heather the above didn't work and she needed to do the following: 
-	* `pip3 install -r rocks_analysis_pipeline/requirements.txt`
-	* Notes: 
-		* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
-		* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
-		* The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing.  
+	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3`
+		* The above will run at most fn files for each run_id listed using the base config file provided. 
+		* For reference the above jobs (one job per run_id) were mostly finished in 30 mins. 
+		* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
+		* A job log for each run_id will be created. Example: rid_0440_009.txt
 
-* **Run katydid:**
-	* Overview: Run katydid on a list of run_ids.
-	* Step 0. Run katydid for the first time on a list of run_ids: 
-		* Log on to rocks. 
-		* `cd /data/eliza4/he6_cres`
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3`
-			* The above will run at most fn files for each run_id listed using the base config file provided. 
-			* For reference the above jobs (one job per run_id) were mostly finished in 30 mins. 
-			* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
-			* A job log for each run_id will be created. Example: rid_0440_009.txt
-
-	* Step 1. Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
-		* Log on to rocks. 
-		* `cd /data/eliza4/he6_cres`
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 9`
-			* The above will rerun all of the files in analysis_id 9 that haven't yet been created. 
+* Step 1. Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
+	* Log on to rocks. 
+	* `cd /data/eliza4/he6_cres`
+	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 9`
+		* The above will rerun all of the files in analysis_id 9 that haven't yet been created. 
 
 * **Post Processing:**
 	* Overview: This is a three stage process. Run each stage without changing anything but the -stage argument.
@@ -78,6 +79,12 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* `qdel -u drewbyron` (delete all the jobs of user drewbyron)
 	* To look at the description of command line arguments for a given .py file use: 
 		* `my_file.py -h`
+
+
+## Testing: 
+
+* Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
+	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
 
 
 ## TODOs: 
