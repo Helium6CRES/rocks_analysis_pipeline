@@ -74,11 +74,18 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 2`
 		* The above will gather all of the events and tracks csvs (respectively) into one csv. 
 
+
+
+### Tools to investigate event classification quality and to conduct analysis. 
+
 * **Investigate results:**
 	* Grab the saved experiment and investigate the quality of the analysis. 
-		* This is to be done locally. 
-		* `class ExperimentResults`
-			* For now I will just have a posted demo of how to use this. But proper documentation to come soon.  
+	* This is to be done locally using `class ExperimentResults` in module `results.py`.
+	* A full demo of how this is done is here: `/rocks_analysis_pipeline/demo/rocks_analysis_demo.ipynb`. 
+	* Copy the `.ipynb` into your own directory suitable for analysis and give it a try. Make neat plots like the one you see in the top of this readme. 
+
+
+--------------------------------------------------------------------------------
 
 ## Useful stuff: 
 
@@ -89,6 +96,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* To look at the description of command line arguments for a given .py file use: 
 		* `my_file.py -h`
 
+--------------------------------------------------------------------------------
 
 ## Testing: 
 
@@ -100,16 +108,11 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* **Summary:** Things are working well. I uninstalled he6-cres-spec-sims and instead just pointed to the local directory on rocks. So they are intertwined now. 
 
 
-## TODOs: 
+## TODOs + Improvements to Make: 
 
-* general: 
-	* Delete all unused or commented out code and .py files. 
-	* Make sure permissions things are ok for other people...
-	* Add a datetime timestamp to all of the writes to the logs. This will be very useful for debugging. 
-
-	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field... 
-	* add utility functions module with get time now, database query,...
-	* Make a new demo ipynb, suggest a workflow (ipynb and saved dirs together on a harddrive)
+* **General**: 
+	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field.
+	* Clean up the demo nb. 
 	* Cleam up the demo nb and add instructions on how to use it (copy it and move to different directory). 
 	* Make some progress on documenting what is actually done at each stage and how things are passed around. This will save me (and others) a ton of headaches. 
 	* It would be nice for the root files df to contain a col for if this file is included in the tracks or events df. Right now it's a bit hard to tell which is a problem. 
