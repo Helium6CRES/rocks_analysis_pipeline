@@ -64,9 +64,6 @@ def main():
     Raises: 
         None
 
-
-
-
     TODOS:
     * This will only work with katydid files that have track/event objects in the trees.
 

@@ -18,6 +18,9 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 <p align="center"><img width="19%" src="/demo/readme_imgs/display_options_1.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_0.png" /></p>
 
 <p align="center"><img width="19%" src="/demo/readme_imgs/display_options_2.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
+
+<p align="center"><img width="19%" src="/demo/readme_imgs/display_options_3.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_2.png" /></p>
+
 --------------------------------------------------------------------------------
 
 ## Instructions for running an analysis on rocks: 
@@ -29,7 +32,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 * `cd /data/eliza4/he6_cres`
 * Note: May need to upgrade pip. 
 	* For Winston and I this worked: `pip3 install --upgrade pip` 
-* `pip3 install -r rocks_analysis_pipeline/requirements.txt`
+* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
 * Notes: 
 	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
 	* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
@@ -47,28 +50,29 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
 		* A job log for each run_id will be created. Example: rid_0440_009.txt
 
-* Step 1. Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
+* **Step 1:** Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
 	* Log on to rocks. 
 	* `cd /data/eliza4/he6_cres`
 	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 9`
 		* The above will rerun all of the files in analysis_id 9 that haven't yet been created. 
 
-* **Post Processing:**
-	* Overview: This is a three stage process. Run each stage without changing anything but the -stage argument.
-		* For each of the steps, begin by navigating to our groups directory on eliza4: 
-			* Log on to rocks. 
-			* `cd /data/eliza4/he6_cres`
-	* Stage 0: Set-up.  
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 0`
-			* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]). 
-			* Before moving on to stage 1, check to see that the directory was made and the `root_files.csv` is present. 
-	* Stage 1: Processing.  
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 1`	
-			* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and nfe files worth of events for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (tracks_[fid].csv, events_[fid].csv) are built for each fid. 
-			* Before moving on to stage 2, check to see that the directory contains nft tracks and nfe events csvs. 
-	* Stage 2: Clean-up. 
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 2`
-			* The above will gather all of the events and tracks csvs (respectively) into one csv. 
+### Post Processing:
+
+* **Overview:** This is a three stage process. Run each stage without changing anything but the -stage argument.
+	* For each of the steps, begin by navigating to our groups directory on eliza4: 
+		* Log on to rocks. 
+		* `cd /data/eliza4/he6_cres`
+* **Stage 0:** Set-up.  
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 0`
+		* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]). 
+		* Before moving on to stage 1, check to see that the directory was made and the `root_files.csv` is present. 
+* **Stage 1:** Processing.  
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 1`	
+		* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and nfe files worth of events for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (tracks_[fid].csv, events_[fid].csv) are built for each fid. 
+		* Before moving on to stage 2, check to see that the directory contains nft tracks and nfe events csvs. 
+* **Stage 2:** Clean-up. 
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 2`
+		* The above will gather all of the events and tracks csvs (respectively) into one csv. 
 
 * **Investigate results:**
 	* Grab the saved experiment and investigate the quality of the analysis. 
@@ -88,25 +92,21 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 
 ## Testing: 
 
-* Getting back into this and finishing up the documentation. Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
+* 11/18/22: Getting back into this and finishing up the documentation. Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
 	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
 	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 2
 	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 0
 	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 1
-
+	* **Summary:** Things are working well. I uninstalled he6-cres-spec-sims and instead just pointed to the local directory on rocks. So they are intertwined now. 
 
 
 ## TODOs: 
 
 * general: 
-	* put start and stop print statements for each job that gets written out to a log file. 
-	* Get sphynx documnetation going. Make it pretty. Use this resource to get started: https://keep.google.com/u/0/#NOTE/1QBoOz6T-t5-MZk35VD79ZzVyOxJDCackSwkSVI6s3UmufJrvEmYfLYvjO9rP
 	* Delete all unused or commented out code and .py files. 
 	* Make sure permissions things are ok for other people...
 	* Add a datetime timestamp to all of the writes to the logs. This will be very useful for debugging. 
-	* Print statements are all over the place. Make it so that the logs are readable (once things work well). 
-	* Delete all commented code that isn't being used. 
-	* Document and make a nice readme with some gifs illustrating what this does. 
+
 	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field... 
 	* add utility functions module with get time now, database query,...
 	* Make a new demo ipynb, suggest a workflow (ipynb and saved dirs together on a harddrive)

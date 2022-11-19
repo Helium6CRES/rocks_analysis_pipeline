@@ -11,6 +11,5 @@ pyyaml>=6.0
 argparse>=1.1
 uproot4>=4.0.0
 scikit-learn>=1.0.1
-he6-cres-spec-sims>=0.1.5
 pytz>=2022.4
 

@@ -36,21 +36,7 @@ pd.set_option("display.max_columns", 100)
 
 def main():
     """
-
-    TODOS:
-    * Build this into a class. It's going to be much easier to read and interact with.
-    * I need to build the clean-up and event-building into this process. Otherwise these
-    files are going to get too large. Already 1.1G after 171 out of 5700 files.
-    * Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df?
-    * Put a timestamp in the log files for clean-up.
-    * Put a timestamp in the dfs somehow so we know when the analysis was conducted.
-    * Get Sphynx working before moving on to documenting! This will be so useful.
-    * Make an option to delete a currently existing experiment directory with a user enter.
-
-
-    Notes:
-    * This will only work with katydid files that have track/event objects in the trees.
-    * Should it just take a analysis id? No then it isn't well defined...
+    DOCUMENT
     """
 
     umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
