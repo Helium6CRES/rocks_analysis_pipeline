@@ -19,7 +19,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 
 <p align="center"><img width="19%" src="/demo/readme_imgs/display_options_2.png" />              <img width="73%" src="/demo/readme_imgs/scatter_plot_1.png" /></p>
 
-<p align="center"><img width="30%" src="/demo/readme_imgs/display_options_3.png" />              <img width="70%" src="/demo/readme_imgs/scatter_plot_2.png" /></p>
+<p align="center"><img width="30%" src="/demo/readme_imgs/display_options_3.png" />              <img width="60%" src="/demo/readme_imgs/scatter_plot_2.png" /></p>
 
 --------------------------------------------------------------------------------
 
