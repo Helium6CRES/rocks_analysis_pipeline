@@ -105,40 +105,24 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 2
 	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 0
 	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 1
-	* **Summary:** Things are working well. I uninstalled he6-cres-spec-sims and instead just pointed to the local directory on rocks. So they are intertwined now. 
+	* **Summary:** Things are working well. I uninstalled he6-cres-spec-sims and instead just pointed to the local directory on rocks. So these two repos are intertwined now. 
 
 
 ## TODOs + Improvements to Make: 
 
-* **General**: 
+* **General**
 	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field.
-	* Clean up the demo nb. 
-	* Cleam up the demo nb and add instructions on how to use it (copy it and move to different directory). 
+	* Add docstrings for each module and class. 
 	* Make some progress on documenting what is actually done at each stage and how things are passed around. This will save me (and others) a ton of headaches. 
 	* It would be nice for the root files df to contain a col for if this file is included in the tracks or events df. Right now it's a bit hard to tell which is a problem. 
 	* Helper function for viewing the noise spectrum from a root file in the results class. 
 	* Add RGA data into root files table. 
-* run_katydid.py
-	* The get_env_data() method doesn't work rn. This needs to retrieve the nmr/rate for each second of data.  
-	* Change the job_logs dir to be under  `job_logs/katydid`. 
+* **run_katydid.py**
 	* The time that is printed to the log for how long katydid took on one file doesn't align with how long the jobs take to run? Why is this?
-	* I don't like the way this is organized rn. I would be nice to build it into a class the way the post processing is. 
-	* The copies of the .yaml isn't getting deleted rn. FIXED (I think, need to verify)
-* run_post_processing.py
+* **run_post_processing.py**
 	* Indexing of the root_files df is still off. 
 	* Fix indexing of events and tracks df. 
 	* Why are there these random (clearly unphysical) events that cross the whole second of data? Need a cut to deal with this.  
-	* Add the clean-up settings to the list of arguments?
 	* Are the files with no tracks or events being dealt with intelligently?
-	* Check to see if an experiment with this name exists.
-	* Organize all of the files in the class so that it's clear which ones are used where. Organize by stage. 
-* results.py
+* **results.py**
 	* Check to make sure this works on other people's machines. 
-	* Add the visualization tool into the class that shows the different relationships between variables (in demo nb rn.)
-
-
-## Testing this on 100 files: 
-
-* All but one file worked the first time through katydid, the clean-up didn't help. The file must have a weirdness
-	* Weird file: Freq_data_2022-08-18-06-29-23_010.root
-* Now running the post processing. This meant submitting 100 jobs. 
