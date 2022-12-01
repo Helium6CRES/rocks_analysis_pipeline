@@ -22,6 +22,7 @@ from typing import List
 from pathlib import Path
 import yaml
 import uproot4
+
 # import awkward
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -52,16 +53,16 @@ def main():
 
     Args: (from command line)
         run_ids (List[int]): all run_ids to be post processed. There needs
-            to already be root files for these run_ids in the associated 
+            to already be root files for these run_ids in the associated
             analysis directory.
         analysis_id (int): analysis_id for which to collect track and event
-            data for. 
+            data for.
         ...
 
-    Returns: 
+    Returns:
         None
 
-    Raises: 
+    Raises:
         None
 
     TODOS:
@@ -135,7 +136,9 @@ def main():
     )
 
     # Print summary of experiment:
-    print(f"Processing: \n file_id: {args.file_id} run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n")
+    print(
+        f"Processing: \n file_id: {args.file_id} run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n"
+    )
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -262,7 +265,7 @@ class PostProcessing:
 
             if file_df_path.is_file():
 
-                file_df = pd.read_csv(file_df_path, index_col = 0)
+                file_df = pd.read_csv(file_df_path, index_col=0)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
                     lambda x: check_if_exists(x)
                 )
@@ -305,8 +308,10 @@ class PostProcessing:
         root_files_df_chunk = self.root_files_df[
             self.root_files_df.file_id == self.file_id
         ]
-        if len(root_files_df_chunk) == 0: 
-            raise UserWarning(f"There is no file_id = {self.file_id} in aid = {self.analysis_id}")
+        if len(root_files_df_chunk) == 0:
+            raise UserWarning(
+                f"There is no file_id = {self.file_id} in aid = {self.analysis_id}"
+            )
 
         tracks = self.get_track_data_from_files(root_files_df_chunk)
 
@@ -333,18 +338,14 @@ class PostProcessing:
         # Step 0. Clean up the tracks.
         cleaned_tracks = self.clean_up_tracks(tracks)
 
-        # Step 1. Add aggregated event info to tracks.
-        tracks = self.add_event_info(tracks)
-        # print("1\n", tracks.index)
-
-        # Step 2. DBSCAN clustering of events.
-        # TODO: Make sure it actually
+        # Step 1. DBSCAN clustering of events.
         tracks = self.cluster_tracks(tracks)
-        # print("3\n", tracks.index)
+
+        # Step 2. Add aggregated event info to tracks.
+        tracks = self.add_event_info(tracks)
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
-        # print("3\n", events.index)
 
         return events
 
@@ -390,7 +391,7 @@ class PostProcessing:
 
     def add_track_info(self, tracks):
 
-        # Organize this function a bit. 
+        # Organize this function a bit.
 
         tracks["FreqIntc"] = (
             tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
@@ -401,7 +402,7 @@ class PostProcessing:
 
         tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
 
-        tracks["set_field"] = tracks['field'].round(decimals = 2)
+        tracks["set_field"] = tracks["field"].round(decimals=2)
 
         intc_info = (
             tracks.groupby(["run_id", "file_id", "EventID"])
@@ -492,15 +493,6 @@ class PostProcessing:
 
         tracks = tracks_in.copy()
 
-        
-        # tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
-        # tracks["FreqIntc"] = (
-        #     tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
-        # )
-        # tracks["TimeIntc"] = (
-        #     tracks["StartTimeInRunC"] - tracks["StartFrequency"] / tracks["Slope"]
-        # )
-
         tracks["EventStartTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "StartTimeInRunC"
         ].transform("min")
@@ -520,6 +512,7 @@ class PostProcessing:
         tracks["EventNBins"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "NTrackBins"
         ].transform("sum")
+
         tracks["EventSlope"] = tracks["EventFreqLength"] / tracks["EventTimeLength"]
 
         tracks["EventTrackCoverage"] = (
@@ -566,10 +559,6 @@ class PostProcessing:
         ].transform("std")
 
 
-        # Adding in more info here. 
-        tracks["EventMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
-            "MeanTrackSNR"
-        ].transform("mean")
 
         tracks["EventTrackTot"] = tracks.groupby(
             ["run_id", "file_id", "EventID"]
@@ -598,14 +587,23 @@ class PostProcessing:
             "EventTimeLength",
             "EventFreqLength",
             "EventTrackCoverage",
-            "EventMeanSNR",
             "EventSlope",
             "EventNBins",
             "EventTrackTot",
             "EventFreqIntc",
             "EventTimeIntc",
+            "mMeanSNR",
+            "sMeanSNR",
+            "mTotalSNR",
+            "sTotalSNR",
+            "mMaxSNR",
+            "sMaxSNR", 
+            "mTotalNUP",
+            "sTotalNUP",
+            "mTotalPower",
+            "sTotalPower",
             "field",
-            "set_field", 
+            "set_field",
             "monitor_rate",
         ]
         events = (
@@ -631,8 +629,8 @@ class PostProcessing:
         root_files_df = self.add_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
 
-        # Step 3. Add the set_field by rounding to nearest 100th place. 
-        root_files_df["set_field"] = root_files_df['field'].round(decimals = 2)
+        # Step 3. Add the set_field by rounding to nearest 100th place.
+        root_files_df["set_field"] = root_files_df["field"].round(decimals=2)
 
         return root_files_df
 
@@ -825,7 +823,7 @@ class PostProcessing:
 
         if len(remove_list) == 0:
             print(f"\nSanity check passed. Only files in the analysis dir are: \n")
-            for path in desired_path_list: 
+            for path in desired_path_list:
                 print(str(path))
         else:
             print("\nWARNING. sanity_check() failed! ")
