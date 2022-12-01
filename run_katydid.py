@@ -49,7 +49,7 @@ def main():
         "-nid",
         "--noise_run_id",
         type=int,
-        help="run_id to use for noise floor in katydid run.",
+        help="run_id to use for noise floor in katydid run. If -1 then will use self as noise file.",
     )
     arg(
         "-aid",
@@ -198,7 +198,13 @@ class RunKatydid:
         file_df["base_config_path"] = self.get_base_config_path()
         file_df["output_dir"] = self.build_dir_structure()
 
-        file_df["noise_file_path"] = self.get_noise_fp()
+        # Collect either the given noise id or assign 'self' to noise file path.
+        if self.noise_run_id == -1: 
+            print("Using 'self' as noise file in katydid analysis.")
+            file_df["noise_file_path"] = file_df["rocks_file_path"]
+        else: 
+            file_df["noise_file_path"] = self.get_noise_fp()
+
         file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
             lambda x: self.process_fp(x)
         )
@@ -206,6 +212,7 @@ class RunKatydid:
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
         )
+
 
         # Trim the df according to the file_num arg.
         if self.file_num != -1:

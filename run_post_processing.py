@@ -529,6 +529,44 @@ class PostProcessing:
             / tracks["EventTimeLength"]
         )
 
+        # Power/SNR metrics.
+        tracks["mMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MeanTrackSNR"
+        ].transform("mean")
+        tracks["sMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MeanTrackSNR"
+        ].transform("std")
+
+        tracks["mTotalSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalTrackSNR"
+        ].transform("mean")
+        tracks["sTotalSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalTrackSNR"
+        ].transform("std")
+
+        tracks["mMaxSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MaxTrackSNR"
+        ].transform("mean")
+        tracks["sMaxSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MaxTrackSNR"
+        ].transform("std")
+
+        tracks["mTotalNUP"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalTrackNUP"
+        ].transform("mean")
+        tracks["sTotalNUP"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalTrackNUP"
+        ].transform("std")
+
+        tracks["mTotalPower"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalPower"
+        ].transform("mean")
+        tracks["sTotalPower"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "TotalPower"
+        ].transform("std")
+
+
+        # Adding in more info here. 
         tracks["EventMeanSNR"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "MeanTrackSNR"
         ].transform("mean")
