@@ -26,21 +26,23 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 ## Instructions for running an analysis on rocks: 
 
 
-### Get set up: 
+### Get set up on rocks: 
 
-* Log on to rocks. 
-* `cd /data/eliza4/he6_cres`
-* Note: May need to upgrade pip. 
-	* For Winston and I this worked: `pip3 install --upgrade pip` 
-* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
-* **NEW STEP**: 
-	* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
-	* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
-	* This is because `run_katydid.py` gets called from within the singularity image. There aren't modules on the image (it can't load `module python 3.7.3` for example) and so the default python version is used as this was what was installed on the image. Each user must have these packages (in python version 3.8) available for the image. 
+* Log on to rocks. You are in your root directory which contains your .bash_profile  .bashrc
+* Add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3. The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing. 
+	* Example: $ nano .bash_profile
+	Add module load python-3.7.3 to the end of the file. Write and exit.
+* Restart your session.
+* Now you need to install your dependancies. Doing this installs them for the python-3.7.3 module
+	* $ pip3 install -r /data/eliza4/he6_cres/rocks_analysis_pipeline/requirements.txt --user
+	* Note: May need to upgrade pip. For Winston and Drew this worked: `pip3 install --upgrade pip`  ``
+* Parts of the analysis (`run_katydid.py) are run within a singularity image. There aren't modules on the image (it can't load `module python 3.7.3` for example) and so the default python version is used as this was what was installed on the image. Each user must have these packages (in python version 3.8 but might be different for future users) available for the image.
+	* $ cd /data/eliza4/he6_cres
+	* $`singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
+	* Singularity> pip3 install -r rocks_analysis_pipeline/requirements.txt --user
+	* Singularity> exit 
 * Notes: 
-	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
-	* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
-	* The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing.  
+	* The requirements.txt should contain all necessary python packages but if that isn't the case please let me (drew) know.  
 
 ### Run katydid:
 
