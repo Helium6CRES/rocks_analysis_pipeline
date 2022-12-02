@@ -23,6 +23,7 @@ def he6cres_db_connection_local():
     )
     return connection
 
+
 def he6cres_db_connection_rocks():
 
     # Connect to the he6cres_db from rocks.
@@ -35,13 +36,14 @@ def he6cres_db_connection_rocks():
     )
     return connection
 
-def he6cres_db_query(query: str, local = False) -> typing.Union[None, pd.DataFrame]:
+
+def he6cres_db_query(query: str, local=False) -> typing.Union[None, pd.DataFrame]:
 
     connection = False
     try:
-        if not local: 
+        if not local:
             connection = he6cres_db_connection_rocks()
-        else: 
+        else:
             connection = he6cres_db_connection_local()
 
         # Create a cursor to perform database operations
@@ -72,8 +74,16 @@ def get_pst_time():
 
 def set_permissions():
 
-    set_group = sp.call(["chgrp", "-R", "he6_cres", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
-    set_permission = sp.call(["chmod", "-R", "774", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
+    set_group = sp.run(
+        ["chgrp", "-R", "he6_cres", "katydid_analysis/"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    set_permission = sp.run(
+        ["chmod", "-R", "774", "katydid_analysis/"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
     return None
 
@@ -81,9 +91,9 @@ def set_permissions():
 def check_if_exists(fp):
     return Path(fp).is_file()
 
-def log_file_break(): 
+
+def log_file_break():
     print("\n\n")
     print("################################################################")
     print("\n\n")
     return None
-
