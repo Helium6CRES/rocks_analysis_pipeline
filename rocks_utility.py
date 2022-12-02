@@ -76,13 +76,13 @@ def set_permissions():
 
     set_group = sp.run(
         ["chgrp", "-R", "he6_cres", "katydid_analysis/"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=sp.DEVNULL,
+        stderr=sp.DEVNULL,
     )
     set_permission = sp.run(
         ["chmod", "-R", "774", "katydid_analysis/"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=sp.DEVNULL,
+        stderr=sp.DEVNULL,
     )
 
     return None
