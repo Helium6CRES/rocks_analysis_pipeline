@@ -15,6 +15,7 @@ import pandas.io.sql as psql
 from pathlib import Path
 import yaml
 import sys
+import subprocess as sp
 
 # Local imports.
 sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
