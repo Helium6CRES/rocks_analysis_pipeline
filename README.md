@@ -34,7 +34,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* For Winston and I this worked: `pip3 install --upgrade pip` 
 * `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
 * **NEW STEP**: 
-	* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc`
+	* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
 	* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
 	* This is because `run_katydid.py` gets called from within the singularity image. There aren't modules (it can't load module python 3.7.3 for example) on the image and so the default python version is used as this was what was installed on the image. Each user must have these packages (in python version 3.8) available for the image. 
 * Notes: 
@@ -99,6 +99,8 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* `qdel -u drewbyron` (delete all the jobs of user drewbyron)
 	* To look at the description of command line arguments for a given .py file use: 
 		* `my_file.py -h`
+* **Permissions:**
+	* I'm finding that with multiple users working in this analysis pipeline simultaneously the permissions can get weird. The following two commands run from `/he6_cres` should help 
 
 --------------------------------------------------------------------------------
 
@@ -132,10 +134,10 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* Check to make sure this works on other people's machines. 
 
 
-## Log of edits: 
+## Log of changes: 
 
 * 12/1/22: 
 	* Adding option for self noise floot with nid = -1. 
 	* Also building out the event properties. 
 	* Testing changes with: 
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 385 393 399 405 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 393 -nid 393 -b "2-12_dbscan_high_energy.yaml" -fn 2`
