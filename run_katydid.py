@@ -391,7 +391,7 @@ class RunKatydid:
             capture_output=True,
         )
 
-        print("Katydid output:", run_katydid.stdout[-100:])
+        print("Katydid output:", run_katydid.stdout[-1000:])
         t_stop = time.process_time()
 
         print(
