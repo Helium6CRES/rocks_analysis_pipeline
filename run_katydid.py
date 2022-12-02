@@ -5,7 +5,7 @@ import argparse
 import pandas as pd
 import datetime
 from glob import glob
-import subprocess as sp
+
 from shutil import copyfile
 import psycopg2
 from psycopg2 import Error
@@ -200,7 +200,7 @@ class RunKatydid:
 
         # Collect either the given noise id or assign 'self' to noise file path.
         if self.noise_run_id == -1: 
-            print("Using 'self' as noise file in katydid analysis.")
+            print("\nUsing 'self' as noise file in katydid analysis.\n")
             file_df["noise_file_path"] = file_df["rocks_file_path"]
         else: 
             file_df["noise_file_path"] = self.get_noise_fp()
