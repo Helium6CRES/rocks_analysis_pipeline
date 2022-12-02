@@ -72,8 +72,8 @@ def get_pst_time():
 
 def set_permissions():
 
-    set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
-    set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
+    set_group = sp.call(["chgrp", "-R", "he6_cres", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
+    set_permission = sp.call(["chmod", "-R", "774", "katydid_analysis/", ">/dev/null", "2>&1"], shell = True)
 
     return None
 
