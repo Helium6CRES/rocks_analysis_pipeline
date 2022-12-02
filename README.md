@@ -36,7 +36,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 * **NEW STEP**: 
 	* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc`
 	* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
-	* This is because run_katydid.py gets called from within the singularity image. There aren't modules on the image and so default python version is used. Each user must have these packages (in 3.8). 
+	* This is because `run_katydid.py` gets called from within the singularity image. There aren't modules (it can't load module python 3.7.3 for example) on the image and so the default python version is used as this was what was installed on the image. Each user must have these packages (in python version 3.8) available for the image. 
 * Notes: 
 	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
 	* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
