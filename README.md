@@ -33,6 +33,10 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 * Note: May need to upgrade pip. 
 	* For Winston and I this worked: `pip3 install --upgrade pip` 
 * `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
+* **NEW STEP**: 
+	* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc`
+	* `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
+	* This is because run_katydid.py gets called from within the singularity image. There aren't modules on the image and so default python version is used. Each user must have these packages (in 3.8). 
 * Notes: 
 	* The following should contain all necessary python packages but if that isn't the case please let me (drew) know. 
 	* Be sure to add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3.
@@ -126,3 +130,12 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* Are the files with no tracks or events being dealt with intelligently?
 * **results.py**
 	* Check to make sure this works on other people's machines. 
+
+
+## Log of edits: 
+
+* 12/1/22: 
+	* Adding option for self noise floot with nid = -1. 
+	* Also building out the event properties. 
+	* Testing changes with: 
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 385 393 399 405 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
