@@ -111,6 +111,10 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
 	* To exit the container: 
 		* `exit`
+* **BASH:**
+	* Pretty print a csv in bash (useful for sanity checking):
+		* `column -s, -t < somefile.csv | less -#2 -N -S`
+		* `.q` to exit. 
 
 --------------------------------------------------------------------------------
 
@@ -159,4 +163,8 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 4 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
 			* The above is failing because of the permissions issues. ehh. 
 			* 1435: Ok actually it failed because katydid didn't seem to run... 
+
+		* Ok now I've come to understand that katydid is working it was just the noise file being -1 that was causing issues. Not sure how exactly. Need to try that again. 
+		* Ok it's hacky but the chmod is working now with suppressed output. 
+		* The self noise file still doesn't work. Would like to get that working. 
 

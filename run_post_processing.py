@@ -558,8 +558,6 @@ class PostProcessing:
             "TotalPower"
         ].transform("std")
 
-
-
         tracks["EventTrackTot"] = tracks.groupby(
             ["run_id", "file_id", "EventID"]
         ).EventSequenceID.transform("count")
@@ -597,7 +595,7 @@ class PostProcessing:
             "mTotalSNR",
             "sTotalSNR",
             "mMaxSNR",
-            "sMaxSNR", 
+            "sMaxSNR",
             "mTotalNUP",
             "sTotalNUP",
             "mTotalPower",
