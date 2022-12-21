@@ -167,4 +167,15 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* Ok now I've come to understand that katydid is working it was just the noise file being -1 that was causing issues. Not sure how exactly. Need to try that again. 
 		* Ok it's hacky but the chmod is working now with suppressed output. 
 		* The self noise file still doesn't work. Would like to get that working. 
+	* Running the following to get the noise floor for each run_id for ne: 12/09/22 
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 7`
+		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
+		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 1`
+		* Notes for next time: 
+			* stage 1 is failing because of the order of the event features being added to the tracks. Push those changes to the remote and then pull on rocks and make it work. 
+			* They try stage 2. 
+			* Then pull locally and make sure it's working ok. 
+			* Then make a plot of the noise floors over time. Make a function for doing this so you can do it for He as well. 
+			* Then think about submitting a new analysis for the full He and Ne sets (see the new submissions in the google doc). Get this banged out. 
 
