@@ -110,7 +110,7 @@ def get_analysis_id(run_ids):
 
     base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
 
-    analysis_ids = []
+    max_analysis_ids = []
     for run_id in run_ids:
 
         run_id_dir = base_path / Path(f"rid_{run_id:04d}")
@@ -119,18 +119,18 @@ def get_analysis_id(run_ids):
             run_id_dir.mkdir()
             print(f"Created directory: {run_id_dir}")
 
-        analysis_dirs = glob(str(run_id_dir) + "/*/")
+        # analysis_dirs = glob(str(run_id_dir) + "/*/")
+        # Robust against deleted or missing aids
+        analysis_ids = [int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()]
+        print(analysis_ids)
 
-        test = [int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()]
-        print(test)
-
-        analysis_id = len(analysis_dirs)
-        analysis_ids.append(analysis_id)
-        print(
-            f"\nlist of analysis IDs detected: {analysis_ids}. max = {max(analysis_ids)} "
-        )
-
-    return max(analysis_ids) + 1
+        max_analysis_id = max(analysis_ids) 
+        max_analysis_ids.append(max_analysis_id)
+        # print(
+        #     f"\nlist of analysis IDs detected: {analysis_ids}. max = {max(analysis_ids)} "
+        # )
+    next_available_aid = max(max_analysis_ids) + 1
+    return next_available_aid
 
 
 if __name__ == "__main__":
