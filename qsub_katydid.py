@@ -120,9 +120,8 @@ def get_analysis_id(run_ids):
             print(f"Created directory: {run_id_dir}")
 
         analysis_dirs = glob(str(run_id_dir) + "/*/")
-        print(list(analysis_dirs))
 
-        test = [str(f.name)[-3:] for f in run_id_dir.iterdir() if f.is_dir()]
+        test = [int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()]
         print(test)
 
         analysis_id = len(analysis_dirs)
@@ -131,7 +130,7 @@ def get_analysis_id(run_ids):
             f"\nlist of analysis IDs detected: {analysis_ids}. max = {max(analysis_ids)} "
         )
 
-    return max(analysis_ids)
+    return max(analysis_ids) + 1
 
 
 if __name__ == "__main__":
