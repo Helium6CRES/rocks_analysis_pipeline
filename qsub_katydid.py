@@ -120,6 +120,11 @@ def get_analysis_id(run_ids):
             print(f"Created directory: {run_id_dir}")
 
         analysis_dirs = glob(str(run_id_dir) + "/*/")
+        print(list(analysis_dirs))
+
+        test = [f[-3:] for f in run_id_dir.iterdir() if f.is_dir()]
+        print(test)
+
         analysis_id = len(analysis_dirs)
         analysis_ids.append(analysis_id)
         print(
