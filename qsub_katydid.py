@@ -123,7 +123,7 @@ def get_analysis_id(run_ids):
         analysis_ids = [
             int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()
         ]
-        print(analysis_ids)
+        print(f"run_id = {run_id}. Existing aids = {analysis_ids}")
 
         max_analysis_id = max(analysis_ids)
         max_analysis_ids.append(max_analysis_id)
