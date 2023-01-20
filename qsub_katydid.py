@@ -64,7 +64,7 @@ def main():
     )
 
     for run_id in args.runids:
-        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -ai {} -b "{}" -fn {} '.format(
+        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -aid {} -b "{}" -fn {} '.format(
             run_id, args.noise_run_id, analysis_id, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
@@ -119,16 +119,15 @@ def get_analysis_id(run_ids):
             run_id_dir.mkdir()
             print(f"Created directory: {run_id_dir}")
 
-        # analysis_dirs = glob(str(run_id_dir) + "/*/")
-        # Robust against deleted or missing aids
-        analysis_ids = [int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()]
+        # Robust against deleted or missing aids.
+        analysis_ids = [
+            int(str(f.name)[-3:]) for f in run_id_dir.iterdir() if f.is_dir()
+        ]
         print(analysis_ids)
 
-        max_analysis_id = max(analysis_ids) 
+        max_analysis_id = max(analysis_ids)
         max_analysis_ids.append(max_analysis_id)
-        # print(
-        #     f"\nlist of analysis IDs detected: {analysis_ids}. max = {max(analysis_ids)} "
-        # )
+
     next_available_aid = max(max_analysis_ids) + 1
     return next_available_aid
 
