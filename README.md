@@ -113,7 +113,7 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* `exit`
 * **BASH:**
 	* Pretty print a csv in bash (useful for sanity checking):
-		* `column -s, -t < somefile.csv | less -#2 -N -S`
+		* `column -s, -t < root_files.csv | less -#2 -N -S`
 		* `.q` to exit. 
 
 --------------------------------------------------------------------------------
@@ -167,15 +167,45 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 		* Ok now I've come to understand that katydid is working it was just the noise file being -1 that was causing issues. Not sure how exactly. Need to try that again. 
 		* Ok it's hacky but the chmod is working now with suppressed output. 
 		* The self noise file still doesn't work. Would like to get that working. 
-	* Running the following to get the noise floor for each run_id for ne: 12/09/22 
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 7`
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 1`
-		* Notes for next time: 
-			* stage 1 is failing because of the order of the event features being added to the tracks. Push those changes to the remote and then pull on rocks and make it work. 
-			* They try stage 2. 
-			* Then pull locally and make sure it's working ok. 
-			* Then make a plot of the noise floors over time. Make a function for doing this so you can do it for He as well. 
-			* Then think about submitting a new analysis for the full He and Ne sets (see the new submissions in the google doc). Get this banged out. 
-
+* 12/09/22:	Running the following to get the noise floor for each run_id for ne: 12/09/22 
+	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
+	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 7`
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 1`
+	* Notes for next time: 
+		* stage 1 is failing because of the order of the event features being added to the tracks. Push those changes to the remote and then pull on rocks and make it work. 
+		* They try stage 2. 
+		* Then pull locally and make sure it's working ok. 
+		* Then make a plot of the noise floors over time. Make a function for doing this so you can do it for He as well. 
+		* Then think about submitting a new analysis for the full He and Ne sets (see the new submissions in the google doc). Get this banged out. 
+* 12/20/22:
+	* Trying to get back into this and make it work!
+	* Task 1: Get the selfing noise file to work and make a plot for the noise file over time for both the ne and he data. 
+		* Running the following to that end: 
+			* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
+			* Stage 1 of the above fails with this: 
+				* `Index(['EventTimeIntc'], dtype='object')] are in the [columns]`
+			* Ok this seems to be working now. Need to make sure the visualizations still work!
+	* For tomorrow: 
+		* Get the noise floors plots and post!
+		* Use this file to do it: `rocks_analysis_notebooks/plotting_scripts/noise_floors_over_time.py`
+		* Then on to Task 2: getting the analysis working for 8,9,10 SNR cuts. 
+* 12/21/22: 
+	* The above worked, and I was able to make the noise files for Neon over the entire course of the data taking. Now working on doing the same for Helium. 
+	* Running things through rocks: 
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
+		
+		* FOR NEXT TIME RUN THE FOLLOWING: 
+			* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 10`
+			* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -aid 10 -name "he_noise_floors_test" -nft 2 -nfe 2 -stage 0`
+			* Then check that the above works and push through all the stages.
+* 12/22/22: 
+	* The Helium all went fine. But run_id 381 is messed up and this is causing issues. 
+	* Also (BIG and ANNOYING) the event reconstruction seems broken now... check on the Helium and Neon datasets.  
+	* Ok working on different SNR cuts. Will take notes of all the files I run here. Going to start with something managable like 10 files per run_id first, and build the machinery to compare the ratio plots and such for each. 
+	* SNR tests: 
+	* SNR cut_9
+	* Neon: (submitted 12/22/22 1338)
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`
+	* Helium: (submitted 12/22/22 1338)
+		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`

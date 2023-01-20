@@ -122,6 +122,9 @@ def get_analysis_id(run_ids):
         analysis_dirs = glob(str(run_id_dir) + "/*/")
         analysis_id = len(analysis_dirs)
         analysis_ids.append(analysis_id)
+        print(
+            f"\nlist of analysis IDs detected: {analysis_ids}. max = {max(analysis_ids)} "
+        )
 
     return max(analysis_ids)
 
