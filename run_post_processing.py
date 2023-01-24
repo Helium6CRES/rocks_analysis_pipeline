@@ -465,8 +465,15 @@ class PostProcessing:
         return labels
 
     def cluster_tracks(
-        self, tracks, eps=0.003, min_samples=1, features=["EventTimeIntc"]
+        self, tracks, eps=0.004, min_samples=1, features=["EventTimeIntc"]
     ):
+        """Notes: 
+            * This is really clustering events not track segments. 
+            * Default up to 1/24/23 was .003 here. 
+            * On 1/24/23 1600, Drew is testing how .004 performs. 
+
+
+        """
 
         exp_tracks_copy = tracks.copy()
         exp_tracks_copy["event_label"] = 100
