@@ -154,6 +154,18 @@ class RunKatydid:
 
             file_df = pd.read_csv(self.file_df_path)
 
+            # The following is a sanity check to make sure the number of files in the clean-up
+            # match the number of files that were originally run. Then trim the df according
+            # to the file_num arg.
+
+            if self.file_num != len(file_df):
+                print(
+                    f"Warning: The file_num specified in this cleanup \
+                    doesn't match the file_num originally run with ({len(file_df)}).\
+                    Trimming to match current file_num ({self.file_num})"
+                )
+                file_df = file_df[: self.file_num]
+
             # Check to see which root files already exist.
             file_df["root_file_exists"] = file_df["root_file_path"].apply(
                 lambda x: check_if_exists(x)
@@ -200,10 +212,10 @@ class RunKatydid:
         file_df["output_dir"] = self.build_dir_structure()
 
         # Collect either the given noise id or assign 'self' to noise file path.
-        if self.noise_run_id == -1: 
+        if self.noise_run_id == -1:
             print("\nUsing 'self' as noise file in katydid analysis.\n")
             file_df["noise_file_path"] = file_df["file_path"]
-        else: 
+        else:
             file_df["noise_file_path"] = self.get_noise_fp()
 
         file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
@@ -213,7 +225,6 @@ class RunKatydid:
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
         )
-
 
         # Trim the df according to the file_num arg.
         if self.file_num != -1:
