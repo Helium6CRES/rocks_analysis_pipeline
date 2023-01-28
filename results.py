@@ -141,7 +141,9 @@ class ExperimentResults:
         # Finish the plot.
         ax.set_ylabel("MHz")
         ax.set_xlabel("Time (s)")
-        ax.set_title(f"run_id: {run_id}, file_id: {file_id}, set_field: {set_field} (T)")
+        ax.set_title(
+            f"run_id: {run_id}, file_id: {file_id}, set_field: {set_field} (T)"
+        )
         plt.show()
 
         return None
@@ -416,10 +418,12 @@ class ExperimentResults:
 
                 if local_path.is_file():
                     print("File already exists locally: {}".format(remote_path.name))
-
-                print("Copying from remote path: ", str(remote_path))
-                sftp.get(str(remote_path), str(local_path), prefetch=True)
-                print("Got above file. Put it: {} ".format(local_path))
+                if self.sftp_exists(sftp, remote_path):
+                    print("Copying from remote path: ", str(remote_path))
+                    sftp.get(str(remote_path), str(local_path), prefetch=True)
+                    print("Got above file. Put it: {} ".format(local_path))
+                else:
+                    print("File doesn't exist: ", remote_path)
 
         finally:
             if sftp:
@@ -431,3 +435,10 @@ class ExperimentResults:
                 ssh.close()
 
         return None
+
+    def sftp_exists(self, sftp, path):
+        try:
+            sftp.stat(str(path))
+            return True
+        except FileNotFoundError:
+            return False

@@ -219,8 +219,16 @@ class PostProcessing:
             # Start by opening and reading in the file_df.
             self.root_files_df = self.load_root_files_df()
 
-            # Now gather tracks, clean them up, build events. Write csvs to disk.
-            self.process_tracks_and_events()
+            # Check to see if the event_i.csv file already exists.
+            # If so, then we won't reprocess.
+            events_path = self.analysis_dir / Path(f"events_{self.file_id}.csv")
+            if events_path.is_file(): 
+                print(f"No processing necessary. Events csv already processed: {events_path}")
+            
+            else: 
+
+                # Now gather tracks, clean them up, build events. Write csvs to disk.
+                self.process_tracks_and_events()
 
         elif self.stage == 2:
 
