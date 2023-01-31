@@ -59,8 +59,9 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 * **Step 1:** Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
 	* Log on to rocks. 
 	* `cd /data/eliza4/he6_cres`
-	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 9`
-		* The above will rerun all of the files in analysis_id 9 that haven't yet been created. 
+	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3 -aid 9`
+		* The above will rerun all of the files in analysis_id 9 that haven't yet been created.
+		* Note that you want to include "-fn 3" here in case a node failed before even creating the  
 
 ### Post Processing:
 
