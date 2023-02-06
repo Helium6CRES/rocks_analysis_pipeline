@@ -125,7 +125,12 @@ def get_analysis_id(run_ids):
         ]
         print(f"run_id = {run_id}. Existing aids = {sorted(analysis_ids)}")
 
-        max_analysis_id = max(analysis_ids)
+        # Use the fact that an empty list is boolean False. 
+        if not analysis_ids: 
+            max_analysis_id = 0
+        else: 
+            max_analysis_id = max(analysis_ids)
+            
         max_analysis_ids.append(max_analysis_id)
 
     next_available_aid = max(max_analysis_ids) + 1

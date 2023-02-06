@@ -115,7 +115,7 @@ class ExperimentResults:
         file_id,
         config={
             "tracks": {"show": True, "EventIDs": [], "alpha": 0.5},
-            "events": {"show": True, "alpha": 1.0},
+            "events": {"show": True, "alpha": 1.0, "cuts": cuts},
             "sparse_spec": {"show": True, "frac_pts": 1.0, "mrk_sz": 0.1, "alpha": 0.1},
         },
         viz_settings=None,
@@ -148,13 +148,17 @@ class ExperimentResults:
 
         return None
 
-    def viz_events(self, ax, run_id, file_id, config):
+    def viz_events(self, ax, run_id, file_id, config, cuts = {}):
 
-        condition = (self.events.run_id == run_id) & (self.events.file_id == file_id)
+        # First apply cuts.
+        events = self.cut_df( self.events, config["events"][cuts])
+
+        condition = (events.run_id == run_id) & (events.file_id == file_id)
         if condition.sum() == 0:
             print(f"Warning: no event data for run_id {run_id}, file_id {file_id}")
 
-        for EventID, event in self.events[condition].iterrows():
+        events = self.cut_df( self.events, cuts)
+        for EventID, event in events[condition].iterrows():
 
             time_coor = np.array(
                 [float(event["EventStartTime"]), float(event["EventEndTime"])]
@@ -273,6 +277,7 @@ class ExperimentResults:
         scatt_type,
         column_1,
         column_2,
+        cuts = {},
         fix_field=False,
         field_value=0,
         scatt_settings={
@@ -292,6 +297,9 @@ class ExperimentResults:
             df = self.tracks
         if scatt_type == "events":
             df = self.events
+
+        # Apply cuts. 
+        df = self.cut_df( df, cuts)
 
         if fix_field:
             condition = df.set_field == field_value
@@ -345,6 +353,15 @@ class ExperimentResults:
         plt.show()
 
         return None
+
+    def cut_df(self, df, cuts): 
+    
+        df_cut = df.copy()
+
+        for column, cut in cuts.items():
+            df_cut = df_cut[(df_cut[column] >= cut[0]) & (df_cut[column] <= cut[1])]
+            
+        return df_cut
 
     def build_result_attributes(self):
 
