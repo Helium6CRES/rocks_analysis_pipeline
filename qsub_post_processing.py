@@ -105,12 +105,16 @@ def main():
     set_permissions()
 
     # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
-
+    # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
+    # DREW_02082023: Adding in the singularity command first as this should help with python package versioning issues. 
+    con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
+        r"\n"
+    )
     base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {}'
     rids_formatted = " ".join((str(rid) for rid in args.run_ids))
     if args.stage == 0:
         file_id = -1
-        cmd = base_post_processing_cmd.format(
+        cmd = con + base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,
@@ -129,7 +133,7 @@ def main():
 
         for file_id in range(files_to_process):
 
-            cmd = base_post_processing_cmd.format(
+            cmd = con +base_post_processing_cmd.format(
                 rids_formatted,
                 args.analysis_id,
                 args.experiment_name,
@@ -143,7 +147,7 @@ def main():
 
     if args.stage == 2:
         file_id = -1
-        cmd = base_post_processing_cmd.format(
+        cmd = con +base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,

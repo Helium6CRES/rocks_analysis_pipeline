@@ -115,7 +115,7 @@ class ExperimentResults:
         file_id,
         config={
             "tracks": {"show": True, "EventIDs": [], "alpha": 0.5},
-            "events": {"show": True, "alpha": 1.0, "cuts": cuts},
+            "events": {"show": True, "alpha": 1.0, "cuts": {}},
             "sparse_spec": {"show": True, "frac_pts": 1.0, "mrk_sz": 0.1, "alpha": 0.1},
         },
         viz_settings=None,
@@ -148,16 +148,15 @@ class ExperimentResults:
 
         return None
 
-    def viz_events(self, ax, run_id, file_id, config, cuts = {}):
+    def viz_events(self, ax, run_id, file_id, config):
 
         # First apply cuts.
-        events = self.cut_df( self.events, config["events"][cuts])
+        events = self.cut_df( self.events, config["events"]["cuts"])
 
         condition = (events.run_id == run_id) & (events.file_id == file_id)
         if condition.sum() == 0:
             print(f"Warning: no event data for run_id {run_id}, file_id {file_id}")
 
-        events = self.cut_df( self.events, cuts)
         for EventID, event in events[condition].iterrows():
 
             time_coor = np.array(
