@@ -42,8 +42,18 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 	* Singularity> `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
 	* Singularity> `exit` 
 * Notes: 
-	* The requirements.txt should contain all necessary python packages but if that isn't the case please let me (drew) know.  
+	* The requirements.txt should contain all necessary python packages but if that isn't the case please let me (drew) know. 
+	
+### Notes about the singularity shell post-02/07/23 meeting with Clint
+We found an issue with psycopg2 (a postgress library) for Heather. The way it is currently set up is that a submission script run on the head node acesses the postgress database and uses the information about the field to build the config files for the requested run_ids. The jobs are then sent to compute nodes. The first thing the compute nodes do is load the singularity image which can be shared between users to essentially create a uniform virtual environment. Katydid runs. Then to do the post-processing, a submission script is run on the head node which then submits a bunch of jobs to the compute nodes. Right now, these do NOT load the singularity image. The logic was that, if the user had run requirements.txt in their head node, then the compute nodes would be able to use all those loaded modules. We found that this is not always true if there is som library involved that you would locally need to instal with apt get. As a result for Heather, eventhough she had installed psycopg2 for her user on the head node, when the post-processing jobs on the compute nodes tried to use psycopg2 they threw and error that they couldn't find a library. The solution, according to Clint, is to also load the singularity image on the compute nodes before each post-processing job is run on one of those nodes. 
 
+Our norm should be that the only thing you run on the head node are submission scripts. You cannot submit jobs from within a singularity image, so these have to be in the user's environment. However all the heavy lisfting is done withing jobs on the compute nodes. These should ALWAYS load the singularity image so that they are run in a consistant environment across users and nodes. Drew is going to work on implementing this.
+
+If you want to test something in the same environment as it will be run with when it is submitted to a compute nose, first run 
+	'singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif'
+to enter an interactive singularity shell and then do your tests there.
+
+	
 ### Run katydid:
 
 * **Overview:** Run katydid on a list of run_ids.
