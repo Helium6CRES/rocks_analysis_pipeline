@@ -106,7 +106,7 @@ def main():
 
     # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
-    # DREW_02082023: Adding in the singularity command first as this should help with python package versioning issues. 
+    # DREW_02082023: Adding in the singularity command first as this should help with python package versioning issues.
     con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
         r"\n"
     )
@@ -123,6 +123,7 @@ def main():
             file_id,
             args.stage,
         )
+        print(cmd)
 
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
@@ -133,7 +134,7 @@ def main():
 
         for file_id in range(files_to_process):
 
-            cmd = con +base_post_processing_cmd.format(
+            cmd = con + base_post_processing_cmd.format(
                 rids_formatted,
                 args.analysis_id,
                 args.experiment_name,
@@ -147,7 +148,7 @@ def main():
 
     if args.stage == 2:
         file_id = -1
-        cmd = con +base_post_processing_cmd.format(
+        cmd = con + base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,
@@ -189,6 +190,7 @@ def qsub_job(experiment_name, analysis_id, file_id, cmd, tlim):
     sp.run(batch_cmd, shell=True)
 
     return None
+
 
 if __name__ == "__main__":
     main()
