@@ -74,20 +74,20 @@ def get_pst_time():
 
 def set_permissions():
     """
-    Note that this is necessary for the output (files and dirs) of the analysis to have 
-    the right permissions so that all other group members can also run an analysis. The 
-    issue is that since not all files in katydid_analysis are owned by any one of us, 
+    Note that this is necessary for the output (files and dirs) of the analysis to have
+    the right permissions so that all other group members can also run an analysis. The
+    issue is that since not all files in katydid_analysis are owned by any one of us,
     we will all get long error messages written to our job logs (for each file we don't
-    own). The below still works well but the output is supressed for this reason. In the 
+    own). The below still works well but the output is supressed for this reason. In the
     future we may want a more targeted command (change permissions for all files I own).
-    For now this works. 
+    For now this works.
     """
-
+    timeout_seconds = 5
     cmd1 = "chgrp -R he6_cres katydid_analysis/ >/dev/null 2>&1"
-    sp.call(cmd1, shell=True)
+    sp.call(cmd1, shell=True, timeout=timeout_seconds)
 
     cmd2 = "chmod -R 774 katydid_analysis/ >/dev/null 2>&1"
-    sp.call(cmd2, shell=True)
+    sp.call(cmd2, shell=True, timeout=timeout_seconds)
 
     return None
 

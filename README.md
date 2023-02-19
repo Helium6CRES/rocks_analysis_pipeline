@@ -126,7 +126,9 @@ to enter an interactive singularity shell and then do your tests there.
 	* Pretty print a csv in bash (useful for sanity checking):
 		* `column -s, -t < root_files.csv | less -#2 -N -S`
 		* `.q` to exit. 
-
+* **Rocks:**
+	* To check on rocks use this site (won't work when on the cenpa VPN): 
+		* `http://cenpa-rocks.npl.washington.edu/ganglia/?r=hour&cs=&ce=&m=load_one&s=by+name&c=&tab=m&vn=&hide-hf=false`
 --------------------------------------------------------------------------------
 
 ## Testing: 

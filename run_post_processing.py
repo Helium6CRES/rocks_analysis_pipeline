@@ -23,7 +23,6 @@ from pathlib import Path
 import yaml
 import uproot4
 
-# import awkward
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
