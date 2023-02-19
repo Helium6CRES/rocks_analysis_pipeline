@@ -135,7 +135,7 @@ def main():
 
         for file_id in range(files_to_process):
 
-            cmd = con + base_post_processing_cmd.format(
+            post_processing_cmd = base_post_processing_cmd.format(
                 rids_formatted,
                 args.analysis_id,
                 args.experiment_name,
@@ -144,12 +144,14 @@ def main():
                 file_id,
                 args.stage,
             )
+            cmd = con + f"{post_processing_cmd}'\""
+            print(cmd)
 
             qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 2:
         file_id = -1
-        cmd = con + base_post_processing_cmd.format(
+        post_processing_cmd = base_post_processing_cmd.format(
             rids_formatted,
             args.analysis_id,
             args.experiment_name,
@@ -158,6 +160,8 @@ def main():
             file_id,
             args.stage,
         )
+        cmd = con + f"{post_processing_cmd}'\""
+        print(cmd)
 
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
