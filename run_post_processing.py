@@ -21,7 +21,7 @@ from typing import List
 
 from pathlib import Path
 import yaml
-import uproot3
+import uproot
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -382,7 +382,7 @@ class PostProcessing:
 
         tracks_df = pd.DataFrame()
 
-        rootfile = uproot3.open(root_files_df_row["root_file_path"])
+        rootfile = uproot.open(root_files_df_row["root_file_path"])
 
         if "multiTrackEvents;1" in rootfile.keys():
 
