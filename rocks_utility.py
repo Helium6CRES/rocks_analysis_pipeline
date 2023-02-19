@@ -82,7 +82,7 @@ def set_permissions():
     future we may want a more targeted command (change permissions for all files I own).
     For now this works.
     """
-    timeout_seconds = 5
+    timeout_seconds = 10
 
     try:
         cmd1 = "chgrp -R he6_cres katydid_analysis/ >/dev/null 2>&1"
