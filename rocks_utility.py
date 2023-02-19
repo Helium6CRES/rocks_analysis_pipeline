@@ -83,11 +83,16 @@ def set_permissions():
     For now this works.
     """
     timeout_seconds = 5
-    cmd1 = "chgrp -R he6_cres katydid_analysis/ >/dev/null 2>&1"
-    sp.call(cmd1, shell=True, timeout=timeout_seconds)
 
-    cmd2 = "chmod -R 774 katydid_analysis/ >/dev/null 2>&1"
-    sp.call(cmd2, shell=True, timeout=timeout_seconds)
+    try:
+        cmd1 = "chgrp -R he6_cres katydid_analysis/ >/dev/null 2>&1"
+        sp.call(cmd1, shell=True, timeout=timeout_seconds)
+
+        cmd2 = "chmod -R 774 katydid_analysis/ >/dev/null 2>&1"
+        sp.call(cmd2, shell=True, timeout=timeout_seconds)
+
+    except Exception:
+        print("set_permissions() function in rocks_utility.py failed.")
 
     return None
 
