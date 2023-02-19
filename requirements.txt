@@ -3,6 +3,8 @@
 # First run: module load python-3.7.3
 # Then run (from within rocks_analysis_pipeline): pip3 install -r requirements.txt
 # TODO: Add specific instructions for inside rocks, 
+# On 2/19/23 Drew added awkward to this list because this now has to be included in the 
+# singularity container for uproot4 to work properly. 
 
 numpy>=1.20.0
 pandas>=1.3.5
@@ -12,4 +14,4 @@ argparse>=1.1
 uproot4>=4.0.0
 scikit-learn>=1.0.1
 pytz>=2022.4
-
+# awkward
