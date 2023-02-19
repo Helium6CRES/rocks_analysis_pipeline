@@ -397,7 +397,7 @@ class PostProcessing:
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
         tracks_df["monitor_rate"] = root_files_df_row["monitor_rate"]
-        print(tracks_df)
+
         return tracks_df.reset_index(drop=True)
 
     def add_track_info(self, tracks):
