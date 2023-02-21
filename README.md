@@ -112,6 +112,7 @@ to enter an interactive singularity shell and then do your tests there.
 	* `qdel -u drewbyron` (delete all the jobs of user drewbyron)
 	* To look at the description of command line arguments for a given .py file use: 
 		* `my_file.py -h`
+	* Use `qstat | wc -l` to count the number of jobs you have open/active. 
 * **Permissions:**
 	* I'm finding that with multiple users working in this analysis pipeline simultaneously the permissions can get weird. The following two commands run from `/he6_cres` should help: 
 		* `chmod -R 774 katydid_analysis/`
@@ -122,10 +123,14 @@ to enter an interactive singularity shell and then do your tests there.
 		* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
 	* To exit the container: 
 		* `exit`
+		
 * **BASH:**
 	* Pretty print a csv in bash (useful for sanity checking):
 		* `column -s, -t < root_files.csv | less -#2 -N -S`
 		* `.q` to exit. 
+	* Count number of files in a directory: 
+		* `ls -1 | wc -l`
+
 * **Rocks:**
 	* To check on rocks use this site (won't work when on the cenpa VPN): 
 		* `http://cenpa-rocks.npl.washington.edu/ganglia/?r=hour&cs=&ce=&m=load_one&s=by+name&c=&tab=m&vn=&hide-hf=false`
@@ -152,6 +157,7 @@ to enter an interactive singularity shell and then do your tests there.
 	* Add RGA data into root files table. 
 * **run_katydid.py**
 	* The time that is printed to the log for how long katydid took on one file doesn't align with how long the jobs take to run? Why is this?
+	* Make sure a representative .yaml is being written to the aid_xxx directory not just the generic unedited one. 
 * **run_post_processing.py**
 	* Indexing of the root_files df is still off. 
 	* Fix indexing of events and tracks df. 
