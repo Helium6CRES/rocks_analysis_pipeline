@@ -472,12 +472,15 @@ class PostProcessing:
         return labels
 
     def cluster_tracks(
-        self, tracks, eps=0.005, min_samples=1, features=["EventTimeIntc"]
+        self, tracks, eps=0, min_samples=1, features=["EventTimeIntc"]
     ):
         """Notes: 
             * This is really clustering events not track segments. 
             * Default up to 1/24/23 was .003 up to now. 
             * On 1/24/23 1600, Drew is testing how .005 performs. 
+            * On 4/12/23 Drew and Heather are working to make the event 
+            reconstruction work better and so need the raw output from 
+            Katydid. That's why I'm setting eps = 0. 
         """
 
         exp_tracks_copy = tracks.copy()
@@ -871,54 +874,3 @@ class PostProcessing:
 
 if __name__ == "__main__":
     main()
-
-
-# def check_if_exists(self, fp):
-#     return Path(fp).is_file()
-
-# def set_permissions():
-
-#     set_group = sp.run(["chgrp", "-R", "he6_cres", "katydid_analysis/"])
-#     set_permission = sp.run(["chmod", "-R", "774", "katydid_analysis/"])
-
-#     return None
-
-
-# # Simplify to not have an insert capability.
-# # TOD0: Put this in a utility module and have the run_katydid.py use it as well.
-# def he6cres_db_query(query: str) -> typing.Union[None, pd.DataFrame]:
-
-#     connection = False
-#     try:
-#         # Connect to an existing database
-#         connection = psycopg2.connect(
-#             user="postgres",
-#             password="chirality",
-#             host="wombat.npl.washington.edu",
-#             port="5544",
-#             database="he6cres_db",
-#         )
-
-#         # Create a cursor to perform database operations
-#         cursor = connection.cursor()
-
-#         # Execute a sql_command
-#         cursor.execute(query)
-#         cols = [desc[0] for desc in cursor.description]
-#         query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
-
-#     except (Exception, Error) as error:
-#         print("Error while connecting to he6cres_db", error)
-#         query_result = None
-
-#     finally:
-#         if connection:
-#             cursor.close()
-#             connection.close()
-
-#     return query_result
-
-# def get_pst_time():
-#     tz = pytz.timezone('US/Pacific')
-#     pst_now = datetime.datetime.now(tz).replace(microsecond=0).replace(tzinfo=None)
-#     return pst_now

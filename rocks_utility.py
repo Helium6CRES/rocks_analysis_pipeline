@@ -81,8 +81,11 @@ def set_permissions():
     own). The below still works well but the output is supressed for this reason. In the
     future we may want a more targeted command (change permissions for all files I own).
     For now this works.
+
+    NOTE: I think this function is taking a lot of time in our submissions. We should 
+    limit it's use whenever possible. 
     """
-    timeout_seconds = 10
+    timeout_seconds = 30
 
     try:
         cmd1 = "chgrp -R he6_cres katydid_analysis/ >/dev/null 2>&1"

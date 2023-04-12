@@ -113,6 +113,10 @@ to enter an interactive singularity shell and then do your tests there.
 	* To look at the description of command line arguments for a given .py file use: 
 		* `my_file.py -h`
 	* Use `qstat | wc -l` to count the number of jobs you have open/active. 
+	* To delete jobs of state `Eqw` or any state, add the following alias to your .bashrc: 
+		* `alias killEqw="qstat | grep drewbyron | grep 'Eqw' | cut -d ' ' -f1 | xargs qdel"`
+		* Change your username and f1 means first column contains the job id, if otherwise then change to -fx for xth column. 
+
 * **Permissions:**
 	* I'm finding that with multiple users working in this analysis pipeline simultaneously the permissions can get weird. The following two commands run from `/he6_cres` should help: 
 		* `chmod -R 774 katydid_analysis/`
@@ -155,6 +159,9 @@ to enter an interactive singularity shell and then do your tests there.
 	* It would be nice for the root files df to contain a col for if this file is included in the tracks or events df. Right now it's a bit hard to tell which is a problem. 
 	* Helper function for viewing the noise spectrum from a root file in the results class. 
 	* Add RGA data into root files table. 
+	* Add in a summary function where you just list the run_ids and aid and it prints to screen the summary of how many root files there are and such...
+	* I think the set_permissions() method of rocks_utility is used too frequently. It may take a long time so may be slowing things down. 
+	* Need to work on protecting the permissions of the data files. Not sure how exactly to do this but this is important. 
 * **run_katydid.py**
 	* The time that is printed to the log for how long katydid took on one file doesn't align with how long the jobs take to run? Why is this?
 	* Make sure a representative .yaml is being written to the aid_xxx directory not just the generic unedited one. 
@@ -228,3 +235,5 @@ to enter an interactive singularity shell and then do your tests there.
 		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`
 	* Helium: (submitted 12/22/22 1338)
 		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`
+* 2/22/23: 
+	* Now the post processing is all run within the singularity container as well. There was an issue with uproot vs uproot4. When I swiched to uproot everything started working fine. The requirements.txt has been updated accordingly but be sure to enter the image then pip install as is described above. 
