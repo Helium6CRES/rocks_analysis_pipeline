@@ -472,7 +472,7 @@ class PostProcessing:
         return labels
 
     def cluster_tracks(
-        self, tracks, eps=0, min_samples=1, features=["EventTimeIntc"]
+        self, tracks, eps=1e-12, min_samples=1, features=["EventTimeIntc"]
     ):
         """Notes: 
             * This is really clustering events not track segments. 
