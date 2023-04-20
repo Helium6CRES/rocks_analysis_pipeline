@@ -87,6 +87,7 @@ to enter an interactive singularity shell and then do your tests there.
 	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 1`	
 		* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and nfe files worth of events for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (tracks_[fid].csv, events_[fid].csv) are built for each fid. 
 		* Before moving on to stage 2, check to see that the directory contains nft tracks and nfe events csvs. 
+		* If for some reason (most likely failed nodes) all of the events_{n}.csv's aren't created rerun the exact same command. It will detect the missing ones and rerun those. 
 * **Stage 2:** Clean-up. 
 	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 2`
 		* The above will gather all of the events and tracks csvs (respectively) into one csv. 

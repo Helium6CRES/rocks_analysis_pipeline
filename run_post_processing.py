@@ -221,10 +221,12 @@ class PostProcessing:
             # Check to see if the event_i.csv file already exists.
             # If so, then we won't reprocess.
             events_path = self.analysis_dir / Path(f"events_{self.file_id}.csv")
-            if events_path.is_file(): 
-                print(f"No processing necessary. Events csv already processed: {events_path}")
-            
-            else: 
+            if events_path.is_file():
+                print(
+                    f"No processing necessary. Events csv already processed: {events_path}"
+                )
+
+            else:
 
                 # Now gather tracks, clean them up, build events. Write csvs to disk.
                 self.process_tracks_and_events()
@@ -345,8 +347,8 @@ class PostProcessing:
         # Step 0. Clean up the tracks.
         cleaned_tracks = self.clean_up_tracks(tracks)
 
-        # Note that we have to do this twice becuase the event IDs are different after the 
-        # dbscan clustering. 
+        # Note that we have to do this twice becuase the event IDs are different after the
+        # dbscan clustering.
         tracks = self.add_event_info(tracks)
 
         # Step 1. DBSCAN clustering of events.
@@ -474,13 +476,13 @@ class PostProcessing:
     def cluster_tracks(
         self, tracks, eps=1e-12, min_samples=1, features=["EventTimeIntc"]
     ):
-        """Notes: 
-            * This is really clustering events not track segments. 
-            * Default up to 1/24/23 was .003 up to now. 
-            * On 1/24/23 1600, Drew is testing how .005 performs. 
-            * On 4/12/23 Drew and Heather are working to make the event 
-            reconstruction work better and so need the raw output from 
-            Katydid. That's why I'm setting eps = 0. 
+        """Notes:
+        * This is really clustering events not track segments.
+        * Default up to 1/24/23 was .003 up to now.
+        * On 1/24/23 1600, Drew is testing how .005 performs.
+        * On 4/12/23 Drew and Heather are working to make the event
+        reconstruction work better and so need the raw output from
+        Katydid. That's why I'm setting eps = 0.
         """
 
         exp_tracks_copy = tracks.copy()
