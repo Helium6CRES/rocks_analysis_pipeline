@@ -93,9 +93,9 @@ def main():
     )
     arg("-dbscan",
         "--do_dbscan_clustering",
-        default=True, 
-        action="store_true",
-        help="Flag indicating whether or not to dbscan cluster colinear events.")
+        type=int,
+        default=1, 
+        help="Flag indicating to dbscan cluster colinear events (1) or not (0).")
 
     arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
 

@@ -127,12 +127,13 @@ def main():
                     single files. 
             """,
     )
-    arg("-dbscan",
+    arg(
+        "-dbscan",
         "--do_dbscan_clustering",
-        default=True, 
-        action="store_true",
-        help="Flag indicating whether or not to dbscan cluster colinear events.")
-
+        type=int,
+        default=1,
+        help="Flag indicating to dbscan cluster colinear events (1) or not (0).",
+    )
 
     args = par.parse_args()
 
@@ -395,9 +396,10 @@ class PostProcessing:
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
-
-        # Step 4. Cluster events.
-        events = self.cluster_and_clean_events(events, diagnostics=True)
+        if self.do_dbscan_clustering:
+            print("DBSCAN clustering.")
+            # Step 4. Cluster events.
+            events = self.cluster_and_clean_events(events, diagnostics=True)
 
         return events
 
