@@ -127,13 +127,12 @@ def main():
                     single files. 
             """,
     )
-    arg(
-        "-do_dbscan_clustering",
-        "--clust",
-        default=True,
+    arg("-dbscan",
+        "--do_dbscan_clustering",
+        default=True, 
         action="store_true",
-        help="Flag indicating whether or not to dbscan cluster colinear events.",
-    )
+        help="Flag indicating whether or not to dbscan cluster colinear events.")
+
 
     args = par.parse_args()
 

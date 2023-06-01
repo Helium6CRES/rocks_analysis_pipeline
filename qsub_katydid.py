@@ -41,8 +41,7 @@ def main():
         "--analysis_id",
         type=int,
         default=-1,
-        help="analysis_id used to label directories. If -1, a new index will be created. \
-        If doing a clean then WHAT??",
+        help="analysis_id used to label directories. If -1, a new index will be created,"
     )
 
     args = par.parse_args()
