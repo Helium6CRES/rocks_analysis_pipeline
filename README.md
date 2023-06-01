@@ -80,16 +80,17 @@ to enter an interactive singularity shell and then do your tests there.
 		* Log on to rocks. 
 		* `cd /data/eliza4/he6_cres`
 * **Stage 0:** Set-up.  
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 0`
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -stage 0`
 		* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]). 
 		* Before moving on to stage 1, check to see that the directory was made and the `root_files.csv` is present. 
 * **Stage 1:** Processing.  
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 1`	
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -stage 1`	
 		* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and nfe files worth of events for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (tracks_[fid].csv, events_[fid].csv) are built for each fid. 
 		* Before moving on to stage 2, check to see that the directory contains nft tracks and nfe events csvs. 
 		* If for some reason (most likely failed nodes) all of the events_{n}.csv's aren't created rerun the exact same command. It will detect the missing ones and rerun those. 
+		* `-dbscan` flag: Flag to run the default dbscan colinear event clustering (1) or not (0). Note that right now there are only default EventTimeIntc eps values (found by Heather via histogramming event time intercepts) for .75 - 3.25 in .25 T steps. This needs to be generalized at some point. 
 * **Stage 2:** Clean-up. 
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -stage 2`
+	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -stage 2`
 		* The above will gather all of the events and tracks csvs (respectively) into one csv. 
 
 
@@ -133,6 +134,8 @@ to enter an interactive singularity shell and then do your tests there.
 	* Pretty print a csv in bash (useful for sanity checking):
 		* `column -s, -t < root_files.csv | less -#2 -N -S`
 		* `.q` to exit. 
+	* Check number of rows in a csv (useful for checking len of df/csv): 
+		* `column -s, -t < events.csv | less -#2 -N -S | wc -l`
 	* Count number of files in a directory: 
 		* `ls -1 | wc -l`
 

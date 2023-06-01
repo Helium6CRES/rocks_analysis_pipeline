@@ -388,13 +388,13 @@ class PostProcessing:
 
         # Note that we have to do this twice becuase the event IDs are different after the
         # dbscan clustering.
-        tracks = self.add_event_info(tracks)
+        # tracks = self.add_event_info(tracks)
 
-        # Step 1. DBSCAN clustering of events.
-        tracks = self.cluster_tracks(tracks)
+        # # Step 1. DBSCAN clustering of events.
+        # tracks = self.cluster_tracks(tracks)
 
-        # Step 2. Add aggregated event info to tracks.
-        tracks = self.add_event_info(tracks)
+        # # Step 2. Add aggregated event info to tracks.
+        # tracks = self.add_event_info(tracks)
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
@@ -404,6 +404,9 @@ class PostProcessing:
             print("DBSCAN clustering.")
             
             events = self.cluster_and_clean_events(events, diagnostics=True)
+
+        # Ensures one row per unique EventID.
+        events = self.build_events(events)
 
         return events
 
@@ -522,7 +525,6 @@ class PostProcessing:
 
         # cleanup
         events = self.update_event_info(events)
-        events = self.build_events(events)
 
         if diagnostics:
 
