@@ -91,12 +91,6 @@ def main():
                     single files. 
             """,
     )
-    arg("-do_dbscan_clustering",
-        "--clust",
-        default=True, 
-        action="store_true",
-        help="Flag indicating whether or not to dbscan cluster colinear events.")
-
     arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
 
     args = par.parse_args()
@@ -116,7 +110,7 @@ def main():
     con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
         r"\n"
     )
-    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {} -clust {}'
+    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {}'
     rids_formatted = " ".join((str(rid) for rid in args.run_ids))
     if args.stage == 0:
         file_id = -1
@@ -128,7 +122,6 @@ def main():
             args.num_files_events,
             file_id,
             args.stage,
-            args.do_dbscan_clustering
         )
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)
@@ -150,7 +143,6 @@ def main():
                 args.num_files_events,
                 file_id,
                 args.stage,
-                args.do_dbscan_clustering
             )
             cmd = con + f"{post_processing_cmd}'\""
             print(cmd)
@@ -167,7 +159,6 @@ def main():
             args.num_files_events,
             file_id,
             args.stage,
-            args.do_dbscan_clustering
         )
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)

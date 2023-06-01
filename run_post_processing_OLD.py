@@ -127,13 +127,6 @@ def main():
                     single files. 
             """,
     )
-    arg(
-        "-do_dbscan_clustering",
-        "--clust",
-        default=True,
-        action="store_true",
-        help="Flag indicating whether or not to dbscan cluster colinear events.",
-    )
 
     args = par.parse_args()
 
@@ -163,7 +156,6 @@ def main():
         args.num_files_events,
         args.file_id,
         args.stage,
-        args.do_dbscan_clustering,
     )
 
     # Done at the beginning and end of main.
@@ -187,7 +179,6 @@ class PostProcessing:
         num_files_events,
         file_id,
         stage,
-        do_dbscan_clustering,
     ):
 
         self.run_ids = run_ids
@@ -197,39 +188,11 @@ class PostProcessing:
         self.num_files_events = num_files_events
         self.file_id = file_id
         self.stage = stage
-        self.do_dbscan_clustering = do_dbscan_clustering
 
         self.analysis_dir = self.get_analysis_dir()
         self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
         self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
         self.events_df_path = self.analysis_dir / Path(f"events.csv")
-
-        # Default field-wise epss for clustering.
-        # 6/1/23 (Drew): Note that this is hardcoded so won't work generically for all fields.
-        # This is an issue and we should solve it with a spline of these values or something.
-        epss = np.array(
-            [
-                0.12,
-                0.08,
-                0.02,
-                0.01,
-                0.003,
-                0.0015,
-                0.0008,
-                0.0004,
-                0.00015,
-                0.0001,
-                0.00008,
-            ]
-        )
-        clust_params = {}
-
-        for (set_field, eps) in zip(set_fields, epss):
-
-            clust_params.update({set_field: {"eps": eps}})
-            clust_params[set_field].update({"features": ["EventTimeIntc"]})
-
-        self.clust_params = clust_params
 
         print(f"PostProcessing instance attributes:\n")
         for key, value in self.__dict__.items():
@@ -397,9 +360,6 @@ class PostProcessing:
         # Step 3. Build event df.
         events = self.build_events(tracks)
 
-        # Step 4. Cluster events.
-        events = self.cluster_and_clean_events(events, diagnostics=True)
-
         return events
 
     def get_track_data_from_files(self, root_files_df):
@@ -503,185 +463,15 @@ class PostProcessing:
 
         return condition_tot
 
-    def cluster_and_clean_events(self, events, diagnostics=False):
-
-        if diagnostics:
-
-            # Take stock of what events were like before the clustering.
-            pre_clust_counts = events.groupby("set_field").file_id.count()
-            pre_clust_summary_mean = events.groupby("set_field").mean()
-            pre_clust_summary_std = events.groupby("set_field").std()
-
-        # cluster
-        events = self.cluster_events(events)
-
-        # cleanup
-        events = self.update_event_info(events)
-        events = self.build_events(events)
-
-        if diagnostics:
-
-            # Take stock of what events were like after the clustering.
-            post_clust_counts = events.groupby("set_field").file_id.count()
-            post_clust_summary_mean = events.groupby("set_field").mean()
-            post_clust_summary_std = events.groupby("set_field").std()
-
-            print("Summary of clustring: \n")
-            print(
-                f"\nFractional reduction in counts from clustering:",
-                post_clust_counts / pre_clust_counts,
-            )
-            print("\nPre-clustering means:")
-            display(pre_clust_summary_mean)
-            print("\nPre-clustering stds:")
-            display(pre_clust_summary_std)
-            print("\nPost-clustering means:")
-            display(post_clust_summary_mean)
-            print("\nPost-clustering stds:")
-            display(post_clust_summary_std)
-
-        return events
-
-    def cluster_events(self, events):
-        """ """
-
-        events_copy = events.copy()
-        events_copy["event_label"] = np.NaN
-
-        for i, (name, group) in enumerate(events_copy.groupby(["run_id", "file_id"])):
-
-            set_field = group.set_field.mean()
-
-            condition = (events_copy.run_id == name[0]) & (
-                events_copy.file_id == name[1]
-            )
-
-            events_copy.loc[condition, "event_label"] = self.dbscan_clustering(
-                events_copy[condition],
-                features=clust_params[set_field]["features"],
-                eps=clust_params[set_field]["eps"],
-                min_samples=1,
-            )
-        events_copy["EventID"] = events_copy["event_label"] + 1
-
-        return events_copy
-
     def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
 
-        # Previously (incorrectly) used the standardscaler but
-        # This meant there was a different normalization on each file!
-        # X_norm = StandardScaler().fit_transform(df[features])
-
+        # Normalize features.
+        X_norm = StandardScaler().fit_transform(df[features])
         # Compute DBSCAN
-        db = DBSCAN(eps=eps, min_samples=min_samples).fit(df[features])
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_norm)
         labels = db.labels_
 
         return labels
-
-    def update_event_info(self, events_in: pd.DataFrame) -> pd.DataFrame:
-
-        events = events_in.copy()
-        events = events.loc[:, ~events.columns.duplicated()]
-
-        events["EventStartTime"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventStartTime"
-        ].transform("min")
-        events["EventEndTime"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventEndTime"
-        ].transform("max")
-
-        events["EventStartFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventStartFreq"
-        ].transform("min")
-        events["EventEndFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventEndFreq"
-        ].transform("max")
-
-        events["EventTimeLength"] = events["EventEndTime"] - events["EventStartTime"]
-        events["EventFreqLength"] = events["EventEndFreq"] - events["EventStartFreq"]
-        events["EventNBins"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventNBins"
-        ].transform("sum")
-
-        events["EventSlope"] = events["EventFreqLength"] / events["EventTimeLength"]
-
-        cols_to_average_over = [
-            "EventTrackCoverage",
-            "EventTrackTot",
-            "EventFreqIntc",
-            "EventTimeIntc",
-            "mMeanSNR",
-            "sMeanSNR",
-            "mTotalSNR",
-            "sTotalSNR",
-            "mMaxSNR",
-            "sMaxSNR",
-            "mTotalNUP",
-            "sTotalNUP",
-            "mTotalPower",
-            "sTotalPower",
-            "field",
-            "set_field",
-            "monitor_rate",
-        ]
-        for col in cols_to_average_over:
-
-            events[col] = events.groupby(["run_id", "file_id", "EventID"])[
-                col
-            ].transform("mean")
-
-        return events
-
-    def build_events(self, events: pd.DataFrame) -> pd.DataFrame:
-
-        event_cols = [
-            "run_id",
-            "file_id",
-            "EventID",
-            "EventStartTime",
-            "EventEndTime",
-            "EventStartFreq",
-            "EventEndFreq",
-            "EventTimeLength",
-            "EventFreqLength",
-            "EventTrackCoverage",
-            "EventSlope",
-            "EventNBins",
-            "EventTrackTot",
-            "EventFreqIntc",
-            "EventTimeIntc",
-            "mMeanSNR",
-            "sMeanSNR",
-            "mTotalSNR",
-            "sTotalSNR",
-            "mMaxSNR",
-            "sMaxSNR",
-            "mTotalNUP",
-            "sTotalNUP",
-            "mTotalPower",
-            "sTotalPower",
-            "field",
-            "set_field",
-            "monitor_rate",
-        ]
-
-        events = (
-            events.groupby(["run_id", "file_id", "EventID"])
-            .first()
-            .reset_index()[event_cols]
-        )
-
-        return events
-
-    # def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
-
-    #     # Normalize features.
-    #     X_norm = StandardScaler().fit_transform(df[features])
-    #     # Compute DBSCAN
-    #     db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_norm)
-    #     labels = db.labels_
-
-    #     return labels
 
     def cluster_tracks(
         self, tracks, eps=1e-12, min_samples=1, features=["EventTimeIntc"]
