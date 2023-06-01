@@ -207,6 +207,7 @@ class PostProcessing:
         # Default field-wise epss for clustering.
         # 6/1/23 (Drew): Note that this is hardcoded so won't work generically for all fields.
         # This is an issue and we should solve it with a spline of these values or something.
+        set_fields = np.arange(0.75, 3.5, 0.25)
         epss = np.array(
             [
                 0.12,
@@ -222,6 +223,7 @@ class PostProcessing:
                 0.00008,
             ]
         )
+
         clust_params = {}
 
         for (set_field, eps) in zip(set_fields, epss):
