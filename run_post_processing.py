@@ -546,7 +546,8 @@ class PostProcessing:
         return events
 
     def cluster_events(self, events):
-        """ """
+        """ 
+        """
 
         events_copy = events.copy()
         events_copy["event_label"] = np.NaN
@@ -561,8 +562,8 @@ class PostProcessing:
 
             events_copy.loc[condition, "event_label"] = self.dbscan_clustering(
                 events_copy[condition],
-                features=clust_params[set_field]["features"],
-                eps=clust_params[set_field]["eps"],
+                features=self.clust_params[set_field]["features"],
+                eps=self.clust_params[set_field]["eps"],
                 min_samples=1,
             )
         events_copy["EventID"] = events_copy["event_label"] + 1
