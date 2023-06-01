@@ -398,9 +398,11 @@ class PostProcessing:
 
         # Step 3. Build event df.
         events = self.build_events(tracks)
+
+        # Step 4. Cluster events.
         if self.do_dbscan_clustering:
             print("DBSCAN clustering.")
-            # Step 4. Cluster events.
+            
             events = self.cluster_and_clean_events(events, diagnostics=True)
 
         return events
@@ -535,13 +537,13 @@ class PostProcessing:
                 post_clust_counts / pre_clust_counts,
             )
             print("\nPre-clustering means:")
-            display(pre_clust_summary_mean)
+            print(pre_clust_summary_mean)
             print("\nPre-clustering stds:")
-            display(pre_clust_summary_std)
+            print(pre_clust_summary_std)
             print("\nPost-clustering means:")
-            display(post_clust_summary_mean)
+            print(post_clust_summary_mean)
             print("\nPost-clustering stds:")
-            display(post_clust_summary_std)
+            print(post_clust_summary_std)
 
         return events
 
