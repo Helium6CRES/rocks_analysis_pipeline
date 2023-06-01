@@ -388,7 +388,7 @@ class PostProcessing:
 
         # Note that we have to do this twice becuase the event IDs are different after the
         # dbscan clustering.
-        # tracks = self.add_event_info(tracks)
+        tracks = self.add_event_info(tracks)
 
         # # Step 1. DBSCAN clustering of events.
         # tracks = self.cluster_tracks(tracks)
