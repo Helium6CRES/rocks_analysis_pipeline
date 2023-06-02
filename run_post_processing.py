@@ -567,17 +567,17 @@ class PostProcessing:
 
         return events_copy
 
-    # def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
+    def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
 
-    #     # Previously (incorrectly) used the standardscaler but
-    #     # This meant there was a different normalization on each file!
-    #     # X_norm = StandardScaler().fit_transform(df[features])
+        # Previously (incorrectly) used the standardscaler but
+        # This meant there was a different normalization on each file!
+        # X_norm = StandardScaler().fit_transform(df[features])
 
-    #     # Compute DBSCAN
-    #     db = DBSCAN(eps=eps, min_samples=min_samples).fit(df[features])
-    #     labels = db.labels_
+        # Compute DBSCAN
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(df[features])
+        labels = db.labels_
 
-    #     return labels
+        return labels
 
     def update_event_info(self, events_in: pd.DataFrame) -> pd.DataFrame:
 
