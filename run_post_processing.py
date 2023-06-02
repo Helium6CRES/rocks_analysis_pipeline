@@ -674,52 +674,6 @@ class PostProcessing:
 
         return events
 
-    # def dbscan_clustering(self, df, features: list, eps: float, min_samples: int):
-
-    #     # Normalize features.
-    #     X_norm = StandardScaler().fit_transform(df[features])
-    #     # Compute DBSCAN
-    #     db = DBSCAN(eps=eps, min_samples=min_samples).fit(X_norm)
-    #     labels = db.labels_
-
-    #     return labels
-
-    # def cluster_tracks(
-    #     self, tracks, eps=1e-12, min_samples=1, features=["EventTimeIntc"]
-    # ):
-    #     """Notes:
-    #     * This is really clustering events not track segments.
-    #     * Default up to 1/24/23 was .003 up to now.
-    #     * On 1/24/23 1600, Drew is testing how .005 performs.
-    #     * On 4/12/23 Drew and Heather are working to make the event
-    #     reconstruction work better and so need the raw output from
-    #     Katydid. That's why I'm setting eps = 0.
-    #     """
-
-    #     exp_tracks_copy = tracks.copy()
-    #     exp_tracks_copy["event_label"] = 100
-
-    #     for i, (name, group) in enumerate(
-    #         exp_tracks_copy.groupby(["run_id", "file_id"])
-    #     ):
-
-    #         print(f"\nClustering: run_id: {name[0]},  file_id: {name[1]}")
-
-    #         condition = (exp_tracks_copy.run_id == name[0]) & (
-    #             exp_tracks_copy.file_id == name[1]
-    #         )
-    #         print(f"Tracks in file: {condition.sum()}")
-    #         print(f"Fraction of total tracks in dataset: {condition.mean()}")
-
-    #         exp_tracks_copy.loc[condition, "event_label"] = self.dbscan_clustering(
-    #             exp_tracks_copy[condition],
-    #             features=list(features),
-    #             eps=eps,
-    #             min_samples=min_samples,
-    #         )
-    #     exp_tracks_copy["EventID"] = exp_tracks_copy["event_label"] + 1
-
-    #     return exp_tracks_copy
 
     def add_event_info(self, tracks_in: pd.DataFrame) -> pd.DataFrame:
 
@@ -803,46 +757,6 @@ class PostProcessing:
 
         return tracks
 
-    # def build_events(self, tracks: pd.DataFrame) -> pd.DataFrame:
-
-    #     # tracks = add_event_info(tracks_in)
-    #     event_cols = [
-    #         "run_id",
-    #         "file_id",
-    #         "EventID",
-    #         "EventStartTime",
-    #         "EventEndTime",
-    #         "EventStartFreq",
-    #         "EventEndFreq",
-    #         "EventTimeLength",
-    #         "EventFreqLength",
-    #         "EventTrackCoverage",
-    #         "EventSlope",
-    #         "EventNBins",
-    #         "EventTrackTot",
-    #         "EventFreqIntc",
-    #         "EventTimeIntc",
-    #         "mMeanSNR",
-    #         "sMeanSNR",
-    #         "mTotalSNR",
-    #         "sTotalSNR",
-    #         "mMaxSNR",
-    #         "sMaxSNR",
-    #         "mTotalNUP",
-    #         "sTotalNUP",
-    #         "mTotalPower",
-    #         "sTotalPower",
-    #         "field",
-    #         "set_field",
-    #         "monitor_rate",
-    #     ]
-    #     events = (
-    #         tracks.groupby(["run_id", "file_id", "EventID"])
-    #         .first()
-    #         .reset_index()[event_cols]
-    #     )
-
-    #     return events
 
     def add_env_data(self, root_files_df):
 
