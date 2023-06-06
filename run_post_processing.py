@@ -274,7 +274,7 @@ class PostProcessing:
 
             print("\nPostProcessing stage 2: clean-up.")
             # Start by opening and reading in the file_df.
-            # self.root_files_df = self.load_root_files_df()
+            self.root_files_df = self.load_root_files_df()
 
             self.merge_csvs()
             self.sanity_check()
@@ -896,6 +896,12 @@ class PostProcessing:
         return None
 
     def merge_csvs(self):
+
+        # Drew, 6/6/23: Editing this to address Heather's issue.   
+        max_fid = self.root_files_df.file_id.max()
+        if self.num_files_events > max_fid: 
+            # The +1 is necessary because max_fid is zero indexed.
+            self.num_files_events = max_fid + 1
 
         tracks_path_list = [
             self.analysis_dir / Path(f"tracks_{i}.csv")
