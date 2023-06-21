@@ -226,6 +226,10 @@ class RunKatydid:
             lambda row: self.build_root_file_path(row), axis=1
         )
 
+        file_df["slew_file_path"] = file_df.apply(
+            lambda row: self.build_slew_file_path(row), axis=1
+        )
+
         # Trim the df according to the file_num arg.
         if self.file_num != -1:
             file_df = file_df[: self.file_num]
@@ -336,6 +340,13 @@ class RunKatydid:
 
         return str(root_path)
 
+    def build_slew_file_path(self, file_df):
+        slew_path = Path(file_df["output_dir"]) / str(
+            Path(file_df["rocks_file_path"]).stem + file_df["output_dir"][-4:] + "_SlewTimes.txt"
+        )
+
+        return str(slew_path)
+
     def run_katydid(self, file_df):
 
         # Force a write to the log.
@@ -359,17 +370,6 @@ class RunKatydid:
         # copy base config file to edit
         copyfile(base_config_path, config_path)
 
-        # copy first config file to the analysis directory for future reference.
-        if file_df["file_id"] == 0:
-            analysis_dir = Path(file_df["root_file_path"]).parents[0]
-            config_path_name = Path(config_path).name
-            saved_config_path = analysis_dir / config_path_name
-            copyfile(config_path, saved_config_path)
-
-            print(
-                f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
-            )
-
         config_dict["spec1"]["filename"] = file_df["rocks_noise_file_path"]
         config_dict["spec2"]["filename"] = file_df["rocks_file_path"]
 
@@ -387,12 +387,25 @@ class RunKatydid:
                         file_df["dbscan_radius_0"],
                         file_df["dbscan_radius_1"],
                     ]
+        config_dict["stv"]["output-file"] = file_df["slew_file_path"]
 
         # Dump the altered config_dict into the copy of the config file.
         # Note that the comments are all lost because you only write the contents of the
         # confic dict.
         with open(config_path, "w") as f:
             yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
+
+        
+        # copy first config file to the analysis directory for future reference.
+        if file_df["file_id"] == 0:
+            analysis_dir = Path(file_df["root_file_path"]).parents[0]
+            config_path_name = Path(config_path).name
+            saved_config_path = analysis_dir / config_path_name
+            copyfile(config_path, saved_config_path)
+
+            print(
+                f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
+            )
 
         # Run katydid on the edited katydid config file.
         # Note that you need to have Katydid configured as a bash executable for this to
