@@ -353,10 +353,14 @@ class RunKatydid:
         sys.stdout.flush()
 
         base_config_path = Path(file_df["base_config_path"])
-
+        
         # Grab the config_dict from the katydid config file.
         with open(base_config_path, "r") as f:
-            config_dict = yaml.load(f, Loader=yaml.FullLoader)
+            try:
+                config_dict = yaml.load(f, Loader=yaml.FullLoader)
+                print(config_dict)
+            except yaml.YAMLError as e:
+                print(e)
 
         # Copy the katydid config file (in same dir) so that we can write to the copy not
         # the original.
