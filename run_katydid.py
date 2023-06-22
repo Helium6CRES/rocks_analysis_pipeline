@@ -358,7 +358,7 @@ class RunKatydid:
         with open(base_config_path, "r") as f:
             try:
                 config_dict = yaml.load(f, Loader=yaml.FullLoader)
-                print(config_dict)
+                #print(config_dict)
             except yaml.YAMLError as e:
                 print(e)
 
