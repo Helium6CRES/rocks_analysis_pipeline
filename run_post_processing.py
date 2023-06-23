@@ -360,8 +360,8 @@ class PostProcessing:
             raise UserWarning(
                 f"There is no file_id = {self.file_id} in aid = {self.analysis_id}"
             )
-
-        tracks = self.get_track_data_from_files(root_files_df_chunk)
+        slews = self.get_slewtime_data_from_files(root_files_df_chunk)
+        tracks = self.get_track_data_from_files(root_files_df_chunk, slews)
 
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
@@ -400,7 +400,7 @@ class PostProcessing:
 
         return events
 
-    def get_track_data_from_files(self, root_files_df):
+    def get_track_data_from_files(self, root_files_df, slewtimes_df):
 
         condition = root_files_df["root_file_exists"] == True
 
@@ -411,9 +411,23 @@ class PostProcessing:
 
         tracks_df = pd.concat(experiment_tracks_list, axis=0).reset_index(drop=True)
 
-        tracks_df = self.add_track_info(tracks_df)
+        tracks_df = self.add_track_info(tracks_df, slewtimes_df)
 
         return tracks_df
+
+    def get_slewtime_data_from_files(self, root_files_df):
+
+        condition = root_files_df["root_file_exists"] == True
+
+        experiment_slewtimes_list = [
+            self.build_slewtimes_for_single_file(root_files_df_row)
+            for index, root_files_df_row in root_files_df[condition].iterrows()
+        ]
+
+        slewtimes_df = pd.concat(experiment_slewtimes_list, axis=0).reset_index(drop=True)
+
+        return slewtimes_df
+
 
     def build_tracks_for_single_file(self, root_files_df_row):
         """
@@ -440,7 +454,23 @@ class PostProcessing:
 
         return tracks_df.reset_index(drop=True)
 
-    def add_track_info(self, tracks):
+    def build_slewtimes_for_single_file(self, root_files_df_row):
+        """
+        check the lines in the csv of root files. Get the path to the SlewTimes.txt and read it as a csv
+        """
+        slewfile = open(root_files_df_row["slew_file_path"],"r")
+        slewtimes_df = pd.read_csv(slewfile, sep=',')
+
+        #clean up
+        slewtimes_df["on_length"] = slewtimes_df["Time_Off"]-slewtimes_df["Time_On"]
+        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.slewtimes_df < 1e-5].index)
+        slewtimes_df["run_id"] = root_files_df_row["run_id"]
+        slewtimes_df["file_id"] = root_files_df_row["file_id"]
+
+
+        return slewtimes_df.reset_index(drop=True)
+
+    def add_track_info(self, tracks, slewtimes):
 
         # Organize this function a bit.
 
@@ -471,6 +501,17 @@ class PostProcessing:
         tracks = pd.merge(
             tracks, intc_info, how="left", on=["run_id", "file_id", "EventID"]
         )
+        
+        #add slew info
+        merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
+        #this should keep one row per track with the most recent trap on start period!
+        merged_df = merged_df[merged_df["StartTimeInRunC"] >= merged_df["Time_On"]]
+        grouped_df = merged_df.groupby("run_id", "file_id", "TrackID")
+        max_time_indices = grouped_df["Time_On"].idxmax()
+        tracks  = merged_df.loc[min_time_indices]
+
+        print("tracks dataframe")
+        print(tracks.head(10))
 
         return tracks
 
