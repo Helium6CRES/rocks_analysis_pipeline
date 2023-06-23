@@ -459,11 +459,13 @@ class PostProcessing:
         check the lines in the csv of root files. Get the path to the SlewTimes.txt and read it as a csv
         """
         slewfile = open(root_files_df_row["slew_file_path"],"r")
-        slewtimes_df = pd.read_csv(slewfile, sep=',')
+        slewtimes_df = pd.read_csv(slewfile, sep=',', header=0)
+        #print(slewtimes_df.head(2))
+        #print(slewtimes_df.keys())
 
         #clean up
         slewtimes_df["on_length"] = slewtimes_df["Time_Off"]-slewtimes_df["Time_On"]
-        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.slewtimes_df < 1e-5].index)
+        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.on_length < 1e-5].index)
         slewtimes_df["run_id"] = root_files_df_row["run_id"]
         slewtimes_df["file_id"] = root_files_df_row["file_id"]
 
@@ -504,15 +506,15 @@ class PostProcessing:
         
         #add slew info
         merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
+
         #this should keep one row per track with the most recent trap on start period!
         merged_df = merged_df[merged_df["StartTimeInRunC"] >= merged_df["Time_On"]]
-        grouped_df = merged_df.groupby("run_id", "file_id", "TrackID")
+        grouped_df = merged_df.groupby(["run_id", "file_id", "TrackID"])
         max_time_indices = grouped_df["Time_On"].idxmax()
-        tracks  = merged_df.loc[min_time_indices]
+        tracks  = merged_df.loc[max_time_indices]
 
-        print("tracks dataframe")
-        print(tracks.head(10))
-
+        tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"]-tracks["Time_On"]
+        tracks["EndTimeInAcc"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
         return tracks
 
     def clean_up_tracks(
@@ -628,8 +630,17 @@ class PostProcessing:
         events["EventStartTime"] = events.groupby(["run_id", "file_id", "EventID"])[
             "EventStartTime"
         ].transform("min")
+
+        events["EventStartTimeInAcc"] = events.groupby(["run_id", "file_id", "EventID"])[
+            "EventStartTimeInAcc"
+        ].transform("min")
+
         events["EventEndTime"] = events.groupby(["run_id", "file_id", "EventID"])[
             "EventEndTime"
+        ].transform("max")
+
+        events["EventEndTimeInAcc"] = events.groupby(["run_id", "file_id", "EventID"])[
+            "EventEndTimeInAcc"
         ].transform("max")
 
         events["EventStartFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
@@ -681,7 +692,9 @@ class PostProcessing:
             "file_id",
             "EventID",
             "EventStartTime",
+            "EventStartTimeInAcc",
             "EventEndTime",
+            "eventEndTimeInAcc",
             "EventStartFreq",
             "EventEndFreq",
             "EventTimeLength",
@@ -723,8 +736,17 @@ class PostProcessing:
         tracks["EventStartTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "StartTimeInRunC"
         ].transform("min")
+        
+        tracks["EventStartTimeInAcc"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "StartTimeInAcq"
+        ].transform("min")
+
         tracks["EventEndTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "EndTimeInRunC"
+        ].transform("max")
+
+        tracks["EventEndTimeInAcc"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "EndTimeInAcc"
         ].transform("max")
 
         tracks["EventStartFreq"] = tracks.groupby(["run_id", "file_id", "EventID"])[
