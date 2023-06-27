@@ -93,7 +93,12 @@ to enter an interactive singularity shell and then do your tests there.
 	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -stage 2`
 		* The above will gather all of the events and tracks csvs (respectively) into one csv. 
 
-
+### Document your analysis
+There is an elog for analyses run on ROCKS. Please see https://maxwell.npl.washington.edu/elog/he6cres/Katydid+analysis/ under our software elog. When you finish running a new analysis as described above, you should document it here. The title should be the "experiment_name" entered in the post-processing, and should contain
+* The "experiment name" and who ran the analysis
+* A short written summary of the goals indicating what run_ids were used, why this analysis was run, and any issues with it or context that future users might want to know
+* A copy of the top output from the post-processing job_log up to where it says Post Processing Stage 0 DONE at PST time: XXX as this contains most of the relevant information including paths to written csv files.
+This elog is not currently backfilled from before the first phase-II data campaign. Going forward anyone who runs an analysis should make an elog in this format. I know this is a bit annoying because right now we can't access the elog while on the vpn, so you have to copy info from the job_log and then close the connection to rocks, close the vpn, and then make the elog post. I recomend making a local file and then copying the contents to your elog post when you are off the vpn.
 
 ### Tools to investigate event classification quality and to conduct analysis. 
 
