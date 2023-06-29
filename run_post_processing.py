@@ -514,7 +514,7 @@ class PostProcessing:
         tracks  = merged_df.loc[max_time_indices]
 
         tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"]-tracks["Time_On"]
-        tracks["EndTimeInAcc"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
+        tracks["EndTimeInAcq"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
         return tracks
 
     def clean_up_tracks(
@@ -631,16 +631,16 @@ class PostProcessing:
             "EventStartTime"
         ].transform("min")
 
-        events["EventStartTimeInAcc"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventStartTimeInAcc"
+        events["EventStartTimeInAcq"] = events.groupby(["run_id", "file_id", "EventID"])[
+            "EventStartTimeInAcq"
         ].transform("min")
 
         events["EventEndTime"] = events.groupby(["run_id", "file_id", "EventID"])[
             "EventEndTime"
         ].transform("max")
 
-        events["EventEndTimeInAcc"] = events.groupby(["run_id", "file_id", "EventID"])[
-            "EventEndTimeInAcc"
+        events["EventEndTimeInAcq"] = events.groupby(["run_id", "file_id", "EventID"])[
+            "EventEndTimeInAcq"
         ].transform("max")
 
         events["EventStartFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
@@ -692,9 +692,9 @@ class PostProcessing:
             "file_id",
             "EventID",
             "EventStartTime",
-            "EventStartTimeInAcc",
+            "EventStartTimeInAcq",
             "EventEndTime",
-            "eventEndTimeInAcc",
+            "EventEndTimeInAcq",
             "EventStartFreq",
             "EventEndFreq",
             "EventTimeLength",
@@ -737,7 +737,7 @@ class PostProcessing:
             "StartTimeInRunC"
         ].transform("min")
         
-        tracks["EventStartTimeInAcc"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+        tracks["EventStartTimeInAcq"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "StartTimeInAcq"
         ].transform("min")
 
@@ -745,8 +745,8 @@ class PostProcessing:
             "EndTimeInRunC"
         ].transform("max")
 
-        tracks["EventEndTimeInAcc"] = tracks.groupby(["run_id", "file_id", "EventID"])[
-            "EndTimeInAcc"
+        tracks["EventEndTimeInAcq"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "EndTimeInAcq"
         ].transform("max")
 
         tracks["EventStartFreq"] = tracks.groupby(["run_id", "file_id", "EventID"])[

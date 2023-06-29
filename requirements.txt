@@ -13,5 +13,5 @@ pyyaml>=6.0
 argparse>=1.1
 scikit-learn>=1.0.1
 pytz>=2022.4
-awkward
-uproot
+awkward==1.1.0
+uproot4==4.0.0
