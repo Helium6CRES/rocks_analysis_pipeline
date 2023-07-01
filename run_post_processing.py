@@ -41,6 +41,9 @@ from rocks_utility import (
     log_file_break,
 )
 
+# Local imports.
+from sideband_classification import classify_sidebands
+
 # Import options.
 pd.set_option("display.max_columns", 100)
 pd.options.mode.chained_assignment = None  # Comment out if debugging.
@@ -397,6 +400,9 @@ class PostProcessing:
             print("DBSCAN clustering.")
             
             events = self.cluster_and_clean_events(events, diagnostics=True)
+
+        # Step 4. Clasify sidebands and calculate axial frequencies
+        events = classify_sidebands(events)
 
         return events
 
