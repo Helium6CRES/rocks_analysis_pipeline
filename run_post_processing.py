@@ -607,7 +607,8 @@ class PostProcessing:
         events_copy = events.copy()
         events_copy["event_label"] = np.NaN
 
-        #DBSCAN is now only on events with the same run_id, file_id, Acq_ID
+        #DBSCAN is now only on events with the same run_id, file_id, Acq_ID. 
+        #Note that EventID is now unique to an acquisition, not a second
         for i, (name, group) in enumerate(events_copy.groupby(["run_id", "file_id", "Acq_ID"])):
 
             set_field = group.set_field.mean()
@@ -641,32 +642,32 @@ class PostProcessing:
         events = events_in.copy()
         events = events.loc[:, ~events.columns.duplicated()]
 
-        events["EventStartTime"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventStartTime"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventStartTime"
         ].transform("min")
 
-        events["EventStartTimeInAcq"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventStartTimeInAcq"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventStartTimeInAcq"
         ].transform("min")
 
-        events["EventEndTime"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventEndTime"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventEndTime"
         ].transform("max")
 
-        events["EventEndTimeInAcq"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventEndTimeInAcq"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventEndTimeInAcq"
         ].transform("max")
 
-        events["EventStartFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventStartFreq"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventStartFreq"
         ].transform("min")
-        events["EventEndFreq"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventEndFreq"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventEndFreq"
         ].transform("max")
 
         events["EventTimeLength"] = events["EventEndTime"] - events["EventStartTime"]
         events["EventFreqLength"] = events["EventEndFreq"] - events["EventStartFreq"]
-        events["EventNBins"] = events.groupby(["run_id", "file_id", "EventID"])[
+        events["EventNBins"] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
             "EventNBins"
         ].transform("sum")
 
@@ -675,7 +676,6 @@ class PostProcessing:
         #Event Acq_ID is an average of component track Acq_ID, 
         #non-int Acq_ID indicating their tracks spanned multiple acquisitions.
         cols_to_average_over = [
-            "Acq_ID",
             "EventTrackCoverage",
             "EventTrackTot",
             "EventFreqIntc",
@@ -698,7 +698,7 @@ class PostProcessing:
         ]
         for col in cols_to_average_over:
 
-            events[col] = events.groupby(["run_id", "file_id", "EventID"])[
+            events[col] = events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])[
                 col
             ].transform("mean")
 
@@ -743,7 +743,7 @@ class PostProcessing:
         ]
 
         events = (
-            events.groupby(["run_id", "file_id", "EventID"])
+            events.groupby(["run_id", "file_id", "Acq_ID", "EventID"])
             .first()
             .reset_index()[event_cols]
         )
