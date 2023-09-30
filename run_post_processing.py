@@ -612,9 +612,7 @@ class PostProcessing:
 
             set_field = group.set_field.mean()
 
-            condition = (events_copy.run_id == name[0]) & (
-                events_copy.file_id == name[1]
-            )
+            condition = (events_copy.run_id == name[0]) & (events_copy.file_id == name[1]) & (events_copy.Acq_ID == name[2])
 
             events_copy.loc[condition, "event_label"] = self.dbscan_clustering(
                 events_copy[condition],
