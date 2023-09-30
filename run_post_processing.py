@@ -486,12 +486,39 @@ class PostProcessing:
         tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
 
         tracks["set_field"] = tracks["field"].round(decimals=2)
+        
+        #add slew info
+        merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
+
+        #this should keep one row per track with the most recent trap on start period!
+        merged_df = merged_df[merged_df["StartTimeInRunC"] >= merged_df["Time_On"]]
+        grouped_df = merged_df.groupby(["run_id", "file_id", "TrackID"])
+
+        #Get acquisition number
+        acq_df = grouped_df.size().reset_index(name='Acq_ID')
+        max_time_indices = grouped_df["Time_On"].idxmax()
+        tracks  = merged_df.loc[max_time_indices]
+
+        #add Acq_ID to tracks
+        tracks = pd.merge(tracks, acq_df, on=["run_id", "file_id", "TrackID"])
+
+        tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"]-tracks["Time_On"]
+        tracks["EndTimeInAcq"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
+
+        tracks["FreqIntA"] = (
+            tracks["EndFrequency"] - tracks["EndTimeInAcq"] * tracks["Slope"]
+        )
+        tracks["TimeIntA"] = (
+            tracks["StartTimeInAcq"] - tracks["StartFrequency"] / tracks["Slope"]
+        )
 
         intc_info = (
             tracks.groupby(["run_id", "file_id", "EventID"])
             .agg(
                 TimeIntc_mean=("TimeIntc", "mean"),
                 TimeIntc_std=("TimeIntc", "std"),
+                TimeIntA_mean=("TimeIntA", "mean"),
+                TimeIntA_std=("TimeIntA", "std"),
                 TimeLength_mean=("TimeLength", "mean"),
                 TimeLength_std=("TimeLength", "std"),
                 Slope_mean=("Slope", "mean"),
@@ -503,18 +530,6 @@ class PostProcessing:
         tracks = pd.merge(
             tracks, intc_info, how="left", on=["run_id", "file_id", "EventID"]
         )
-        
-        #add slew info
-        merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
-
-        #this should keep one row per track with the most recent trap on start period!
-        merged_df = merged_df[merged_df["StartTimeInRunC"] >= merged_df["Time_On"]]
-        grouped_df = merged_df.groupby(["run_id", "file_id", "TrackID"])
-        max_time_indices = grouped_df["Time_On"].idxmax()
-        tracks  = merged_df.loc[max_time_indices]
-
-        tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"]-tracks["Time_On"]
-        tracks["EndTimeInAcq"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
         return tracks
 
     def clean_up_tracks(
@@ -592,7 +607,8 @@ class PostProcessing:
         events_copy = events.copy()
         events_copy["event_label"] = np.NaN
 
-        for i, (name, group) in enumerate(events_copy.groupby(["run_id", "file_id"])):
+        #DBSCAN is now only on events with the same run_id, file_id, Acq_ID
+        for i, (name, group) in enumerate(events_copy.groupby(["run_id", "file_id", "Acq_ID"])):
 
             set_field = group.set_field.mean()
 
@@ -658,11 +674,16 @@ class PostProcessing:
 
         events["EventSlope"] = events["EventFreqLength"] / events["EventTimeLength"]
 
+        #Event Acq_ID is an average of component track Acq_ID, 
+        #non-int Acq_ID indicating their tracks spanned multiple acquisitions.
         cols_to_average_over = [
+            "Acq_ID",
             "EventTrackCoverage",
             "EventTrackTot",
             "EventFreqIntc",
             "EventTimeIntc",
+            "EventFreqIntA",
+            "EventTimeIntA",
             "mMeanSNR",
             "sMeanSNR",
             "mTotalSNR",
@@ -691,6 +712,7 @@ class PostProcessing:
             "run_id",
             "file_id",
             "EventID",
+            "Acq_ID",
             "EventStartTime",
             "EventStartTimeInAcq",
             "EventEndTime",
@@ -705,6 +727,8 @@ class PostProcessing:
             "EventTrackTot",
             "EventFreqIntc",
             "EventTimeIntc",
+            "EventFreqIntA",
+            "EventTimeIntA",
             "mMeanSNR",
             "sMeanSNR",
             "mTotalSNR",
@@ -732,6 +756,10 @@ class PostProcessing:
     def add_event_info(self, tracks_in: pd.DataFrame) -> pd.DataFrame:
 
         tracks = tracks_in.copy()
+
+        tracks["Acq_ID"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "Acq_ID"
+        ].transform("mean")
 
         tracks["EventStartTime"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "StartTimeInRunC"
@@ -816,6 +844,13 @@ class PostProcessing:
         )
         tracks["EventTimeIntc"] = (
             tracks["EventStartTime"] - tracks["EventStartFreq"] / tracks["EventSlope"]
+        )
+
+        tracks["EventFreqIntA"] = (
+            tracks["EventEndFreq"] - tracks["EventEndTimeInAcq"] * tracks["EventSlope"]
+        )
+        tracks["EventTimeIntA"] = (
+            tracks["EventStartTimeInAcq"] - tracks["EventStartFreq"] / tracks["EventSlope"]
         )
 
         return tracks
