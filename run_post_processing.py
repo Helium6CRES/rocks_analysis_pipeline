@@ -151,7 +151,7 @@ def main():
 
     # Deal with permissions (chmod 774, group he6_cres).
     # Done at the beginning and end of main.
-    set_permissions()
+    #set_permissions()
 
     # Step 0: Build the directory structure out for the experiment results and write the root_file_df to it.
 
@@ -167,7 +167,7 @@ def main():
     )
 
     # Done at the beginning and end of main.
-    set_permissions()
+    #set_permissions()
 
     # Current time to nearest second.
     now = datetime.datetime.now().replace(microsecond=0)
