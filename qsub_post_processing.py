@@ -103,7 +103,7 @@ def main():
 
     tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
-    # Force a write to the log.
+    # Force a write to the log. Add a timeout here in the future?
     sys.stdout.flush()
 
     # Deal with permissions (chmod 770, group he6_cres).

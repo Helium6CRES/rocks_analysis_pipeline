@@ -146,7 +146,7 @@ def main():
         f"Processing: \n file_id: {args.file_id} run_ids: {args.run_ids}, analysis_id: {args.analysis_id}\n"
     )
 
-    # Force a write to the log.
+    # Force a write to the log. Should add a time out here? How to do that in python cleanly...
     sys.stdout.flush()
 
     # Deal with permissions (chmod 774, group he6_cres).
@@ -210,11 +210,11 @@ class PostProcessing:
         set_fields = np.arange(0.75, 3.5, 0.25)
         epss = np.array(
             [
-                0.12,
-                0.08,
-                0.02,
                 0.01,
-                0.003,
+                0.01,
+                0.01,
+                0.005,
+                0.0025,
                 0.0015,
                 0.0008,
                 0.0004,
