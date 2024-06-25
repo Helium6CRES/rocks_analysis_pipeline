@@ -262,7 +262,7 @@ class RunKatydid:
         rocks_fp = "/data/eliza4/he6_cres/" + daq_fp[5:]
         return rocks_fp
 
-    def get_slope(self, true_field, frequency: float = 18.5e9):
+    def get_slope(self, true_field, frequency: float = 19.15e9):
 
         approx_power = sc.power_larmor(true_field, frequency)
         approx_energy = sc.freq_to_energy(frequency, true_field)
