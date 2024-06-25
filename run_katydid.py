@@ -244,7 +244,7 @@ class RunKatydid:
     def create_base_file_df(self, run_id: int):
         # DOCUMENT.
         query_he6_db = """
-                        SELECT r.run_id, f.spec_id, f.file_path, r.true_field
+                        SELECT r.run_id, f.spec_id, f.file_in_acq, f.channel, f.file_path, r.true_field
                         FROM he6cres_runs.run_log as r
                         RIGHT JOIN he6cres_runs.spec_files as f
                         ON r.run_id = f.run_id
@@ -262,7 +262,7 @@ class RunKatydid:
         rocks_fp = "/data/eliza4/he6_cres/" + daq_fp[5:]
         return rocks_fp
 
-    def get_slope(self, true_field, frequency: float = 18.5e9):
+    def get_slope(self, true_field, frequency: float = 19.15e9):
 
         approx_power = sc.power_larmor(true_field, frequency)
         approx_energy = sc.freq_to_energy(frequency, true_field)
@@ -317,18 +317,18 @@ class RunKatydid:
         Note: just takes the first file in this run_id (assumption is it's a one file acq)
         """
         query_he6_db = """
-                        SELECT f.run_id, f.file_path 
+                        SELECT f.run_id, f.file_path, f.file_in_acq, f.channel,
                         FROM he6cres_runs.spec_files as f
                         WHERE f.run_id = {}
-                        ORDER BY f.created_at DESC
-                        LIMIT 1
+                        ORDER BY f.channel
+                        LIMIT 2
                       """.format(
             self.noise_run_id
         )
 
         file_df = he6cres_db_query(query_he6_db)
 
-        noise_file_path = file_df["file_path"].iloc[0]
+        noise_file_path = file_df["file_path"]
         print(f"Noise path: {noise_file_path}")
 
         return noise_file_path
