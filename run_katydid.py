@@ -225,9 +225,13 @@ class RunKatydid:
             lambda x: self.process_fp(x)
         )
 
+        print(file_df)
+
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
         )
+
+        print(file_df)
 
         file_df["slew_file_path"] = file_df.apply(
             lambda row: self.build_slew_file_path(row), axis=1
@@ -259,7 +263,7 @@ class RunKatydid:
 
         file_df = he6cres_db_query(query_he6_db)
 
-        print(file_df['true_field'])
+        # print(file_df['true_field'])
 
         # need to check that true_field was filled and is not NAN. If NAN, check database and 
         all_nan_true_field = file_df['true_field'].isna().all()
@@ -267,7 +271,7 @@ class RunKatydid:
         if all_nan_true_field:
             file_df['true_field'] = file_df['set_field'].abs()
 
-        print(file_df['true_field'])
+        # print(file_df['true_field'])
 
         # Group by file_inAcq and apply the aggregation function
         file_df = file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
@@ -365,14 +369,14 @@ class RunKatydid:
 
     def build_root_file_path(self, file_df):
         root_path = Path(file_df["output_dir"]) / str(
-            Path(file_df["rocks_file_path"]).stem + file_df["output_dir"][-4:] + ".root"
+            Path(file_df["rocks_file_path"][0]).stem[:-2] + file_df["output_dir"][-4:] + ".root"
         )
 
         return str(root_path)
 
     def build_slew_file_path(self, file_df):
         slew_path = Path(file_df["output_dir"]) / str(
-            Path(file_df["rocks_file_path"]).stem + file_df["output_dir"][-4:] + "_SlewTimes.txt"
+            Path(file_df["rocks_file_path"][0]).stem[:-2] + file_df["output_dir"][-4:] + "_SlewTimes.txt"
         )
 
         return str(slew_path)
