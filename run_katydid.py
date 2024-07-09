@@ -247,7 +247,7 @@ class RunKatydid:
     def create_base_file_df(self, run_id: int):
         # DOCUMENT.
         query_he6_db = """
-                        SELECT r.run_id, f.spec_id, f.file_in_acq, f.channel, f.file_path, r.true_field
+                        SELECT r.run_id, f.spec_id, f.file_in_acq, f.channel, f.file_path, r.true_field, r.set_field
                         FROM he6cres_runs.run_log as r
                         RIGHT JOIN he6cres_runs.spec_files as f
                         ON r.run_id = f.run_id
@@ -258,7 +258,17 @@ class RunKatydid:
         )
 
         file_df = he6cres_db_query(query_he6_db)
-        
+
+        print(file_df['true_field'])
+
+        # need to check that true_field was filled and is not NAN. If NAN, check database and 
+        all_nan_true_field = file_df['true_field'].isna().all()
+        print(f"All values in column 'true_field' are NaN: {all_nan_true_field}")
+        if all_nan_true_field:
+            file_df['true_field'] = file_df['set_field'].abs()
+
+        print(file_df['true_field'])
+
         # Group by file_inAcq and apply the aggregation function
         file_df = file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
         return file_df
