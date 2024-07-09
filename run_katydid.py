@@ -202,6 +202,8 @@ class RunKatydid:
         file_df["exists"] = file_df["rocks_file_path"].apply(
             lambda x: check_if_exists(x)
         )
+
+        print(file_df)
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
         dbscan_r = self.get_dbscan_radius(file_df["approx_slope"][0])
@@ -216,7 +218,8 @@ class RunKatydid:
             print("\nUsing 'self' as noise file in katydid analysis.\n")
             file_df["noise_file_path"] = file_df["file_path"]
         else:
-            file_df["noise_file_path"] = self.get_noise_fp()
+            noise_fp_list = self.get_noise_fp()
+            file_df["noise_file_path"] = [noise_fp_list] * len(file_df)
 
         file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
             lambda x: self.process_fp(x)
@@ -255,12 +258,24 @@ class RunKatydid:
         )
 
         file_df = he6cres_db_query(query_he6_db)
-
+        
+        # Group by file_inAcq and apply the aggregation function
+        file_df = file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
         return file_df
 
-    def process_fp(self, daq_fp):
-        rocks_fp = "/data/eliza4/he6_cres/" + daq_fp[5:]
-        return rocks_fp
+    # Define a function to aggregate file_path into a list ordered by channel
+    def aggregate_paths(self, group):
+        ordered_paths = group.sort_values(by='channel')['file_path'].apply(str).tolist()
+        return pd.Series({
+            'run_id': group['run_id'].iloc[0],
+            'true_field': group['true_field'].iloc[0],
+            'file_path': ordered_paths
+        })
+
+    def process_fp(self, daq_fp_list):
+        #print(daq_fp_list)
+        rocks_fp_list = ["/data/eliza4/he6_cres/" + daq_fp[5:] for daq_fp in daq_fp_list]
+        return rocks_fp_list
 
     def get_slope(self, true_field, frequency: float = 19.15e9):
 
@@ -317,7 +332,7 @@ class RunKatydid:
         Note: just takes the first file in this run_id (assumption is it's a one file acq)
         """
         query_he6_db = """
-                        SELECT f.run_id, f.file_path, f.file_in_acq, f.channel,
+                        SELECT f.run_id, f.file_path, f.file_in_acq, f.channel
                         FROM he6cres_runs.spec_files as f
                         WHERE f.run_id = {}
                         ORDER BY f.channel
@@ -326,9 +341,14 @@ class RunKatydid:
             self.noise_run_id
         )
 
-        file_df = he6cres_db_query(query_he6_db)
+        noise_file_df = he6cres_db_query(query_he6_db)
+	
+        # Group by file_inAcq and apply the aggregation function
+        #make dummy true_field column to use agg function. this is dumb fix later
+        noise_file_df["true_field"] = 0
+        noise_file_df = noise_file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
 
-        noise_file_path = file_df["file_path"]
+        noise_file_path = noise_file_df["file_path"].iloc[0]
         print(f"Noise path: {noise_file_path}")
 
         return noise_file_path
