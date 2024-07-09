@@ -120,16 +120,21 @@ class RunKatydid:
         # Step 2. Collect the file_df. This means deciding if cleanup or new analysis.
         self.file_df = self.collect_file_df()
 
-        # Step 3. Run katydid on all files in file_df that don't already exist.
-        condition = self.file_df["root_file_exists"] != True
+        # Step 3. Run katydid on all files in file_df that don't already have root files that exist.
+        condition = (self.file_df["root_file_exists"] != True) & (self.file_df["exists"] == True)
         print(f"\nRunning katydid on {condition.sum()} of {len(self.file_df)} files.")
+        # Alert which run_ids files do not exist on ROCKS
+        print("The following file_ids don't seem to exist yet on ROCKS!")
+        # Print file_id where exists is False
+        for file_id in self.file_df.loc[~self.file_df['exists'], 'file_id']:
+            print(file_id)
         # Run katydid on each row/spec file in file_df.
         self.file_df[condition].apply(lambda row: self.run_katydid(row), axis=1)
 
         # Clean up any half baked root files.
         self.clean_up_root_dir(self.file_df)
 
-        set_permissions()
+        # set_permissions()
 
         return None
 
@@ -225,13 +230,9 @@ class RunKatydid:
             lambda x: self.process_fp(x)
         )
 
-        print(file_df)
-
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
         )
-
-        print(file_df)
 
         file_df["slew_file_path"] = file_df.apply(
             lambda row: self.build_slew_file_path(row), axis=1
