@@ -465,7 +465,7 @@ class PostProcessing:
 
         #clean up
         slewtimes_df["on_length"] = slewtimes_df["Time_Off"]-slewtimes_df["Time_On"]
-        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.on_length < 1e-5].index)
+        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.on_length < 2e-3].index)
         slewtimes_df["run_id"] = root_files_df_row["run_id"]
         slewtimes_df["file_id"] = root_files_df_row["file_id"]
 

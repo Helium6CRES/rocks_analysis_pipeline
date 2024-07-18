@@ -95,7 +95,7 @@ def main():
         args.file_num,
     )
 
-    set_permissions()
+    # set_permissions()
 
     print(f"\nRunning Katydid on {args.run_id} DONE at PST time: {get_pst_time()}\n")
     log_file_break()
@@ -124,10 +124,10 @@ class RunKatydid:
         condition = (self.file_df["root_file_exists"] != True) & (self.file_df["exists"] == True)
         print(f"\nRunning katydid on {condition.sum()} of {len(self.file_df)} files.")
         # Alert which run_ids files do not exist on ROCKS
-        print("The following file_ids don't seem to exist yet on ROCKS!")
+        print("The following files don't seem to exist yet on ROCKS!")
         # Print file_id where exists is False
-        for file_id in self.file_df.loc[~self.file_df['exists'], 'file_id']:
-            print(file_id)
+        for rocks_file_path in self.file_df.loc[~self.file_df['exists'], 'rocks_file_path']:
+            print(rocks_file_path)
         # Run katydid on each row/spec file in file_df.
         self.file_df[condition].apply(lambda row: self.run_katydid(row), axis=1)
 
@@ -208,7 +208,6 @@ class RunKatydid:
             lambda x: check_if_exists(x)
         )
 
-        print(file_df)
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
         dbscan_r = self.get_dbscan_radius(file_df["approx_slope"][0])
@@ -409,8 +408,8 @@ class RunKatydid:
         # copy base config file to edit
         copyfile(base_config_path, config_path)
 
-        config_dict["spec1"]["filename"] = file_df["rocks_noise_file_path"]
-        config_dict["spec2"]["filename"] = file_df["rocks_file_path"]
+        config_dict["spec1"]["filenames"] = file_df["rocks_noise_file_path"]
+        config_dict["spec2"]["filenames"] = file_df["rocks_file_path"]
 
         for key, val in config_dict.items():
             for inner_key, inner_val in val.items():

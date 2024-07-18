@@ -201,6 +201,7 @@ def qsub_job(experiment_name, analysis_id, file_id, cmd, tlim):
     qsub_str = " ".join([str(s) for s in qsub_opts])
     batch_cmd = "qsub {} {}".format(qsub_str, cmd)
 
+    print("running job")
     sp.run(batch_cmd, shell=True)
 
     return None

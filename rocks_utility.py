@@ -100,8 +100,12 @@ def set_permissions():
     return None
 
 
-def check_if_exists(fp_list):
-    return all(Path(fp).is_file() for fp in fp_list)
+def check_if_exists(fp_input):
+    # Check if the input is a list or a single path
+    if isinstance(fp_input, list):
+        return all(Path(fp).is_file() for fp in fp_input)
+    else:
+        return Path(fp_input).is_file()
 
 def log_file_break():
     print("\n\n")
