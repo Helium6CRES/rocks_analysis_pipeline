@@ -1012,14 +1012,14 @@ class PostProcessing:
         events_path_exists = [path.is_file() for path in events_path_list]
 
         if not all(tracks_path_exists):
-            raise UserWarning(
-                f"Not all {self.num_files_tracks} tracks csvs are present for merging csvs."
-            )
+            print(f"Not all {self.num_files_tracks} tracks csvs are present for merging csvs.")
 
         if not all(events_path_exists):
-            raise UserWarning(
-                f"Not all {self.num_files_events} events csvs are present for merging csvs."
-            )
+            print(f"Not all {self.num_files_events} events csvs are present for merging csvs.")
+
+        # Filter the lists to include only the paths that exist
+        tracks_path_list = [path for path in tracks_path_list if path.is_file()]
+        events_path_list = [path for path in events_path_list if path.is_file()]
 
         tracks_dfs = [
             pd.read_csv(tracks_path, index_col=0) for tracks_path in tracks_path_list
