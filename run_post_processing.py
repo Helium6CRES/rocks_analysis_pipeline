@@ -551,8 +551,14 @@ class PostProcessing:
             )
             for col, cut_level in zip(cols, cut_levels)
         ]
+        # Add the new condition for StartFrequency to cut vaunix image (TEMP!)
+        start_freq_cond = ~(
+            ((tracks["StartFrequency"] >= (1.1e9 - 1.5e6)) & (tracks["StartFrequency"] <= (1.1e9 + 1.0e6)))
+            | ((tracks["StartFrequency"] >= (1.3e9 - 1.5e6)) & (tracks["StartFrequency"] <= (1.3e9 + 1.0e6)))
+        )
+        conditions.append(start_freq_cond)
 
-        # Hacky way to and the list of boolean conditions. Couldn't figure out how to vectorize it.
+        # Combine all conditions
         condition_tot = np.ones_like(conditions[0])
         for condition in conditions:
             condition_tot = condition_tot & condition
