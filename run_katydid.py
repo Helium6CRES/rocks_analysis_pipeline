@@ -408,6 +408,18 @@ class RunKatydid:
         # copy base config file to edit
         copyfile(base_config_path, config_path)
 
+        # Check the file extension of the first path in rocks_file_path list
+        rocks_file_path = file_df["rocks_file_path"]
+        first_rock_file = rocks_file_path[0] if rocks_file_path else ""
+        if first_rock_file.endswith(".spec"):
+            for processor in config_dict['processor-toolbox']['processors']:
+                if processor['name'] == 'spec2':
+                    processor['type'] = 'spec-processor'
+        elif first_rock_file.endswith(".speck"):
+            for processor in config_dict['processor-toolbox']['processors']:
+                if processor['name'] == 'spec2':
+                    processor['type'] = 'speck-processor'
+
         config_dict["spec1"]["filenames"] = file_df["rocks_noise_file_path"]
         config_dict["spec2"]["filenames"] = file_df["rocks_file_path"]
 
