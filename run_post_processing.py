@@ -363,10 +363,14 @@ class PostProcessing:
         slews = self.get_slewtime_data_from_files(root_files_df_chunk)
         tracks = self.get_track_data_from_files(root_files_df_chunk, slews)
 
+        #clean tracks. Add column IsCutPP which is a boolian if it was cut in post processing (here)
+        # This trims "barnicles" and bad frequencies
+        processed_tracks = self.clean_up_tracks(tracks)
+
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
 
-            self.write_to_csv(self.file_id, tracks, file_name="tracks")
+            self.write_to_csv(self.file_id, processed_tracks, file_name="tracks")
 
         print(f"\nProcessing file_id: {self.file_id}")
 
@@ -376,21 +380,21 @@ class PostProcessing:
         # Write out events to csv for first nfe file_ids (command line argument).
         if self.file_id < self.num_files_events:
 
-            events = self.get_event_data_from_tracks(tracks)
+            events = self.get_event_data_from_tracks(processed_tracks)
             self.write_to_csv(self.file_id, events, file_name="events")
 
         return None
 
     def get_event_data_from_tracks(self, tracks):
 
-        # Step 0. Clean up the tracks. This trims "barnicles".
-        cleaned_tracks = self.clean_up_tracks(tracks)
+        # Step 0. Only make events from tracks with cut_condition == False
+        cleaned_tracks = tracks[tracks["cut_condition"] == False]
 
         # Step 1. Add aggregate event data. 
-        tracks = self.add_event_info(tracks)
+        cleaned_tracks = self.add_event_info(cleaned_tracks)
 
         # Step 2. Build event df. One row per EventID. 
-        events = self.build_events(tracks)
+        events = self.build_events(cleaned_tracks)
 
         # Step 3. Optional. Cluster events. Use -dbscan flag to change 
         if self.do_dbscan_clustering:
@@ -538,8 +542,9 @@ class PostProcessing:
 
         cut_condition = self.create_track_cleaning_cut(tracks, cols, cut_levels)
 
-        tracks = tracks[cut_condition]
-
+        # Add the cut condition as a new column
+        tracks["cut_condition"] = cut_condition
+        print("number of tracks cut: ", np.sum(cut_condition))
         return tracks
 
     def create_track_cleaning_cut(self, tracks, cols, cut_levels):
@@ -552,7 +557,7 @@ class PostProcessing:
             for col, cut_level in zip(cols, cut_levels)
         ]
         # Add the new condition for StartFrequency to cut vaunix image (TEMP!)
-        start_freq_cond = ~(
+        start_freq_cond = (
             ((tracks["StartFrequency"] >= (1.1e9 - 1.5e6)) & (tracks["StartFrequency"] <= (1.1e9 + 1.0e6)))
             | ((tracks["StartFrequency"] >= (1.3e9 - 1.5e6)) & (tracks["StartFrequency"] <= (1.3e9 + 1.0e6)))
         )
@@ -563,7 +568,7 @@ class PostProcessing:
         for condition in conditions:
             condition_tot = condition_tot & condition
 
-        return condition_tot
+        return start_freq_cond
 
     def cluster_and_clean_events(self, events, diagnostics=False):
 
