@@ -491,23 +491,35 @@ class PostProcessing:
 
         tracks["set_field"] = tracks["field"].round(decimals=2)
         
-        #add slew info
+        # Merge tracks with slewtimes on run_id and file_id
         merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
-
-        #this should keep one row per track with the most recent trap on start period!
+        # Keep rows where StartTimeInRunC is greater than or equal to Time_On
         merged_df = merged_df[merged_df["StartTimeInRunC"] >= merged_df["Time_On"]]
-        grouped_df = merged_df.groupby(["run_id", "file_id", "TrackID"])
+        merged_df_E = merged_df.copy()
+        # Rename the StartTimeInRunC column to Event_StartTimeInRunC before grouping
+        merged_df_E = merged_df_E.rename(columns={"StartTimeInRunC": "StartTimeInRunC_E"})
+        # Group by run_id, file_id, EventID to find the earliest StartTimeInRunC for each EventID
+        grouped_df = merged_df_E.groupby(["run_id", "file_id", "EventID"])
+        # Find the earliest StartTimeInRunC for each EventID within run_id and file_id
+        earliest_start_time = grouped_df["StartTimeInRunC_E"].min().reset_index()
+        # Merge back to get the rows with earliest StartTimeInRunC
+        merged_earliest = pd.merge(merged_df, earliest_start_time, on=["run_id", "file_id", "EventID"])
+        #this should keep only rows where the event the track is in has a later startTimeInRunC than the Time_On
+        merged_earliest = merged_earliest[merged_earliest["StartTimeInRunC_E"] >= merged_earliest["Time_On"]]
+        # Group by run_id, file_id, TrackID and calculate the cumulative count to create Acq_ID
+        merged_earliest['Acq_ID'] = merged_earliest.groupby(['run_id', 'file_id', 'TrackID']).cumcount() + 1
+        # Find the indices of the rows with the highest Acq_ID within each group
+        max_acq_id_indices = merged_earliest.groupby(['run_id', 'file_id', 'TrackID'])['Acq_ID'].idxmax()
 
-        #Get acquisition number
-        acq_df = grouped_df.size().reset_index(name='Acq_ID')
-        max_time_indices = grouped_df["Time_On"].idxmax()
-        tracks  = merged_df.loc[max_time_indices]
+        # Filter the DataFrame to keep only the rows with the highest Acq_ID
+        tracks = merged_earliest.loc[max_acq_id_indices]
 
-        #add Acq_ID to tracks
-        tracks = pd.merge(tracks, acq_df, on=["run_id", "file_id", "TrackID"])
+        # Drop the Event_StartTimeInRunC_E column
+        tracks = tracks.drop(columns=['StartTimeInRunC_E'])
 
-        tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"]-tracks["Time_On"]
-        tracks["EndTimeInAcq"] = tracks["EndTimeInRunC"]-tracks["Time_On"]
+        # Calculate StartTimeInAcq and EndTimeInAcq
+        tracks["StartTimeInAcq"] = tracks["StartTimeInRunC"] - tracks["Time_On"]
+        tracks["EndTimeInAcq"] = tracks["EndTimeInRunC"] - tracks["Time_On"]
 
         tracks["FreqIntA"] = (
             tracks["EndFrequency"] - tracks["EndTimeInAcq"] * tracks["Slope"]
