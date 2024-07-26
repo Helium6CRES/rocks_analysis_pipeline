@@ -514,7 +514,7 @@ class PostProcessing:
         # Filter the DataFrame to keep only the rows with the highest Acq_ID
         tracks = merged_earliest.loc[max_acq_id_indices]
 
-        # Drop the Event_StartTimeInRunC_E column
+        # Drop the StartTimeInRunC_E column
         tracks = tracks.drop(columns=['StartTimeInRunC_E'])
 
         # Calculate StartTimeInAcq and EndTimeInAcq
@@ -634,7 +634,9 @@ class PostProcessing:
         #Note that EventID is now unique to an acquisition, not a second
         for i, (name, group) in enumerate(events_copy.groupby(["run_id", "file_id", "Acq_ID"])):
 
-            set_field = group.set_field.mean()
+            #This is to try to be robust against set_field being wrong from user error when taking data.
+            #use field from NMR instead and round to hope you get one of the fields in the clustering params
+            set_field = group.field.mean().round(2)
 
             condition = (events_copy.run_id == name[0]) & (events_copy.file_id == name[1]) & (events_copy.Acq_ID == name[2])
 
@@ -697,7 +699,7 @@ class PostProcessing:
         events["EventSlope"] = events["EventFreqLength"] / events["EventTimeLength"]
 
         #Event Acq_ID is an average of component track Acq_ID, 
-        #non-int Acq_ID indicating their tracks spanned multiple acquisitions.
+        #as these are assigned on the basis of that track's event, non-int Acq_ID indicats a bug
         cols_to_average_over = [
             "EventTrackCoverage",
             "EventTrackTot",
