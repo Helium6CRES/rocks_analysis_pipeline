@@ -479,6 +479,7 @@ class PostProcessing:
     def add_track_info(self, tracks, slewtimes):
 
         # Organize this function a bit.
+        tracks["set_field"] = tracks["field"].round(decimals=2)
 
         tracks["FreqIntc"] = (
             tracks["EndFrequency"] - tracks["EndTimeInRunC"] * tracks["Slope"]
@@ -489,7 +490,19 @@ class PostProcessing:
 
         tracks["MeanTrackSNR"] = tracks["TotalTrackSNR"] / tracks["NTrackBins"]
 
-        tracks["set_field"] = tracks["field"].round(decimals=2)
+        # Define frequency bins of size 10e6 from 100e6 to 2400e6
+        bins = np.arange(100e6, 2400e6 + 10e6, 10e6)
+        bin_labels = np.arange(len(bins) - 1)
+
+        # Assign each track to a bin
+        tracks['FrequencyBin'] = pd.cut(tracks['StartFrequency'], bins, labels=bin_labels, include_lowest=True)
+
+        # Function to calculate the percentile rank of TotalTrackSNR within each bin
+        def calculate_percentile(s):
+            return s.rank(pct=True)
+
+        # Apply the function within each bin group and add as a new column
+        tracks['MeanTrackSNR_Percentile'] = tracks.groupby(['FrequencyBin','set_field'])['MeanTrackSNR'].transform(calculate_percentile) * 100
         
         # Merge tracks with slewtimes on run_id and file_id
         merged_df = pd.merge(tracks, slewtimes, on=["run_id", "file_id"])
