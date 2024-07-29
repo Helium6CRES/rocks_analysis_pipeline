@@ -730,6 +730,8 @@ class PostProcessing:
             "sTotalNUP",
             "mTotalPower",
             "sTotalPower",
+            "mMeanSNR_Percentile",
+            "sMeanSNR_Percentile",
             "field",
             "set_field",
             "monitor_rate",
@@ -775,6 +777,8 @@ class PostProcessing:
             "sTotalNUP",
             "mTotalPower",
             "sTotalPower",
+            "mMeanSNR_Percentile",
+            "sMeanSNR_Percentile",
             "field",
             "set_field",
             "monitor_rate",
@@ -869,6 +873,13 @@ class PostProcessing:
         ].transform("mean")
         tracks["sTotalPower"] = tracks.groupby(["run_id", "file_id", "EventID"])[
             "TotalPower"
+        ].transform("std")
+
+        tracks["mMeanSNR_Percentile"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MeanTrackSNR_Percentile"
+        ].transform("mean")
+        tracks["sMeanSNR_Percentile"] = tracks.groupby(["run_id", "file_id", "EventID"])[
+            "MeanTrackSNR_Percentile"
         ].transform("std")
 
         tracks["EventTrackTot"] = tracks.groupby(
