@@ -208,28 +208,14 @@ class PostProcessing:
         # 6/1/23 (Drew): Note that this is hardcoded so won't work generically for all fields.
         # This is an issue and we should solve it with a spline of these values or something.
         set_fields = np.arange(0.75, 3.5, 0.25)
-        epss = np.array(
-            [
-                0.08,
-                0.08,
-                0.02,
-                0.01,
-                0.003,
-                0.0015,
-                0.0008,
-                0.0004,
-                0.00015,
-                0.0001,
-                0.00008,
-            ]
-        )
+        epss = np.array([0.01, 0.01, 0.007, 0.004, 0.002, 0.001, 0.0008, 0.0005, 0.0003, 0.0002, 0.0001])
 
         clust_params = {}
 
         for (set_field, eps) in zip(set_fields, epss):
 
             clust_params.update({set_field: {"eps": eps}})
-            clust_params[set_field].update({"features": ["EventTimeIntc"]})
+            clust_params[set_field].update({"features": ["EventPerpInt"]})
 
         self.clust_params = clust_params
 
@@ -604,6 +590,9 @@ class PostProcessing:
             pre_clust_summary_mean = events.groupby("set_field").mean()
             pre_clust_summary_std = events.groupby("set_field").std()
 
+        # add permp int info
+        events = add_new_params(events)
+
         # cluster
         events = self.cluster_events(events)
 
@@ -635,6 +624,25 @@ class PostProcessing:
             print(post_clust_summary_std)
 
         return events
+
+    def add_new_params(events):
+        events_copy = events.copy()
+
+        approx_slopes = set_fields
+        for i, field in enumerate(set_fields):
+            approx_slopes[i] = get_slope(field)*1e-9
+        print(approx_slopes)
+
+        events_copy['m'] = approx_slopes[np.searchsorted(set_fields, events_copy['set_field'])]
+        events_copy['b'] = 0.6+1/events_copy['m']*0.5
+        events_copy['theta'] = np.arctan(1/events_copy['m'])
+        events_copy['x0'] = (events_copy['b']-events_copy['EventFreqIntc']*1e-9)/(events_copy['EventSlope']*1e-9+(1/events_copy['m']))
+
+        #Make new column for the perp intercept.
+        events_copy['EventPerpInt'] = (events_copy['b']-events_copy['EventFreqIntc']*1e-9)/((events_copy['EventSlope']*1e-9+(1/events_copy['m'])) * np.cos(events_copy['theta']))
+        print(events_copy)
+        return events_copy
+
 
     def cluster_events(self, events):
         """ 
@@ -735,6 +743,8 @@ class PostProcessing:
             "field",
             "set_field",
             "monitor_rate",
+            "m",
+            "EventPerpInt",
         ]
         for col in cols_to_average_over:
 
@@ -782,6 +792,8 @@ class PostProcessing:
             "field",
             "set_field",
             "monitor_rate",
+            "m",
+            "EventPerpInt",
         ]
 
         events = (
@@ -1148,6 +1160,14 @@ class PostProcessing:
             flatarray = np.append(flatarray, a)
 
         return flatarray
+
+    def get_slope(self, true_field, frequency: float = 19.15e9):
+
+        approx_power = sc.power_larmor(true_field, frequency)
+        approx_energy = sc.freq_to_energy(frequency, true_field)
+        approx_slope = sc.df_dt(approx_energy, true_field, approx_power)
+
+        return approx_slope
 
 
 if __name__ == "__main__":
