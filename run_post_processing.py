@@ -892,7 +892,7 @@ class PostProcessing:
 
         approx_slopes = self.set_fields.copy()
         for i, field in enumerate(self.set_fields):
-            approx_slopes[i] = get_slope(field)*1e-9
+            approx_slopes[i] = self.get_slope(field)*1e-9
         print("approx_slopes: ",approx_slopes)
 
         tracks['FieldAveSlope'] = approx_slopes[np.searchsorted(self.set_fields, tracks['set_field'])]
