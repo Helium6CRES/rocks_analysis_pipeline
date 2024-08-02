@@ -207,12 +207,12 @@ class PostProcessing:
         # Default field-wise epss for clustering.
         # 6/1/23 (Drew): Note that this is hardcoded so won't work generically for all fields.
         # This is an issue and we should solve it with a spline of these values or something.
-        set_fields = np.arange(0.75, 3.5, 0.25)
+        self.set_fields = np.arange(0.75, 3.5, 0.25)
         epss = np.array([0.01, 0.01, 0.007, 0.004, 0.002, 0.001, 0.0008, 0.0005, 0.0003, 0.0002, 0.0001])
 
         clust_params = {}
 
-        for (set_field, eps) in zip(set_fields, epss):
+        for (set_field, eps) in zip(self.set_fields, epss):
 
             clust_params.update({set_field: {"eps": eps}})
             clust_params[set_field].update({"features": ["EventPerpInt"]})
@@ -590,9 +590,6 @@ class PostProcessing:
             pre_clust_summary_mean = events.groupby("set_field").mean()
             pre_clust_summary_std = events.groupby("set_field").std()
 
-        # add permp int info
-        events = add_new_params(events)
-
         # cluster
         events = self.cluster_events(events)
 
@@ -624,25 +621,6 @@ class PostProcessing:
             print(post_clust_summary_std)
 
         return events
-
-    def add_new_params(events):
-        events_copy = events.copy()
-
-        approx_slopes = set_fields
-        for i, field in enumerate(set_fields):
-            approx_slopes[i] = get_slope(field)*1e-9
-        print(approx_slopes)
-
-        events_copy['m'] = approx_slopes[np.searchsorted(set_fields, events_copy['set_field'])]
-        events_copy['b'] = 0.6+1/events_copy['m']*0.5
-        events_copy['theta'] = np.arctan(1/events_copy['m'])
-        events_copy['x0'] = (events_copy['b']-events_copy['EventFreqIntc']*1e-9)/(events_copy['EventSlope']*1e-9+(1/events_copy['m']))
-
-        #Make new column for the perp intercept.
-        events_copy['EventPerpInt'] = (events_copy['b']-events_copy['EventFreqIntc']*1e-9)/((events_copy['EventSlope']*1e-9+(1/events_copy['m'])) * np.cos(events_copy['theta']))
-        print(events_copy)
-        return events_copy
-
 
     def cluster_events(self, events):
         """ 
@@ -743,7 +721,7 @@ class PostProcessing:
             "field",
             "set_field",
             "monitor_rate",
-            "m",
+            "FieldAveSlope",
             "EventPerpInt",
         ]
         for col in cols_to_average_over:
@@ -792,7 +770,7 @@ class PostProcessing:
             "field",
             "set_field",
             "monitor_rate",
-            "m",
+            "FieldAveSlope",
             "EventPerpInt",
         ]
 
@@ -911,6 +889,20 @@ class PostProcessing:
         tracks["EventTimeIntA"] = (
             tracks["EventStartTimeInAcq"] - tracks["EventStartFreq"] / tracks["EventSlope"]
         )
+
+        approx_slopes = self.set_fields.copy()
+        for i, field in enumerate(self.set_fields):
+            approx_slopes[i] = get_slope(field)*1e-9
+        print("approx_slopes: ",approx_slopes)
+
+        tracks['FieldAveSlope'] = approx_slopes[np.searchsorted(self.set_fields, tracks['set_field'])]
+        tracks['Eventb'] = 0.6+1/tracks['FieldAveSlope']*0.5
+        tracks['Eventtheta'] = np.arctan(1/tracks['FieldAveSlope'])
+        tracks['Eventx0'] = (tracks['Eventb']-tracks['EventFreqIntc']*1e-9)/(tracks['EventSlope']*1e-9+(1/tracks['FieldAveSlope']))
+
+        #Make new column for the perp intercept.
+        tracks['EventPerpInt'] = (tracks['Eventb']-tracks['EventFreqIntc']*1e-9)/((tracks['EventSlope']*1e-9+(1/tracks['FieldAveSlope'])) * np.cos(tracks['Eventtheta']))
+        
 
         return tracks
 
