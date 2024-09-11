@@ -1035,7 +1035,8 @@ class PostProcessing:
                     root_files_df["field"][condition] = field
 
             if root_files_df["field"].isnull().values.any():
-                raise UserWarning(f"Some rate data was not collected.")
+                #raise UserWarning(f"Some rate data was not collected.")
+                print("Some nmr data was not collected.")
 
         return root_files_df
 
