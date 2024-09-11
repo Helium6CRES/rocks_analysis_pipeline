@@ -108,7 +108,7 @@ def main():
 
     # Deal with permissions (chmod 770, group he6_cres).
     # Done at the beginning and end of qsub main.
-    set_permissions()
+    #set_permissions()
 
     # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
@@ -175,7 +175,7 @@ def main():
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     # Done at the beginning and end of qsub main.
-    set_permissions()
+    #set_permissions()
 
 
 def qsub_job(experiment_name, analysis_id, file_id, cmd, tlim):

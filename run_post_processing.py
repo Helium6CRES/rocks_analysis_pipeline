@@ -1013,26 +1013,29 @@ class PostProcessing:
             )
 
             field_log = he6cres_db_query(query)
-            field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
+            if field_log.empty:
+                field_log["created_at"] = np.nan
+            else:    
+                field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
 
-            for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
 
-                if len(file_path) != 1:
-                    raise UserWarning(
-                        f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                    if len(file_path) != 1:
+                        raise UserWarning(
+                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                        )
+
+                    # Get field during second of data
+                    field = self.get_nearest(field_log, file_path.utc_time.iloc[0]).field
+
+                    # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table.
+                    condition = (root_files_df["run_id"] == rid) & (
+                        root_files_df["file_id"] == fid
                     )
+                    root_files_df["field"][condition] = field
 
-                # Get field during second of data
-                field = self.get_nearest(field_log, file_path.utc_time.iloc[0]).field
-
-                # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table.
-                condition = (root_files_df["run_id"] == rid) & (
-                    root_files_df["file_id"] == fid
-                )
-                root_files_df["field"][condition] = field
-
-        if root_files_df["field"].isnull().values.any():
-            raise UserWarning(f"Some rate data was not collected.")
+            if root_files_df["field"].isnull().values.any():
+                raise UserWarning(f"Some rate data was not collected.")
 
         return root_files_df
 
