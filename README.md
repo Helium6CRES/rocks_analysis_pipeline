@@ -53,6 +53,25 @@ If you want to test something in the same environment as it will be run with whe
 	'singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif'
 to enter an interactive singularity shell and then do your tests there.
 
+### Update katydid on ROCKS
+cd into katydid directory, stash existing version and run 
+    $ git pull origin feature/FreqDomainInput.
+Check permissions. Go back to /data/eliza4/he6_cres/ and run 
+    $ chmod -R 777 katydid
+
+Enter singularity container and bind the local file system on the rocks head node.
+    $ singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif
+source the script that uses the good CMake version and makes root libraries acessable:
+    $ source /data/eliza4/he6_cres/root/bin/thisroot.sh
+Then compile
+	$ cd katydid/build
+	$ cmake .. (ccmake .. gives you interactive wizard where you can set DEBUG etc)
+	$ make 
+    $ make install
+Then exit singularity, from he6_cres copy over new config gile to base_configs:
+    $ cp katydid/Examples/ConfigFiles/2-12_dbscan_high_energy_slew_snr9_2400.yaml katydid_analysis/base_configs/
+and set it's permisissions
+    $ chmod 774 katydid_analysis/base_configs/2-12_dbscan_high_energy_slew_snr9_2400.yaml
 	
 ### Run katydid:
 
