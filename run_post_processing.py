@@ -455,7 +455,9 @@ class PostProcessing:
 
         #clean up
         slewtimes_df["on_length"] = slewtimes_df["Time_Off"]-slewtimes_df["Time_On"]
-        slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.on_length < 2e-3].index)
+
+        # This is to clean up gaps in the slew times. Bring this back if you need to analyze data from before September 2024. (ie when we upgraded to ExB and moved Vaunix down to bin301)
+        #slewtimes_df = slewtimes_df.drop(slewtimes_df[slewtimes_df.on_length < 2e-3].index)
         slewtimes_df["run_id"] = root_files_df_row["run_id"]
         slewtimes_df["file_id"] = root_files_df_row["file_id"]
 
