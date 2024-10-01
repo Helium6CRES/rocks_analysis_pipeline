@@ -945,6 +945,7 @@ class PostProcessing:
         if self.ms_standard:
             print("User specified run_ids are all in ms standard.")
             time_str = root_file_path[-32:-9]
+            time_str_padded = time_str + "000"  # Pad with zeros to get microseconds
             datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
 
         else:
