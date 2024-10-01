@@ -39,29 +39,25 @@ def he6cres_db_connection_rocks():
 
 def he6cres_db_query(query: str, local=False) -> typing.Union[None, pd.DataFrame]:
 
-    connection = False
     try:
+        # Create a connection to the database
         if not local:
-            connection = he6cres_db_connection_rocks()
+            with he6cres_db_connection_rocks() as connection:
+                with connection.cursor() as cursor:
+                    # Execute a SQL command
+                    cursor.execute(query)
+                    cols = [desc[0] for desc in cursor.description]
+                    query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
         else:
-            connection = he6cres_db_connection_local()
-
-        # Create a cursor to perform database operations
-        cursor = connection.cursor()
-
-        # Execute a sql_command
-        cursor.execute(query)
-        cols = [desc[0] for desc in cursor.description]
-        query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
+            with he6cres_db_connection_local() as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    cols = [desc[0] for desc in cursor.description]
+                    query_result = pd.DataFrame(cursor.fetchall(), columns=cols)
 
     except (Exception, Error) as error:
         print("Error while connecting to he6cres_db", error)
         query_result = None
-
-    finally:
-        if connection:
-            cursor.close()
-            connection.close()
 
     return query_result
 
