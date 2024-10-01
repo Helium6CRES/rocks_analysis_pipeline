@@ -95,7 +95,16 @@ def main():
         "--do_dbscan_clustering",
         type=int,
         default=1, 
-        help="Flag indicating to dbscan cluster colinear events (1) or not (0).")
+        help="Flag indicating to dbscan cluster colinear events (1) or not (0)."
+    )
+    arg(
+        "-ms_standard",
+        "--ms_standard",
+        type=int,
+        help="""0: Root file names only to second. %Y-%m-%d-%H-%M-%S
+                1: Root file names to ms. "%Y-%m-%d-%H-%M-%S-%f"
+            """,
+    )
 
     arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
 
@@ -128,7 +137,8 @@ def main():
             args.num_files_events,
             file_id,
             args.stage,
-            args.do_dbscan_clustering
+            args.do_dbscan_clustering,
+            args.ms_standard
         )
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)
@@ -150,7 +160,8 @@ def main():
                 args.num_files_events,
                 file_id,
                 args.stage,
-                args.do_dbscan_clustering
+                args.do_dbscan_clustering,
+                args.ms_standard
             )
             cmd = con + f"{post_processing_cmd}'\""
             print(cmd)
@@ -167,7 +178,8 @@ def main():
             args.num_files_events,
             file_id,
             args.stage,
-            args.do_dbscan_clustering
+            args.do_dbscan_clustering,
+            args.ms_standard
         )
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)

@@ -134,6 +134,14 @@ def main():
         default=1,
         help="Flag indicating to dbscan cluster colinear events (1) or not (0).",
     )
+    arg(
+        "-ms_standard",
+        "--ms_standard",
+        type=int,
+        help="""0: Root file names only to second. %Y-%m-%d-%H-%M-%S
+                1: Root file names to ms. "%Y-%m-%d-%H-%M-%S-%f"
+            """,
+    )
 
     args = par.parse_args()
 
@@ -164,6 +172,7 @@ def main():
         args.file_id,
         args.stage,
         args.do_dbscan_clustering,
+        args.ms_standard
     )
 
     # Done at the beginning and end of main.
@@ -188,6 +197,7 @@ class PostProcessing:
         file_id,
         stage,
         do_dbscan_clustering,
+        ms_standard
     ):
 
         self.run_ids = run_ids
@@ -198,6 +208,7 @@ class PostProcessing:
         self.file_id = file_id
         self.stage = stage
         self.do_dbscan_clustering = do_dbscan_clustering
+        self.ms_standard = ms_standard
 
         self.analysis_dir = self.get_analysis_dir()
         self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
@@ -931,8 +942,15 @@ class PostProcessing:
 
     def get_utc_time(self, root_file_path):
         # USED in add_env_data()
-        time_str = root_file_path[-28:-9]
-        datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
+        if self.ms_standard:
+            print("User specified run_ids are all in ms standard.")
+            time_str = root_file_path[-32:-9]
+            datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
+
+        else:
+            print("User specified run_ids are all in second standard.")
+            time_str = root_file_path[-28:-9]
+            datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
 
         return datetime_object
 
