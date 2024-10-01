@@ -138,8 +138,8 @@ def main():
         "-ms_standard",
         "--ms_standard",
         type=int,
-        help="""0: Root file names only to second. %Y-%m-%d-%H-%M-%S
-                1: Root file names to ms. "%Y-%m-%d-%H-%M-%S-%f"
+        help="""0: Root file names only to second. %Y-%m-%d-%H-%M-%S use for rid 1570 and earlier!
+                1: Root file names to ms. "%Y-%m-%d-%H-%M-%S-%f
             """,
     )
 
