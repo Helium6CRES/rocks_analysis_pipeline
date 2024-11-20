@@ -1053,7 +1053,7 @@ class PostProcessing:
                 time_format = "%Y/%m/%d %H:%M:%S.%f%z"
 
                 # Convert to a datetime object. includes the parsed time and timezone offset for PST
-                dt = datetime.strptime(time_start, time_format)
+                dt = datetime.datetime.strptime(time_start, time_format)
                 # Convert to UTC
                 dt_utc = dt.astimezone(datetime.timezone.utc)
                 # Convert to numpy.datetime64
