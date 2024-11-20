@@ -9,7 +9,7 @@ import pandas.io.sql as psql
 
 import pytz
 import numpy as np
-from datetime import datetime, timedelta
+import datetime
 from glob import glob
 import subprocess as sp
 import shutil
@@ -179,7 +179,7 @@ def main():
     #set_permissions()
 
     # Current time to nearest second.
-    now = datetime.now().replace(microsecond=0)
+    now = datetime.datetime.now().replace(microsecond=0)
     print(f"\nPost Processing Stage {args.stage} DONE at PST time: {get_pst_time()}\n")
     log_file_break()
 
@@ -949,12 +949,12 @@ class PostProcessing:
             print("User specified run_ids are all in ms standard.")
             time_str = root_file_path[-32:-9]
             time_str_padded = time_str + "000"  # Pad with zeros to get microseconds
-            datetime_object = datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
+            datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
 
         else:
             print("User specified run_ids are all in second standard.")
             time_str = root_file_path[-28:-9]
-            datetime_object = datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
+            datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S")
 
         return datetime_object
 
