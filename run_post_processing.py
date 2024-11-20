@@ -9,7 +9,7 @@ import pandas.io.sql as psql
 
 import pytz
 import numpy as np
-import datetime
+from datetime import datetime, timedelta
 from glob import glob
 import subprocess as sp
 import shutil
@@ -451,7 +451,7 @@ class PostProcessing:
         tracks_df["file_id"] = root_files_df_row["file_id"]
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
-        tracks_df["monitor_rate"] = root_files_df_row["monitor_rate"]
+        tracks_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
 
         return tracks_df.reset_index(drop=True)
 
@@ -733,7 +733,7 @@ class PostProcessing:
             "sMeanSNR_Percentile",
             "field",
             "set_field",
-            "monitor_rate",
+            "arduino_monitor_rate",
             "FieldAveSlope",
             "EventPerpInt",
         ]
@@ -782,7 +782,7 @@ class PostProcessing:
             "sMeanSNR_Percentile",
             "field",
             "set_field",
-            "monitor_rate",
+            "arduino_monitor_rate",
             "FieldAveSlope",
             "EventPerpInt",
         ]
@@ -932,8 +932,10 @@ class PostProcessing:
         root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
         # Step 1: Add the monitor rate/field data to each file.
-        root_files_df = self.add_monitor_rate(root_files_df)
+        root_files_df = self.add_arduino_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
+        #root_files_df = self.add_pressures(root_files_df)
+        #root_files_df = self.add_temps(root_files_df)
 
         # Step 3. Add the set_field by rounding to nearest 100th place.
         root_files_df["set_field"] = root_files_df["field"].round(decimals=2)
@@ -962,9 +964,9 @@ class PostProcessing:
 
         return df.loc[[minidx]].iloc[0]
 
-    def add_monitor_rate(self, root_files_df):
+    def add_arduino_monitor_rate(self, root_files_df):
         # USED in add_env_data()
-        root_files_df["monitor_rate"] = np.nan
+        root_files_df["arduino_monitor_rate"] = np.nan
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
@@ -995,20 +997,86 @@ class PostProcessing:
                         f"There should be only one file with run_id = {rid} and file_id = {fid}."
                     )
 
-                # Get monitor_rate during run.
-                monitor_rate = self.get_nearest(
+                # Get arduino_monitor_rate during run.
+                arduino_monitor_rate = self.get_nearest(
                     monitor_log, file_path.utc_time.iloc[0]
                 ).rate
 
                 condition = (root_files_df["run_id"] == rid) & (
                     root_files_df["file_id"] == fid
                 )
-                root_files_df["monitor_rate"][condition] = monitor_rate
+                root_files_df["arduino_monitor_rate"][condition] = arduino_monitor_rate
 
-        if root_files_df["monitor_rate"].isnull().values.any():
-            raise UserWarning(f"Some monitor_rate data was not collected.")
+        if root_files_df["arduino_monitor_rate"].isnull().values.any():
+            raise UserWarning(f"Some arduino_monitor_rate data was not collected.")
 
         return root_files_df
+
+    def add_offline_monitor_counts(self, root_files_df):
+        # For now works with just the trigger channel (CH4)
+        # Does not computer offline coincidence!
+        # USED in add_env_data()
+        root_files_df["offline_monitor_counts"] = np.nan
+
+        # Step 0. Group by run_id.
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the ealiest UTC time present in the given run_id.
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            # Get runname in caen_runs table nearest before the earliest time in run_id. logged_at also UTC
+            query = """SELECT cr.caen_run_id, cr.runname, cr.logged_at
+                       FROM he6cres_runs.caen_runs as cr 
+                       WHERE cr.logged_at <= '{}'::timestamp
+                       ORDER BY cr.caen_run_id DESC LIMIT 1
+                    """.format(dt_min)
+
+            caen_log = he6cres_db_query(query)
+            if caen_log.empty:
+                raise UserWarning("No matching caen_run found in the database.")
+            else:
+                caen_run_path = Path(caen_log['runname'].iloc[0])
+
+                # Build path to run.info on rocks
+                rocks_caen_run_info_path = Path('/data/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path('run.info')
+
+                # Read in run.info and extract time.start
+                time_start = None
+                if rocks_caen_run_info_path.exists():
+                    with rocks_caen_run_info_path.open('r') as f:
+                        for line in f:
+                            if line.startswith('time.start='):
+                                time_start = line.split('=')[1].strip()
+                                break
+                # Define the format of the input string
+                time_format = "%Y/%m/%d %H:%M:%S.%f%z"
+
+                # Convert to a datetime object. includes the parsed time and timezone offset for PST
+                dt = datetime.strptime(time_start, time_format)
+                # Convert to UTC
+                dt_utc = dt.astimezone(datetime.timezone.utc)
+                # Convert to numpy.datetime64
+                caen_run_time_start = np.datetime64(dt_utc)
+
+                # Build path to compass data csv on rocks
+                rocks_caen_run_data_path = Path('/data/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH4@DT5725_1146_{caen_run_path.name}.csv')
+                # Read in the compass data csv to caen_df
+                caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0)
+
+                # Add new column to caen_df for absolute UTC timestamp for each hit
+                caen_df['TIMETAG_abs'] = caen_run_time_start - pd.to_timedelta(caen_df['TIMETAG'], unit='ps')
+                condition = (root_files_df["run_id"] == rid)
+                # Apply the monitor event counting function to each row (ie each 1s CRES file) in this run_id
+                root_files_df.loc[condition, 'offline_monitor_counts'] = root_files_df_gb.apply(count_events, caen_df=caen_df, axis=1)
+
+        return root_files_df
+
+    # Define a function to count events for each row in df_A
+    def count_events(self, row, caen_df):
+        start_time = row['utc_time']
+        end_time = start_time + pd.Timedelta(seconds=1)
+        #Works fine to compare datetime and np.datetime64 objects!
+        return caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)].shape[0]
 
     def add_field(self, root_files_df):
 
