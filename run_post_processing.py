@@ -946,7 +946,7 @@ class PostProcessing:
     def get_utc_time(self, root_file_path):
         # USED in add_env_data()
         if self.ms_standard:
-            print("User specified run_ids are all in ms standard.")
+            #print("User specified run_ids are all in ms standard.")
             time_str = root_file_path[-32:-9]
             time_str_padded = time_str + "000"  # Pad with zeros to get microseconds
             datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
@@ -1068,20 +1068,23 @@ class PostProcessing:
                 # Convert TIMETAG from picoseconds to nanoseconds
                 caen_df['TIMETAG_ns'] = caen_df['TIMETAG'] / 1_000
                 # Use 'ns' as the unit
-                caen_df['TIMETAG_abs'] = caen_run_time_start - pd.to_timedelta(caen_df['TIMETAG_ns'], unit='ns')
-                caen_df['TIMETAG_abs'] = caen_df['TIMETAG_abs'].dt.tz_localize(None)
+                caen_df['TIMETAG_abs'] = caen_run_time_start + pd.to_timedelta(caen_df['TIMETAG_ns'], unit='ns')
+                caen_df['TIMETAG_abs'] = caen_df['TIMETAG_abs'].dt.tz_localize("UTC")
                 print(caen_df)
 
                 condition = (root_files_df["run_id"] == rid)
                 # Apply the monitor event counting function to each row (ie each 1s CRES file) in this run_id
-                root_files_df.loc[condition, 'offline_monitor_counts'] = root_files_df_gb.apply(self.count_events_efficient, caen_df=caen_df, axis=1)
+                root_files_df.loc[condition, 'offline_monitor_counts'] = root_files_df_gb.apply(self.count_events, caen_df=caen_df, axis=1)
 
         return root_files_df
 
     # Define a function to count events for each row in df_A
+    def count_events(self, row, caen_df):
         start_time = row['utc_time']
         end_time = start_time + pd.Timedelta(seconds=1)
+        print("start time: ", start_time, " end time: ", end_time)
         #Works fine to compare datetime and np.datetime64 objects!
+        print(caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)])
         return caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)].shape[0]
 
     def count_events_efficient(self, row, caen_df):
@@ -1091,11 +1094,12 @@ class PostProcessing:
         # Convert start_time and end_time to NumPy datetime64
         start_time = np.datetime64(row['utc_time'])
         end_time = start_time + np.timedelta64(1, 's')  # Add 1 second
-
+        print("start time: ", start_time, " end time: ", end_time)
         # Use searchsorted to find the indices
         start_idx = np.searchsorted(timetag_values, start_time, side='left')
         end_idx = np.searchsorted(timetag_values, end_time, side='right')
-
+        print(timetag_values[start_idx])
+        print(timetag_values[end_idx])
         # Return the count of events within the range
         return end_idx - start_idx        
 
