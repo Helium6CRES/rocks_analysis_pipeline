@@ -1062,22 +1062,42 @@ class PostProcessing:
                 # Build path to compass data csv on rocks
                 rocks_caen_run_data_path = Path('/data/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH4@DT5725_1146_{caen_run_path.name}.csv')
                 # Read in the compass data csv to caen_df
-                caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0)
+                caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
 
                 # Add new column to caen_df for absolute UTC timestamp for each hit
-                caen_df['TIMETAG_abs'] = caen_run_time_start - pd.to_timedelta(caen_df['TIMETAG'], unit='ps')
+                # Convert TIMETAG from picoseconds to nanoseconds
+                caen_df['TIMETAG_ns'] = caen_df['TIMETAG'] / 1_000
+                # Use 'ns' as the unit
+                caen_df['TIMETAG_abs'] = caen_run_time_start - pd.to_timedelta(caen_df['TIMETAG_ns'], unit='ns')
+                caen_df['TIMETAG_abs'] = caen_df['TIMETAG_abs'].dt.tz_localize(None)
+                print(caen_df)
+
                 condition = (root_files_df["run_id"] == rid)
                 # Apply the monitor event counting function to each row (ie each 1s CRES file) in this run_id
-                root_files_df.loc[condition, 'offline_monitor_counts'] = root_files_df_gb.apply(count_events, caen_df=caen_df, axis=1)
+                root_files_df.loc[condition, 'offline_monitor_counts'] = root_files_df_gb.apply(self.count_events_efficient, caen_df=caen_df, axis=1)
 
         return root_files_df
 
     # Define a function to count events for each row in df_A
-    def count_events(self, row, caen_df):
         start_time = row['utc_time']
         end_time = start_time + pd.Timedelta(seconds=1)
         #Works fine to compare datetime and np.datetime64 objects!
         return caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)].shape[0]
+
+    def count_events_efficient(self, row, caen_df):
+        # Ensure TIMETAG_abs is a NumPy datetime64 array
+        timetag_values = caen_df['TIMETAG_abs'].to_numpy()
+
+        # Convert start_time and end_time to NumPy datetime64
+        start_time = np.datetime64(row['utc_time'])
+        end_time = start_time + np.timedelta64(1, 's')  # Add 1 second
+
+        # Use searchsorted to find the indices
+        start_idx = np.searchsorted(timetag_values, start_time, side='left')
+        end_idx = np.searchsorted(timetag_values, end_time, side='right')
+
+        # Return the count of events within the range
+        return end_idx - start_idx        
 
     def add_field(self, root_files_df):
 
