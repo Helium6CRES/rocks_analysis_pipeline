@@ -1070,7 +1070,7 @@ class PostProcessing:
                 # Use 'ns' as the unit
                 caen_df['TIMETAG_abs'] = caen_run_time_start + pd.to_timedelta(caen_df['TIMETAG_ns'], unit='ns')
                 caen_df['TIMETAG_abs'] = caen_df['TIMETAG_abs'].dt.tz_localize("UTC")
-                print(caen_df)
+                # print(caen_df)
 
                 condition = (root_files_df["run_id"] == rid)
                 # Apply the monitor event counting function to each row (ie each 1s CRES file) in this run_id
