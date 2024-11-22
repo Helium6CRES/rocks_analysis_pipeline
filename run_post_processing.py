@@ -935,8 +935,8 @@ class PostProcessing:
         root_files_df = self.add_arduino_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
         root_files_df = self.add_offline_monitor_counts(root_files_df)
-        #root_files_df = self.add_pressures(root_files_df)
-        #root_files_df = self.add_temps(root_files_df)
+        root_files_df = self.add_pressures(root_files_df)
+        root_files_df = self.add_temps(root_files_df)
 
         # Step 3. Add the set_field by rounding to nearest 100th place.
         root_files_df["set_field"] = root_files_df["field"].round(decimals=2)
@@ -1151,6 +1151,129 @@ class PostProcessing:
             if root_files_df["field"].isnull().values.any():
                 #raise UserWarning(f"Some rate data was not collected.")
                 print("Some nmr data was not collected.")
+
+        return root_files_df
+
+    def add_pressures(self, root_files_df):
+        # Define the list of gases
+        gases = [
+            "nitrogen", "helium", "co2", "hydrogen", 
+            "water", "oxygen", "krypton", "argon", 
+            "cf3", "a19", "total"
+        ]
+
+        # Initialize the columns for each gas with NaN
+        for gas in gases:
+            root_files_df[gas] = np.nan
+
+
+        # Step 0. Group by run_id.
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the extreme times present in the given run_id.
+            # The idea is that we want to be careful about the amount of queries we do to get this info.
+            # Here we only do one query per run_id (instead of one per file)
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            # Note that I also need to make sure the field probe was locked!
+            query = """SELECT r.rga_id, r.utc_write_time, r.nitrogen, r.helium, r.co2, r.hydrogen, r.water, r.oxygen, r.krypton, r.argon, r.cf3, r.a19, r.total
+                       FROM he6cres_runs.rga as r 
+                       WHERE r.utc_write_time >= '{}'::timestamp
+                           AND r.utc_write_time <= '{}'::timestamp + interval '1 minute'
+                           AND r.time_since_write < 60.0
+                    """.format(
+                dt_min, dt_max
+            )
+
+            rga_log = he6cres_db_query(query)
+            if rga_log.empty:
+                rga_log["created_at"] = np.nan
+            else:    
+                # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
+                # to created_at for consistancy in get_nearest()
+                rga_log["created_at"] = rga_log["utc_write_time"].dt.tz_localize("UTC")
+
+                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+
+                    if len(file_path) != 1:
+                        raise UserWarning(
+                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                        )
+
+                    nearest_row = self.get_nearest(rga_log, file_path.utc_time.iloc[0])
+                    for gas in gases:
+                        # Get pressures during second of data
+                        gas_value = nearest_row[gas]
+
+                        # Apply the condition to filter rows
+                        condition = (root_files_df["run_id"] == rid) & (root_files_df["file_id"] == fid)
+
+                        # Assign the value to the relevant rows
+                        root_files_df.loc[condition, gas] = gas_value
+
+
+            if root_files_df["total"].isnull().values.any():
+                print("Some rga data was not collected.")
+
+        return root_files_df
+
+    def add_temps(self, root_files_df):
+        # Define the list of endpoints
+        epts = [7,8,9,10,11,12,13,14]
+        sensor_names = ['A','B','C','D','E','F','G','H']
+
+        # Initialize the columns for each endpoint with NaN
+        for sensor in sensor_names:
+            root_files_df[sensor] = np.nan
+
+
+        # Step 0. Group by run_id.
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the extreme times present in the given run_id.
+            # The idea is that we want to be careful about the amount of queries we do to get this info.
+            # Here we only do one query per run_id (instead of one per file)
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            # 
+            query = """SELECT e.endpoint_id, e.timestamp, e.value_raw
+                       FROM public.endpoint_numeric_data as e
+                       WHERE e.timestamp >= '{}'::timestamp
+                           AND r.timestamp <= '{}'::timestamp + interval '1 minute'
+                    """.format(
+                dt_min, dt_max
+            )
+
+            rga_log = he6cres_db_query(query)
+            if rga_log.empty:
+                rga_log["created_at"] = np.nan
+            else:    
+                # I'm re-naming timestamp to created_at for consistancy in get_nearest()
+                rga_log["created_at"] = rga_log["timestamp"].dt.tz_localize("UTC")
+
+                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+
+                    if len(file_path) != 1:
+                        raise UserWarning(
+                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                        )
+                    for i, ept in enumerate(epts):
+                        # Only keep data from this endpoint
+                        rga_log_ept = rga_log[rga_log["endpoint_id"] == ept]
+                        # Get temps during second of data
+                        temp_value = self.get_nearest(rga_log_ept, file_path.utc_time.iloc[0])[value_raw]
+
+                        # Apply the condition to filter rows
+                        condition = (root_files_df["run_id"] == rid) & (root_files_df["file_id"] == fid)
+
+                        # Assign the value to the relevant rows
+                        root_files_df.loc[condition, sensor_names[i]] = temp_value
+
+
+            if root_files_df["A"].isnull().values.any():
+                print("Some temp data was not collected.")
 
         return root_files_df
 
