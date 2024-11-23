@@ -98,6 +98,13 @@ def main():
         help="Flag indicating to dbscan cluster colinear events (1) or not (0)."
     )
     arg(
+        "-offline_mon",
+        "--count_beta_mon_events_offline",
+        type=int,
+        default=0,
+        help="Flag indicating to do an offline beta monitor event count (1) or not (0).",
+    )
+    arg(
         "-ms_standard",
         "--ms_standard",
         type=int,
@@ -138,6 +145,7 @@ def main():
             file_id,
             args.stage,
             args.do_dbscan_clustering,
+            args.count_beta_mon_events_offline,
             args.ms_standard
         )
         cmd = con + f"{post_processing_cmd}'\""
@@ -161,6 +169,7 @@ def main():
                 file_id,
                 args.stage,
                 args.do_dbscan_clustering,
+                arga.count_beta_mon_events_offline,
                 args.ms_standard
             )
             cmd = con + f"{post_processing_cmd}'\""
@@ -179,6 +188,7 @@ def main():
             file_id,
             args.stage,
             args.do_dbscan_clustering,
+            args.count_beta_mon_events_offline,
             args.ms_standard
         )
         cmd = con + f"{post_processing_cmd}'\""

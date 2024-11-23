@@ -135,6 +135,13 @@ def main():
         help="Flag indicating to dbscan cluster colinear events (1) or not (0).",
     )
     arg(
+        "-offline_mon",
+        "--count_beta_mon_events_offline",
+        type=int,
+        default=0,
+        help="Flag indicating to do an offline beta monitor event count (1) or not (0).",
+    )
+    arg(
         "-ms_standard",
         "--ms_standard",
         type=int,
@@ -172,6 +179,7 @@ def main():
         args.file_id,
         args.stage,
         args.do_dbscan_clustering,
+        args.count_beta_mon_events_offline,
         args.ms_standard
     )
 
@@ -197,6 +205,7 @@ class PostProcessing:
         file_id,
         stage,
         do_dbscan_clustering,
+        count_beta_mon_events_offline,
         ms_standard
     ):
 
@@ -208,6 +217,7 @@ class PostProcessing:
         self.file_id = file_id
         self.stage = stage
         self.do_dbscan_clustering = do_dbscan_clustering
+        self.count_beta_mon_events_offline = count_beta_mon_events_offline
         self.ms_standard = ms_standard
 
         self.analysis_dir = self.get_analysis_dir()
@@ -934,7 +944,8 @@ class PostProcessing:
         # Step 1: Add the monitor rate/field data to each file.
         root_files_df = self.add_arduino_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
-        root_files_df = self.add_offline_monitor_counts(root_files_df)
+        if self.count_beta_mon_events_offline:
+            root_files_df = self.add_offline_monitor_counts(root_files_df)
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
 
@@ -1080,11 +1091,11 @@ class PostProcessing:
 
     # Define a function to count events for each row in df_A
     def count_events(self, row, caen_df):
-        start_time = row['utc_time']
-        end_time = start_time + pd.Timedelta(seconds=1)
-        print("start time: ", start_time, " end time: ", end_time)
+        end_time = row['utc_time'] #spec(k) file name is immediatly after write time, not before
+        start_time = end_time - pd.Timedelta(seconds=1)
+        #print("start time: ", start_time, " end time: ", end_time)
         #Works fine to compare datetime and np.datetime64 objects!
-        print(caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)])
+        #print(caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)])
         return caen_df[(caen_df['TIMETAG_abs'] > start_time) & (caen_df['TIMETAG_abs'] < end_time)].shape[0]
 
     def count_events_efficient(self, row, caen_df):
