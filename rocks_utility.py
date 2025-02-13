@@ -17,7 +17,7 @@ def he6cres_db_connection_local():
     connection = psycopg2.connect(
         user="postgres",
         password="chirality",
-        host="10.66.192.47",
+        host="192.168.60.47",
         port="5432",
         database="he6cres_db",
     )
@@ -30,7 +30,7 @@ def he6cres_db_connection_rocks():
     connection = psycopg2.connect(
         user="postgres",
         password="chirality",
-        host="wombat.npl.washington.edu",
+        host="192.168.60.47",
         port="5544",
         database="he6cres_db",
     )
