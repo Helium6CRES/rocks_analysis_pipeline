@@ -18,7 +18,7 @@ import sys
 import subprocess as sp
 
 # Local imports.
-sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports.
@@ -183,7 +183,7 @@ class RunKatydid:
         return file_df
 
     def build_file_df_path(self):
-        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
         rid_ai_dir = (
             base_path
             / Path(f"rid_{self.run_id:04d}")
@@ -288,7 +288,7 @@ class RunKatydid:
 
     def process_fp(self, daq_fp_list):
         #print(daq_fp_list)
-        rocks_fp_list = ["/data/eliza4/he6_cres/" + daq_fp[5:] for daq_fp in daq_fp_list]
+        rocks_fp_list = ["/data/raid2/eliza4/he6_cres/" + daq_fp[5:] for daq_fp in daq_fp_list]
         return rocks_fp_list
 
     def get_slope(self, true_field, frequency: float = 19.15e9):
@@ -316,7 +316,7 @@ class RunKatydid:
 
     def get_base_config_path(self):
 
-        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/base_configs")
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/base_configs")
         base_config_full = base_path / Path(self.base_config)
 
         if not base_config_full.is_file():
@@ -326,7 +326,7 @@ class RunKatydid:
 
     def build_dir_structure(self):
 
-        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
 
         run_id_dir = base_path / Path(f"rid_{self.run_id:04d}")
 
@@ -462,7 +462,7 @@ class RunKatydid:
         # work (as is standard).
         t_start = time.process_time()
         run_katydid = sp.run(
-            ["/data/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
+            ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
             capture_output=True,
         )
 

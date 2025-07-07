@@ -36,7 +36,7 @@ class ExperimentResults:
         self.rocks_IP = rocks_IP
 
         self.rocks_base_path = Path(
-            "/data/eliza4/he6_cres/katydid_analysis/saved_experiments"
+            "/data/raid2/eliza4/he6_cres/katydid_analysis/saved_experiments"
         )
         self.experiment_dir_name = Path(f"{experiment_name}_aid_{analysis_id}")
         self.experiment_dir_rocks = self.rocks_base_path / self.experiment_dir_name

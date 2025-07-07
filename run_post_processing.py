@@ -28,7 +28,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
 # Local imports.
-sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 
@@ -290,7 +290,7 @@ class PostProcessing:
 
     def get_analysis_dir(self):
 
-        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/saved_experiments")
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/saved_experiments")
 
         analysis_dir = base_path / Path(
             f"{self.experiment_name}_aid_{self.analysis_id}"
@@ -338,7 +338,7 @@ class PostProcessing:
 
     def build_file_df_path(self, run_id):
 
-        base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
         rid_ai_dir = (
             base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
         )
@@ -1050,7 +1050,7 @@ class PostProcessing:
                 caen_run_path = Path(caen_log['runname'].iloc[0])
 
                 # Build path to run.info on rocks
-                rocks_caen_run_info_path = Path('/data/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path('run.info')
+                rocks_caen_run_info_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path('run.info')
 
                 # Read in run.info and extract time.start
                 time_start = None
@@ -1071,7 +1071,7 @@ class PostProcessing:
                 caen_run_time_start = np.datetime64(dt_utc)
 
                 # Build path to compass data csv on rocks
-                rocks_caen_run_data_path = Path('/data/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH4@DT5725_1146_{caen_run_path.name}.csv')
+                rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH4@DT5725_1146_{caen_run_path.name}.csv')
                 # Read in the compass data csv to caen_df
                 caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
 

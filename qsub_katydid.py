@@ -58,12 +58,12 @@ def main():
         analysis_id = args.analysis_id
 
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
-    con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
+    con = "\"singularity exec --bind /data/raid2/eliza4/he6_cres/ /data/raid2/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/raid2/eliza4/he6_cres/.bashrc {} ".format(
         r"\n"
     )
 
     for run_id in args.runids:
-        default_katydid_sub = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -aid {} -b "{}" -fn {} '.format(
+        default_katydid_sub = 'python3 /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py -id {} -nid {} -aid {} -b "{}" -fn {} '.format(
             run_id, args.noise_run_id, analysis_id, args.base_config, args.file_num
         )
         cmd = con + f"{default_katydid_sub}'\""
@@ -88,7 +88,7 @@ def qsub_job(run_id, analysis_id, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{analysis_id:03d}.txt",
+        f"-o /data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{analysis_id:03d}.txt",
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
     batch_cmd = "qsub {} {}".format(qsub_str, cmd)
@@ -107,7 +107,7 @@ def get_analysis_id(run_ids):
 
     """
 
-    base_path = Path("/data/eliza4/he6_cres/katydid_analysis/root_files")
+    base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
 
     max_analysis_ids = []
     for run_id in run_ids:

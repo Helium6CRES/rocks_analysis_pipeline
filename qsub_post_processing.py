@@ -22,7 +22,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
 # Local imports.
-sys.path.append("/data/eliza4/he6_cres/simulation/he6-cres-spec-sims")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 
@@ -129,10 +129,10 @@ def main():
     # ./rocks_analysis_pipeline/post_processing.py -rids 440 439 377 376 375 374 373 -aid 16 -name "demo1" -nft 1 -nfe 1
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
     # DREW_02082023: Adding in the singularity command first as this should help with python package versioning issues.
-    con = "\"singularity exec --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/eliza4/he6_cres/.bashrc {} ".format(
+    con = "\"singularity exec --bind /data/raid2/eliza4/he6_cres/ /data/raid2/eliza4/he6_cres/containers/he6cres-katydid-base.sif /bin/bash -c $'source /data/raid2/eliza4/he6_cres/.bashrc {} ".format(
         r"\n"
     )
-    base_post_processing_cmd = 'python3 /data/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {} -dbscan {} -ms_standard {}'
+    base_post_processing_cmd = 'python3 /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py -rids {} -aid {} -name "{}" -nft {} -nfe {} -fid {} -stage {} -dbscan {} -ms_standard {}'
     rids_formatted = " ".join((str(rid) for rid in args.run_ids))
     if args.stage == 0:
         file_id = -1
@@ -218,7 +218,7 @@ def qsub_job(experiment_name, analysis_id, file_id, cmd, tlim):
         "-q all.q",  # queue name (cenpa only uses one queue)
         "-j yes",  # join stderr and stdout
         "-b y",  # Look for series of bytes.
-        f"-o /data/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/{experiment_name}_aid_{analysis_id}.txt",
+        f"-o /data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/post_processing/{experiment_name}_aid_{analysis_id}.txt",
     ]
     qsub_str = " ".join([str(s) for s in qsub_opts])
     batch_cmd = "qsub {} {}".format(qsub_str, cmd)
