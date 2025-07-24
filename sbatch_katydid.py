@@ -35,18 +35,18 @@ def main():
     # Command to run inside the container
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
 
-    singularity_prefix = (
-        "\"singularity exec --bind /data/raid2/eliza4/he6_cres/ "
-        "/data/raid2/eliza4/he6_cres/containers/he6cres-katydid-base.sif "
+    apptainer_prefix = (
+        "\"apptainer exec --bind /data/raid2/eliza4/he6_cres/ "
+        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
         "/bin/bash -c $'source /data/raid2/eliza4/he6_cres/.bashrc {} "
     ).format(r"\n")
 
     for run_id in args.runids:
         default_katydid_sub = (
-            f"python3 /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py "
+            f"/opt/python3.7/bin/python3.7 /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py "
             f"-id {run_id} -nid {args.noise_run_id} -aid {analysis_id} -b \"{args.base_config}\" -fn {args.file_num} "
         )
-        cmd = singularity_prefix + f"{default_katydid_sub}'\""
+        cmd = apptainer_prefix + f"{default_katydid_sub}'\""
         sbatch_job(run_id, analysis_id, cmd, tlim)
 
 

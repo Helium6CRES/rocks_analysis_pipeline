@@ -4,7 +4,7 @@
 --------------------------------------------------------------------------------
 # rocks_analysis_pipeline
 
-This repo contains scripts for running katydid, a C++ based analysis tool adapted from Project 8 that extracts physically relevant features from spectrograms, on the CENPA cluster (rocks) and then conducts the post processing of these tracks and events.
+This repo contains scripts for running katydid, a C++ based analysis tool adapted from Project 8 that extracts physically relevant features from spectrograms, on the CENPA cluster (WULF) and then conducts the post processing of these tracks and events.
 
 --------------------------------------------------------------------------------
 ### Run an analysis then make interactive plots of cres track features!
@@ -23,62 +23,50 @@ This repo contains scripts for running katydid, a C++ based analysis tool adapte
 
 --------------------------------------------------------------------------------
 
-## Instructions for running an analysis on rocks: 
+## Instructions for running an analysis on WULF (CENPA compute cluster): 
 
 
-### Get set up on rocks: 
+### Get set up on WULF: 
+To facilitate developers having the same environment across machines and on cluster nodes, we need to use a containerized development environemnt. This is done with apptainer. The container is built to be totally independant of previous projects, such as project8, to support ROOT, Katydid, and include all the base python dependancies used mainly for analysis on the CENPA Wulf cluster. The container is deffined via the apptainer definition file, he6cres-base.def which builds everything from ubuntu:20.04 to make a reproducible He6-CRES environment with Python 3.7.3, pip dependencies, and ROOT 6.22/06. This definition file is used to buld the container: he6cres-base.sif which can be used by anyone. \
+In normal operations, developers should just use the existing .sif file as is while changing katydid or analysis scripts for example for the beta monitor.
 
-* Log on to rocks. You are in your root directory which contains your .bash_profile  .bashrc
-* Add the `module load python-3.7.3` to your enviornment setup file or .bash_profile file so that you have access to python3. The above must be done by each user, as it's the current users python packages that the scripts below will be utilizing. 
-	* Example: `$ nano .bash_profile`
-	Add `module load python-3.7.3` to the end of the file. Write and exit.
-* Restart your session.
-* Now you need to install your dependancies. Doing this installs them for the python-3.7.3 module
-	* $ `pip3 install -r /data/eliza4/he6_cres/rocks_analysis_pipeline/requirements.txt --user`
-	* Note: May need to upgrade pip. For Winston and Drew this worked: `pip3 install --upgrade pip`
-* Parts of the analysis (`run_katydid.py`) are run within a singularity image. There aren't modules on the image (it can't load `module python 3.7.3` for example) and so the default python version is used as this was what was installed on the image. Each user must have these packages (in python version 3.8 but might be different for future users) available for the image.
-	* $ `cd /data/eliza4/he6_cres`
-	* $`singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
-	* Singularity> `pip3 install -r rocks_analysis_pipeline/requirements.txt --user`
-	* Singularity> `exit` 
-* Notes: 
-	* The requirements.txt should contain all necessary python packages but if that isn't the case please let me (drew) know. 
-	
-### Notes about the singularity shell post-02/07/23 meeting with Clint
-We found an issue with psycopg2 (a postgress library) for Heather. The way it is currently set up is that a submission script run on the head node acesses the postgress database and uses the information about the field to build the config files for the requested run_ids. The jobs are then sent to compute nodes. The first thing the compute nodes do is load the singularity image which can be shared between users to essentially create a uniform virtual environment. Katydid runs. Then to do the post-processing, a submission script is run on the head node which then submits a bunch of jobs to the compute nodes. Right now, these do NOT load the singularity image. The logic was that, if the user had run requirements.txt in their head node, then the compute nodes would be able to use all those loaded modules. We found that this is not always true if there is som library involved that you would locally need to instal with apt get. As a result for Heather, eventhough she had installed psycopg2 for her user on the head node, when the post-processing jobs on the compute nodes tried to use psycopg2 they threw and error that they couldn't find a library. The solution, according to Clint, is to also load the singularity image on the compute nodes before each post-processing job is run on one of those nodes. 
+The container can be found at: \
+`/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 
-Our norm should be that the only thing you run on the head node are submission scripts. You cannot submit jobs from within a singularity image, so these have to be in the user's environment. However all the heavy lisfting is done withing jobs on the compute nodes. These should ALWAYS load the singularity image so that they are run in a consistant environment across users and nodes. Drew is going to work on implementing this.
+To enter an interactive appt session, run \
+`apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 
-If you want to test something in the same environment as it will be run with when it is submitted to a compute nose, first run 
-	'singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif'
-to enter an interactive singularity shell and then do your tests there.
+Here you can, for example, check which python version is in the container: \
+`which python3`
+`python3`
 
-### Update katydid on ROCKS
+With the container, after getting an account on WULF, you should be all set to go as long as you run jobs within the container. Most scripts are already configured to do this when submitting jobs to nodes. If you run anything on the head node outside the container, note that you will not have any dependancies installed.
+
+### Update katydid on ROCKS:
 * cd into katydid directory, stash existing version and run 
-    * $ git pull origin feature/FreqDomainInput.
-* Check permissions. Go back to /data/eliza4/he6_cres/ and run 
-    * $ chmod -R 777 katydid
-
-* Enter singularity container and bind the local file system on the rocks head node.
-    * $ singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif
+    * $ `git pull origin feature/FreqDomainInput.`
+* Check permissions. Go back to /data/raid2eliza4/he6_cres/ and run 
+    * $ `chmod -R 777 katydid`
+* Enter apptainer and bind the local file system on the wulf head node.
+    * $ `apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 * source the script that uses the good CMake version and makes root libraries acessable:
-    * $ source /data/eliza4/he6_cres/root/bin/thisroot.sh
+    * $ `source /data/raid2/eliza4/he6_cres/root/bin/thisroot.sh`
 * Then compile
-    * $ cd katydid/build
-    * $ cmake .. (ccmake .. gives you interactive wizard where you can set DEBUG etc)
-    * $ make 
-    * $ make install
+    * > `cd katydid/build`
+    * > `cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CPP14=ON`
+    * > `make` 
+    * > `make install`
 * Then exit singularity, from he6_cres copy over new config gile to base_configs:
-    * $ cp katydid/Examples/ConfigFiles/2-12_dbscan_high_energy_slew_snr9_2400.yaml katydid_analysis/base_configs/
+    * $ `cp katydid/Examples/ConfigFiles/2-12_dbscan_high_energy_slew_snr9_2400.yaml katydid_analysis/base_configs/`
 * and set it's permisissions
-    * $ chmod 774 katydid_analysis/base_configs/2-12_dbscan_high_energy_slew_snr9_2400.yaml
+    * $ `chmod 774 katydid_analysis/base_configs/2-12_dbscan_high_energy_slew_snr9_2400.yaml`
 	
 ### Run katydid:
 
 * **Overview:** Run katydid on a list of run_ids.
 * **Step 0:** Run katydid for the first time on a list of run_ids: 
 	* Log on to rocks. 
-	* `cd /data/eliza4/he6_cres`
+	* `cd /data/raid2/eliza4/he6_cres`
 	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3`
 		* The above will run at most fn files for each run_id listed using the base config file provided. 
 		* For reference the above jobs (one job per run_id) were mostly finished in 30 mins. 
@@ -87,7 +75,7 @@ to enter an interactive singularity shell and then do your tests there.
 
 * **Step 1:** Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
 	* Log on to rocks. 
-	* `cd /data/eliza4/he6_cres`
+	* `cd /data/raid2/eliza4/he6_cres`
 	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3 -aid 9`
 		* The above will rerun all of the files in analysis_id 9 that haven't yet been created.
 		* Note that you want to include "-fn 3" here in case a node failed before even creating the  
@@ -100,7 +88,7 @@ spec(k) file name time format for the data you want to process.
    	* 1: Root file names to ms. "%Y-%m-%d-%H-%M-%S-%f
 	* For each of the steps, begin by navigating to our groups directory on eliza4: 
 		* Log on to rocks. 
-		* `cd /data/eliza4/he6_cres`
+		* `cd /data/raid2/eliza4/he6_cres`
 * **Stage 0:** Set-up.  
 	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -ms_standard 1 -stage 0`
 		* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]). 
@@ -135,25 +123,22 @@ This elog is not currently backfilled from before the first phase-II data campai
 
 ## Useful stuff: 
 
-* **SGE:**
-	* `qrsh` will open a terminal in a new node (you are on the head/login node by default). Use this to test any computationally intensive processes. 
-	* `qstat` to see all of the jobs you have running or in the queue. 
-	* `qdel -u drewbyron` (delete all the jobs of user drewbyron)
-	* To look at the description of command line arguments for a given .py file use: 
-		* `my_file.py -h`
-	* Use `qstat | wc -l` to count the number of jobs you have open/active. 
-	* To delete jobs of state `Eqw` or any state, add the following alias to your .bashrc: 
-		* `alias killEqw="qstat | grep drewbyron | grep 'Eqw' | cut -d ' ' -f1 | xargs qdel"`
-		* Change your username and f1 means first column contains the job id, if otherwise then change to -fx for xth column. 
+* **Slurm:**
+	* `sbatch submit_job.sh` Submit a job script
+	* `squeue` to see all of the jobs you have running or in the queue.
+	* `scancel -u netid` (delete all the jobs of user netid)
+	* `scancel 4807` (delete job id 4807)
+	* `scontrol show job 466` show info about a job eg jobid 466
+	* `scontrol show node n4180` show info about a node
 
 * **Permissions:**
 	* I'm finding that with multiple users working in this analysis pipeline simultaneously the permissions can get weird. The following two commands run from `/he6_cres` should help: 
 		* `chmod -R 774 katydid_analysis/`
 		* `chgrp -R he6_cres katydid_analysis/`
 
-* **Singularity Container:**
-	* To interactively enter the analysis singularity container run the following: 
-		* `singularity shell --bind /data/eliza4/he6_cres/ /data/eliza4/he6_cres/containers/he6cres-katydid-base.sif`
+* **Apptainer:**
+	* To interactively enter the analysis apptainer run the following: 
+		* `apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 	* To exit the container: 
 		* `exit`
 		
