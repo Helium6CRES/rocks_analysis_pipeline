@@ -48,18 +48,18 @@ With the container, after getting an account on WULF, you should be all set to g
 * Check permissions. Go back to /data/raid2eliza4/he6_cres/ and run 
     * $ `chmod -R 777 katydid`
 * Enter apptainer and bind the local file system on the wulf head node.
-    * $ `apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
+    * $ `apptainer shell --bind /data/raid2/eliza4/he6_cres /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 * source the script that uses the good CMake version and makes root libraries acessable:
     * $ `source /data/raid2/eliza4/he6_cres/root/bin/thisroot.sh`
 * Then compile
     * > `cd katydid/build`
-    * > `cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CPP14=ON`
+    * > `cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CPP14=ON -DKatydid_USE_MATLAB=OFF`
     * > `make` 
     * > `make install`
 * Then exit singularity, from he6_cres copy over new config gile to base_configs:
-    * $ `cp katydid/Examples/ConfigFiles/2-12_dbscan_high_energy_slew_snr9_2400.yaml katydid_analysis/base_configs/`
+    * $ `cp katydid/Examples/ConfigFiles/2-12_LTF_MBEB_tausnr7_2400.yaml katydid_analysis/base_configs/`
 * and set it's permisissions
-    * $ `chmod 774 katydid_analysis/base_configs/2-12_dbscan_high_energy_slew_snr9_2400.yaml`
+    * $ `chmod 774 katydid_analysis/base_configs/2-12_LTF_MBEB_tausnr7_2400.yaml`
 	
 ### Run katydid:
 
@@ -138,7 +138,7 @@ This elog is not currently backfilled from before the first phase-II data campai
 
 * **Apptainer:**
 	* To interactively enter the analysis apptainer run the following: 
-		* `apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
+		* `apptainer shell --bind /data/raid2/eliza4/he6_cres /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 	* To exit the container: 
 		* `exit`
 		

@@ -18,7 +18,7 @@ import sys
 import subprocess as sp
 
 # Local imports.
-sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports.
