@@ -129,8 +129,19 @@ class RunKatydid:
         for rocks_file_path in self.file_df.loc[~self.file_df['exists'], 'rocks_file_path']:
             print(rocks_file_path)
         # Run katydid on each row/spec file in file_df.
-        self.file_df[condition].apply(lambda row: self.run_katydid(row), axis=1)
-
+        #self.file_df[condition].apply(lambda row: self.run_katydid(row), axis=1)
+        for idx, row in self.file_df[condition].iterrows():
+            try:
+                print(f"\nProcessing file_id {row['file_id']} at PST time: {get_pst_time()}")
+                sys.stdout.flush()
+                self.run_katydid(row)
+                print(f"Finished file_id {row['file_id']} at PST time: {get_pst_time()}")
+                sys.stdout.flush()
+            except Exception as e:
+                print(f"Exception while processing file_id {row['file_id']}: {e}")
+                sys.stdout.flush()
+                continue
+                        
         # Clean up any half baked root files.
         self.clean_up_root_dir(self.file_df)
 

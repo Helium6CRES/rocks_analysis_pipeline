@@ -30,7 +30,7 @@ def he6cres_db_connection_rocks():
     connection = psycopg2.connect(
         user="postgres",
         password="chirality",
-        host="172.25.100.47",
+        host="192.168.60.47",
         port="5432",
         database="he6cres_db",
     )
