@@ -49,8 +49,8 @@ With the container, after getting an account on WULF, you should be all set to g
     * $ `chmod -R 777 katydid`
 * Enter apptainer and bind the local file system on the wulf head node.
     * $ `apptainer shell --bind /data/raid2/eliza4/he6_cres /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
-* source the script that uses the good CMake version and makes root libraries acessable:
-    * $ `source /data/raid2/eliza4/he6_cres/root/bin/thisroot.sh`
+* source root from prebuilt ROOT tarball in container acessable. Updates the current shell’s environment. Very important!:
+    * $ `source /usr/local/root/bin/thisroot.sh`
 * Then compile
     * > `cd katydid/build`
     * > `cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CPP14=ON -DKatydid_USE_MATLAB=OFF`
