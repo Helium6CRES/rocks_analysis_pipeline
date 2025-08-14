@@ -3,14 +3,6 @@ import subprocess as sp
 import argparse
 from pathlib import Path
 
-# Local imports.
-sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
-import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
-
-
-# Local imports.
-from rocks_utility import set_permissions
-
 def main():
     """
     DOCUMENT
@@ -85,9 +77,6 @@ def main():
 
     tlim = "12:00:00" if args.tlim is None else args.tlim[0]
 
-    # Force a write to the log. Add a timeout here in the future?
-    sys.stdout.flush()
-
     # Command to run inside the container (mirrors sbatch_katydid.py pattern)
     # Note: the literal \n is required in the bash -c $'...' string for multi-line commands.
     apptainer_prefix = (
@@ -110,16 +99,16 @@ def main():
     if args.stage == 0:
         file_id = -1
         post_processing_cmd = base_post_processing_cmd.format(
-            rids_formatted,
-            args.analysis_id,
-            args.experiment_name,
-            args.num_files_tracks,
-            file_id,
-            args.stage,
-            args.count_beta_mon_events_offline,
-            args.ms_standard
+            rids=rids_formatted,
+            aid=args.analysis_id,
+            name=args.experiment_name,
+            nft=args.num_files_tracks,
+            fid=file_id,
+            stage=args.stage,
+            offline_mon=args.count_beta_mon_events_offline,
+            ms_standard=args.ms_standard
         )
-        cmd = con + f"{post_processing_cmd}'\""
+        cmd = apptainer_prefix + f"{post_processing_cmd}'\""
         print(cmd)
 
         sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
@@ -132,16 +121,16 @@ def main():
         for file_id in range(files_to_process):
 
             post_processing_cmd = base_post_processing_cmd.format(
-                rids_formatted,
-                args.analysis_id,
-                args.experiment_name,
-                args.num_files_tracks,
-                file_id,
-                args.stage,
-                arga.count_beta_mon_events_offline,
-                args.ms_standard
+                rids=rids_formatted,
+                aid=args.analysis_id,
+                name=args.experiment_name,
+                nft=args.num_files_tracks,
+                fid=file_id,
+                stage=args.stage,
+                offline_mon=args.count_beta_mon_events_offline,
+                ms_standard=args.ms_standard
             )
-            cmd = con + f"{post_processing_cmd}'\""
+            cmd = apptainer_prefix + f"{post_processing_cmd}'\""
             print(cmd)
 
             sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
@@ -149,16 +138,16 @@ def main():
     if args.stage == 2:
         file_id = -1
         post_processing_cmd = base_post_processing_cmd.format(
-            rids_formatted,
-            args.analysis_id,
-            args.experiment_name,
-            args.num_files_tracks,
-            file_id,
-            args.stage,
-            args.count_beta_mon_events_offline,
-            args.ms_standard
+            rids=rids_formatted,
+            aid=args.analysis_id,
+            name=args.experiment_name,
+            nft=args.num_files_tracks,
+            fid=file_id,
+            stage=args.stage,
+            offline_mon=args.count_beta_mon_events_offline,
+            ms_standard=args.ms_standard
         )
-        cmd = con + f"{post_processing_cmd}'\""
+        cmd = apptainer_prefix + f"{post_processing_cmd}'\""
         print(cmd)
 
         sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
