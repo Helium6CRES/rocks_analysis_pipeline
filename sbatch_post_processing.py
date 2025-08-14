@@ -122,7 +122,7 @@ def main():
     # Base command to your pipeline (keep flags aligned with run_post_processing.py expectations)
     base_post_processing_cmd = (
         "/opt/python3.7/bin/python3.7 -u "
-        "/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing.py "
+        "/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing_2025LTF.py "
         "-rids {rids} -aid {aid} -name \"{name}\" "
         "-nft {nft} -fid {fid} -stage {stage} "
         "-offline_mon {offline_mon} -ms_standard {ms_standard}"
@@ -130,29 +130,59 @@ def main():
 
     rids_formatted = " ".join(str(rid) for rid in args.run_ids)
 
-    def submit(file_id: int):
+    if args.stage == 0:
+        file_id = -1
         post_processing_cmd = base_post_processing_cmd.format(
-            rids=rids_formatted,
-            aid=args.analysis_id,
-            name=args.experiment_name,
-            nft=args.num_files_tracks,
-            fid=file_id,
-            stage=args.stage,
-            offline_mon=args.count_beta_mon_events_offline,
-            ms_standard=args.ms_standard,
+            rids_formatted,
+            args.analysis_id,
+            args.experiment_name,
+            args.num_files_tracks,
+            file_id,
+            args.stage,
+            args.count_beta_mon_events_offline,
+            args.ms_standard
         )
-        wrapped = apptainer_prefix + f"{post_processing_cmd}'\""
-        sbatch_job(args.experiment_name, args.analysis_id, file_id, wrapped, tlim)
+        cmd = con + f"{post_processing_cmd}'\""
+        print(cmd)
 
-    if args.stage in (0, 2):
-        # Single driver job
-        submit(file_id=-1)
-    elif args.stage == 1:
-        # Fan out over individual files
-        files_to_process = int(args.num_files_tracks)
+        qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
+
+    if args.stage == 1:
+
+        files_to_process = args.num_files_tracks
         print(f"Submitting {files_to_process} jobs.")
+
         for file_id in range(files_to_process):
-            submit(file_id=file_id)
+
+            post_processing_cmd = base_post_processing_cmd.format(
+                rids_formatted,
+                args.analysis_id,
+                args.experiment_name,
+                args.num_files_tracks,
+                file_id,
+                args.stage,
+                arga.count_beta_mon_events_offline,
+                args.ms_standard
+            )
+            cmd = con + f"{post_processing_cmd}'\""
+            print(cmd)
+
+            qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
+
+    if args.stage == 2:
+        file_id = -1
+        post_processing_cmd = base_post_processing_cmd.format(
+            rids_formatted,
+            args.analysis_id,
+            args.experiment_name,
+            args.num_files_tracks,
+            file_id,
+            args.stage,
+            args.count_beta_mon_events_offline,
+            args.ms_standard
+        )
+        cmd = con + f"{post_processing_cmd}'\""
+        print(cmd)
 
         qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
@@ -181,6 +211,8 @@ def sbatch_job(experiment_name: str, analysis_id: int, file_id: int, cmd: str, t
 
     print("\n\n", batch_cmd, "\n\n")
     sp.run(batch_cmd, shell=True)
+
+    return None
 
 
 if __name__ == "__main__":
