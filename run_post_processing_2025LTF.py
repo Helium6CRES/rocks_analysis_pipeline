@@ -204,21 +204,6 @@ class PostProcessing:
         self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
         self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
 
-        # Default field-wise epss for clustering.
-        # 6/1/23 (Drew): Note that this is hardcoded so won't work generically for all fields.
-        # This is an issue and we should solve it with a spline of these values or something.
-        self.set_fields = np.arange(0.75, 3.5, 0.25)
-        epss = np.array([0.01, 0.01, 0.007, 0.004, 0.002, 0.001, 0.0008, 0.0005, 0.0003, 0.0002, 0.0001])
-
-        clust_params = {}
-
-        for (set_field, eps) in zip(self.set_fields, epss):
-
-            clust_params.update({set_field: {"eps": eps}})
-            clust_params[set_field].update({"features": ["EventPerpInt"]})
-
-        self.clust_params = clust_params
-
         print(f"PostProcessing instance attributes:\n")
         for key, value in self.__dict__.items():
             print(f"{key}: {value}")
@@ -347,6 +332,7 @@ class PostProcessing:
         #clean tracks. Add column IsCutPP which is a boolian if it was cut in post processing (here)
         # This trims "barnicles" and bad frequencies
         #processed_tracks = self.clean_up_tracks(tracks)
+        processed_tracks = tracks
 
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
@@ -644,7 +630,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-
+            print(query)
             field_log = he6cres_db_query(query)
             if field_log.empty:
                 field_log["created_at"] = np.nan
@@ -703,7 +689,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-
+            print(query)
             rga_log = he6cres_db_query(query)
             if rga_log.empty:
                 rga_log["created_at"] = np.nan
@@ -755,7 +741,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-
+            print(query)
             rga_log = he6cres_db_query(query)
 
             if not rga_log.empty:
