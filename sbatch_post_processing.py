@@ -162,7 +162,7 @@ def sbatch_job(experiment_name: str, analysis_id: int, file_id: int, cmd: str, t
     """
     log_dir = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/post_processing")
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f"{experiment_name}_aid_{analysis_id}_fid_{file_id}.txt"
+    log_path = log_dir / f"{experiment_name}_aid_{analysis_id}.txt"
 
     sbatch_opts = [
         "--job-name", f"{experiment_name}_a{analysis_id}_f{file_id}",
