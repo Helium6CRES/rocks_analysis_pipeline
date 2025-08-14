@@ -1,25 +1,7 @@
 #!/usr/bin/env python3
-import os
-import sys
-import time
-import argparse
-import pandas as pd
-import datetime
-from glob import glob
 import subprocess as sp
-import shutil
-from shutil import copyfile
-import psycopg2
-from psycopg2 import Error
-import typing
-from typing import List
-import pandas.io.sql as psql
+import argparse
 from pathlib import Path
-import yaml
-import uproot4
-import numpy as np
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims")
@@ -28,11 +10,6 @@ import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Local imports.
 from rocks_utility import set_permissions
-
-
-# Import options.
-pd.set_option("display.max_columns", 100)
-
 
 def main():
     """
@@ -145,7 +122,7 @@ def main():
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)
 
-        qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
+        sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 1:
 
@@ -167,7 +144,7 @@ def main():
             cmd = con + f"{post_processing_cmd}'\""
             print(cmd)
 
-            qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
+            sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     if args.stage == 2:
         file_id = -1
@@ -184,7 +161,7 @@ def main():
         cmd = con + f"{post_processing_cmd}'\""
         print(cmd)
 
-        qsub_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
+        sbatch_job(args.experiment_name, args.analysis_id, file_id, cmd, tlim)
 
     # Done at the beginning and end of qsub main.
     #set_permissions()
