@@ -16,6 +16,7 @@ from pathlib import Path
 import yaml
 import sys
 import subprocess as sp
+import json
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
@@ -169,6 +170,8 @@ class RunKatydid:
             )
 
             file_df = pd.read_csv(self.file_df_path)
+            file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.loads)
+            file_df["rocks_noise_file_path"] = file_df["rocks_noise_file_path"].apply(json.loads)
 
             # The following is a sanity check to make sure the number of files in the clean-up
             # match the number of files that were originally run. Then trim the df according
@@ -215,6 +218,7 @@ class RunKatydid:
         file_df["rocks_file_path"] = file_df["file_path"].apply(
             lambda x: self.process_fp(x)
         )
+        file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.dumps)
         file_df["exists"] = file_df["rocks_file_path"].apply(
             lambda x: check_if_exists(x)
         )
@@ -239,6 +243,7 @@ class RunKatydid:
         file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
             lambda x: self.process_fp(x)
         )
+        file_df["rocks_noise_file_path"] = file_df["rocks_noise_file_path"].apply(json.dumps)
 
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
@@ -255,7 +260,7 @@ class RunKatydid:
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
         print(f"Built file_df: {self.file_df_path}")
-        file_df.to_csv(self.file_df_path)
+        file_df.to_csv(self.file_df_path, index=False)
 
         return file_df
 
