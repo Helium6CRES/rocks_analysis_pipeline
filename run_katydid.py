@@ -218,10 +218,10 @@ class RunKatydid:
         file_df["rocks_file_path"] = file_df["file_path"].apply(
             lambda x: self.process_fp(x)
         )
-        file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.dumps)
         file_df["exists"] = file_df["rocks_file_path"].apply(
             lambda x: check_if_exists(x)
         )
+        file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.dumps)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
