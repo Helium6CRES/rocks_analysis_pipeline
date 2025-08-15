@@ -221,7 +221,6 @@ class RunKatydid:
         file_df["exists"] = file_df["rocks_file_path"].apply(
             lambda x: check_if_exists(x)
         )
-        file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.dumps)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
@@ -243,7 +242,6 @@ class RunKatydid:
         file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
             lambda x: self.process_fp(x)
         )
-        file_df["rocks_noise_file_path"] = file_df["rocks_noise_file_path"].apply(json.dumps)
 
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
@@ -260,7 +258,11 @@ class RunKatydid:
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
         print(f"Built file_df: {self.file_df_path}")
-        file_df.to_csv(self.file_df_path, index=False)
+        # CSV-only copy so we don't mutate the in-memory df we return
+        file_df_csv = file_df.copy()
+        file_df_csv["rocks_file_path"] = file_df_csv["rocks_file_path"].map(json.dumps)
+        file_df_csv["rocks_noise_file_path"] = file_df_csv["rocks_noise_file_path"].map(json.dumps)
+        file_df_csv.to_csv(self.file_df_path, index=False)
 
         return file_df
 
