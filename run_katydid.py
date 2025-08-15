@@ -472,25 +472,53 @@ class RunKatydid:
         # Note that you need to have Katydid configured as a bash executable for this to
         # work (as is standard).
         t_start = time.process_time()
-        run_katydid = sp.run(
-            ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", config_path],
+        proc = sp.run(
+            ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", str(config_path)],
             capture_output=True,
         )
 
-        print("Katydid output: (300 chars)", run_katydid.stdout[-300:])
+        # Decode logs (avoid escape noise)
+        out = proc.stdout.decode(errors="replace")
+        err = proc.stderr.decode(errors="replace")
+
+        print("Katydid stdout (tail 1k):", out[-1000:])
+        if err.strip():
+            print("Katydid stderr (tail 1k):", err[-1000:])
+
         t_stop = time.process_time()
+        elapsed = t_stop - t_start
 
-        print(
-            "\nfile {}.\ntime to run: {:.2f} s.\ncurrent time: {}.\nroot file created {}\n".format(
-                file_df["file_id"],
-                t_stop - t_start,
-                get_pst_time(),
-                file_df["root_file_path"],
+        root_path = Path(file_df["root_file_path"])
+        root_exists = root_path.is_file()
+        root_size = root_path.stat().st_size if root_exists else 0
+
+        # Only claim success if returncode==0 and the file exists and is non-empty
+        if proc.returncode == 0 and root_exists and root_size > 0:
+            print(
+                f"\nfile {file_df['file_id']}."
+                f"\ntime to run: {elapsed:.2f} s."
+                f"\ncurrent time: {get_pst_time()}."
+                f"\nroot file created {root_path}\n"
             )
-        )
-
-        # Delete the copy of the katydid config file once done with processing.
-        Path(config_path).unlink()
+            # Safe to remove the temp config
+            Path(config_path).unlink(missing_ok=True)
+        else:
+            print(
+                f"\nfile {file_df['file_id']} FAILED."
+                f"\ntime: {elapsed:.2f} s."
+                f"\nreturncode: {proc.returncode}"
+                f"\nroot exists: {root_exists} size: {root_size}\n"
+                f"Config kept for debug: {config_path}\n"
+            )
+            # Optionally rename to mark failure
+            fail_cfg = config_path.with_suffix(config_path.suffix + ".failed")
+            try:
+                config_path.rename(fail_cfg)
+                print(f"Saved failing config as: {fail_cfg}")
+            except Exception as e:
+                print(f"Could not rename failing config: {e}")
+            # Re-raise or just return; your choice:
+            # raise RuntimeError("Katydid failed")
 
         return None
 
