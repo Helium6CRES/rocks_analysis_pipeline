@@ -508,7 +508,9 @@ class RunKatydid:
                 f"\nroot file created {root_path}\n"
             )
             # Safe to remove the temp config
-            Path(config_path).unlink(missing_ok=True)
+            if Path(config_path).exists():
+                Path(config_path).unlink()
+
         else:
             print(
                 f"\nfile {file_df['file_id']} FAILED."
