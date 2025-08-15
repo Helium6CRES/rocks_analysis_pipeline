@@ -203,6 +203,7 @@ class PostProcessing:
         self.analysis_dir = self.get_analysis_dir()
         self.root_files_df_path = self.analysis_dir / Path(f"root_files.csv")
         self.tracks_df_path = self.analysis_dir / Path(f"tracks.csv")
+        self.track_points_df_path = self.analysis_dir / Path(f"track_points.csv")
 
         print(f"PostProcessing instance attributes:\n")
         for key, value in self.__dict__.items():
@@ -328,6 +329,7 @@ class PostProcessing:
                 f"There is no file_id = {self.file_id} in aid = {self.analysis_id}"
             )
         tracks = self.get_track_data_from_files(root_files_df_chunk)
+        track_points = self.get_track_points_data_from_files(root_files_df_chunk)
 
         #clean tracks. Add column IsCutPP which is a boolian if it was cut in post processing (here)
         # This trims "barnicles" and bad frequencies
@@ -336,8 +338,8 @@ class PostProcessing:
 
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
-
             self.write_to_csv(self.file_id, processed_tracks, file_name="tracks")
+            self.write_to_csv(self.file_id, processed_tracks, file_name="track_points")
 
         print(f"\nProcessing file_id: {self.file_id}")
 
@@ -351,7 +353,7 @@ class PostProcessing:
         condition = root_files_df["root_file_exists"] == True
 
         experiment_tracks_list = [
-            self.build_tracks_for_single_file(root_files_df_row)
+            self.build_bulk_track_params_for_single_file(root_files_df_row)
             for index, root_files_df_row in root_files_df[condition].iterrows()
         ]
 
@@ -359,8 +361,21 @@ class PostProcessing:
 
         return tracks_df
 
+    def get_track_points_data_from_files(self, root_files_df):
 
-    def build_tracks_for_single_file(self, root_files_df_row):
+        condition = root_files_df["root_file_exists"] == True
+
+        experiment_track_points_list = [
+            self.build_track_points_for_single_file(root_files_df_row)
+            for index, root_files_df_row in root_files_df[condition].iterrows()
+        ]
+
+        track_points_df = pd.concat(experiment_track_points_list, axis=0).reset_index(drop=True)
+
+        return track_points_df
+
+
+    def build_bulk_track_params_for_single_file(self, root_files_df_row):
         """
         DOCUMENT.
         """
@@ -387,8 +402,52 @@ class PostProcessing:
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
         tracks_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
+        tracks_df["nitrogen"] = root_files_df_row["nitrogen"]
+        tracks_df["helium"] = root_files_df_row["helium"]
+        tracks_df["hydrogen"] = root_files_df_row["hydrogen"]
+        tracks_df["water"] = root_files_df_row["water"]
+        tracks_df["a19"] = root_files_df_row["a19"]
+        tracks_df["total"] = root_files_df_row["total"]
+        tracks_df["A_temp"] = root_files_df_row["A"]
+        tracks_df["B_temp"] = root_files_df_row["B"]
+        tracks_df["C_temp"] = root_files_df_row["C"]
+        tracks_df["D_temp"] = root_files_df_row["D"]
+        tracks_df["E_temp"] = root_files_df_row["E"]
+        tracks_df["F_temp"] = root_files_df_row["F"]
+        tracks_df["G_temp"] = root_files_df_row["G"]
+        tracks_df["H_temp"] = root_files_df_row["H"]
 
         return tracks_df.reset_index(drop=True)
+
+    def build_track_points_for_single_file(self, root_files_df_row):
+        """
+        DOCUMENT.
+        """
+
+        track_points_df = pd.DataFrame()
+
+        rootfile = uproot.open(root_files_df_row["root_file_path"])
+
+        if "tracks;1" in rootfile.keys():
+            track_points_root = rootfile["tracks;1"]["Track"]["fPoints"]
+            cols = {}
+            for key, branch in track_points_root.items():
+                # Skip object/pointer branches that trigger the “arbitrary pointer” error
+                if branch.interpretation.__class__.__name__ == "AsObjects":
+                    continue
+
+                track_points_df[key[9:]] = self.flat(branch.array())
+
+            if cols:
+                track_points_df = pd.DataFrame(cols)
+
+        track_points_df["run_id"] = root_files_df_row["run_id"]
+        track_points_df["file_id"] = root_files_df_row["file_id"]
+        track_points_df["root_file_path"] = root_files_df_row["root_file_path"]
+        track_points_df["field"] = root_files_df_row["field"]
+        track_points_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
+
+        return track_points_df.reset_index(drop=True)
 
     def clean_up_tracks(
         self, tracks, cols=["TimeIntc", "TimeLength", "Slope"], cut_levels=[2, 2, 2]
@@ -630,7 +689,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-            print(query)
+            #print(query)
             field_log = he6cres_db_query(query)
             if field_log.empty:
                 field_log["created_at"] = np.nan
@@ -653,9 +712,9 @@ class PostProcessing:
                     )
                     root_files_df["field"][condition] = field
 
-            if root_files_df["field"].isnull().values.any():
-                #raise UserWarning(f"Some rate data was not collected.")
-                print("Some nmr data was not collected.")
+        if root_files_df["field"].isnull().values.any():
+            #raise UserWarning(f"Some rate data was not collected.")
+            print("Some nmr data was not collected.")
 
         return root_files_df
 
@@ -689,7 +748,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-            print(query)
+            #print(query)
             rga_log = he6cres_db_query(query)
             if rga_log.empty:
                 rga_log["created_at"] = np.nan
@@ -711,8 +770,8 @@ class PostProcessing:
                     root_files_df.loc[condition, gases] = nearest_row[gases].values
 
 
-            if root_files_df["total"].isnull().values.any():
-                print("Some rga data was not collected.")
+        if root_files_df["total"].isnull().values.any():
+            print("Some rga data was not collected.")
 
         return root_files_df
 
@@ -741,7 +800,7 @@ class PostProcessing:
                     """.format(
                 dt_min, dt_max
             )
-            print(query)
+            #print(query)
             rga_log = he6cres_db_query(query)
 
             if not rga_log.empty:
@@ -811,6 +870,37 @@ class PostProcessing:
         for track_path in tracks_path_list:
             track_path.unlink()
 
+        #now track points csvs
+        track_points_path_list = [
+            self.analysis_dir / Path(f"track_points_{i}.csv")
+            for i in range(self.num_files_tracks)
+        ]
+
+        track_points_path_exists = [path.is_file() for path in track_points_path_list]
+
+        if not all(track_points_path_exists):
+            print(f"Not all {self.num_files_tracks} track points csvs are present for merging csvs.")
+
+        # Filter the lists to include only the paths that exist
+        track_points_path_list = [path for path in track_points_path_list if path.is_file()]
+
+        track_points_dfs = [
+            pd.read_csv(track_points_path, index_col=0) for track_points_path in track_points_path_list
+        ]
+        track_points_df = pd.concat(track_points_dfs, ignore_index=True)
+        lens = [len(df) for df in track_points_dfs]
+        print("\nCombining set of track_points_dfs.\n")
+        print("lengths: ", lens)
+        print("sum: ", sum(lens))
+        print("len single file (sanity check): ", len(track_points_df))
+        print("track points index: ", track_points_df.index)
+        print("track points cols: ", track_points_df.columns)
+
+        track_points_df.to_csv(self.track_points_df_path)
+
+        for track_points_path in track_points_path_list:
+            track_points_path.unlink()
+
         return None
 
     def sanity_check(self):
@@ -818,6 +908,7 @@ class PostProcessing:
         desired_path_list = [
             self.root_files_df_path,
             self.tracks_df_path,
+            self.track_points_df_path,
         ]
         real_path_list = self.analysis_dir.glob("*.csv")
         remove_list = list(set(real_path_list) - set(desired_path_list))
