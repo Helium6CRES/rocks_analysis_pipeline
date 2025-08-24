@@ -214,7 +214,7 @@ class PostProcessing:
             print("\nPostProcessing stage 0: set-up.\n")
             self.build_analysis_dir()
             self.root_files_df = self.get_experiment_files()
-
+            print(self.root_files_df)
             # Add per-file nmr and monitor rate data.
             self.root_files_df = self.add_env_data(self.root_files_df)
 
@@ -285,7 +285,7 @@ class PostProcessing:
 
             if file_df_path.is_file():
 
-                file_df = pd.read_csv(file_df_path, index_col=0)
+                file_df = pd.read_csv(file_df_path)
                 file_df["root_file_exists"] = file_df["root_file_path"].apply(
                     lambda x: check_if_exists(x)
                 )
@@ -339,7 +339,7 @@ class PostProcessing:
         # Write out tracks to csv for first nft file_ids (command line argument).
         if self.file_id < self.num_files_tracks:
             self.write_to_csv(self.file_id, processed_tracks, file_name="tracks")
-            self.write_to_csv(self.file_id, processed_tracks, file_name="track_points")
+            self.write_to_csv(self.file_id, track_points, file_name="track_points")
 
         print(f"\nProcessing file_id: {self.file_id}")
 
