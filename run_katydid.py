@@ -447,8 +447,10 @@ class RunKatydid:
                     config_dict[key][inner_key] = file_df["root_file_path"]
 
                 if inner_key == "initial-slope":
-
                     config_dict[key][inner_key] = file_df["approx_slope"]
+
+                if inner_key == "min-slope":
+                    config_dict[key][inner_key] = file_df["approx_slope"]-1e-10
 
                 if inner_key == "radii":
                     config_dict[key][inner_key] = [
