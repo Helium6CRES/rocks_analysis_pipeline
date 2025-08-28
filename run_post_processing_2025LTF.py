@@ -495,10 +495,15 @@ class PostProcessing:
         root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
         # Step 1: Add the monitor rate/field data to each file.
-        root_files_df = self.add_arduino_monitor_rate(root_files_df)
         root_files_df = self.add_field(root_files_df)
+
+        # BLINDING! DON'T ADD BETA MONITOR!
+        root_files_df["arduino_monitor_rate"] = 1
+        '''
+        root_files_df = self.add_arduino_monitor_rate(root_files_df)
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
+        '''
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
 
