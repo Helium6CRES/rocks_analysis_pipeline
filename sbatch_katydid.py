@@ -21,7 +21,7 @@ def main():
 
     args = par.parse_args()
 
-    tlim = "12:00:00" if args.tlim is None else args.tlim[0]
+    tlim = "48:00:00" if args.tlim is None else args.tlim[0]
 
     # If the analysis_id is set to -1 then a new directory is built.
     # Else you will conduct a clean-up.
