@@ -25,7 +25,7 @@ def count_offline_mon_for_run(run_id: int, analysis_id: int, ms_standard: int = 
         experiment_name=None,
         num_files_tracks=0,
         file_id=0,
-        stage=0,  # just using its utilities
+        stage=-1,  # just using its utilities
         ms_standard=ms_standard,
     )
 

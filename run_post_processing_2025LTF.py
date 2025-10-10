@@ -120,13 +120,7 @@ def main():
                     single file. 
             """,
     )
-    arg(
-        "-offline_mon",
-        "--count_beta_mon_events_offline",
-        type=int,
-        default=0,
-        help="Flag indicating to do an offline beta monitor event count (1) or not (0).",
-    )
+
     arg(
         "-ms_standard",
         "--ms_standard",
@@ -163,7 +157,6 @@ def main():
         args.num_files_tracks,
         args.file_id,
         args.stage,
-        args.count_beta_mon_events_offline,
         args.ms_standard
     )
 
@@ -187,7 +180,6 @@ class PostProcessing:
         num_files_tracks,
         file_id,
         stage,
-        count_beta_mon_events_offline,
         ms_standard
     ):
 
@@ -197,7 +189,7 @@ class PostProcessing:
         self.num_files_tracks = num_files_tracks
         self.file_id = file_id
         self.stage = stage
-        self.count_beta_mon_events_offline = count_beta_mon_events_offline
+        #self.count_beta_mon_events_offline = count_beta_mon_events_offline
         self.ms_standard = ms_standard
 
         self.analysis_dir = self.get_analysis_dir()
@@ -209,7 +201,9 @@ class PostProcessing:
         for key, value in self.__dict__.items():
             print(f"{key}: {value}")
 
-        if self.stage == 0:
+        if self.stage == -1:
+            print("constructor")
+        elif self.stage == 0:
 
             print("\nPostProcessing stage 0: set-up.\n")
             self.build_analysis_dir()
