@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Helper script to compute offline beta monitor event counts for a single run_id.
+Helper script to add environment data and compute offline beta monitor event counts for a single run_id.
 
 Each compute node should run this script for one run_id in parallel.
 It uses the same PostProcessing class from run_post_processing_2025LTF.py.
@@ -26,7 +26,6 @@ def count_offline_mon_for_run(run_id: int, analysis_id: int, ms_standard: int = 
         num_files_tracks=0,
         file_id=0,
         stage=0,  # just using its utilities
-        count_beta_mon_events_offline=0,  # prevent re-running inside constructor
         ms_standard=ms_standard,
     )
 
@@ -39,7 +38,10 @@ def count_offline_mon_for_run(run_id: int, analysis_id: int, ms_standard: int = 
     file_df = pd.read_csv(file_df_path)
 
     # Compute offline monitor counts
-    updated_df = pp.add_offline_monitor_counts(file_df)
+    updated_df = pp.add_env_data(file_df)
+
+    # Compute offline monitor counts
+    updated_df = pp.add_offline_monitor_counts(updated_df)
 
     # Write to new CSV (avoid overwriting original)
     out_path = file_df_path.with_name(file_df_path.stem + "_with_offline_mon.csv")

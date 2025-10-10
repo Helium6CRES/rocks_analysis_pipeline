@@ -216,7 +216,8 @@ class PostProcessing:
             self.root_files_df = self.get_experiment_files()
             print(self.root_files_df)
             # Add per-file nmr and monitor rate data.
-            self.root_files_df = self.add_env_data(self.root_files_df)
+            if self.envir_data_missing:
+                self.root_files_df = self.add_env_data(self.root_files_df)
 
             # Write the root_files_df to disk for use in the subsequent stages.
             self.root_files_df.to_csv(self.root_files_df_path)
@@ -315,10 +316,12 @@ class PostProcessing:
         file_df_path_normal = rid_ai_dir / Path(
             f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
         )
-
+        self.envir_data_missing = False
         if file_df_path_offline.exists():
+            self.envir_data_missing = False
             return file_df_path_offline
         elif file_df_path_normal.exists():
+            self.envir_data_missing = True
             return file_df_path_normal
         else:
             raise FileNotFoundError(
@@ -512,9 +515,10 @@ class PostProcessing:
         #root_files_df["arduino_monitor_rate"] = 1
         
         root_files_df = self.add_arduino_monitor_rate(root_files_df)
+        '''
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
-        
+        '''
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
 
