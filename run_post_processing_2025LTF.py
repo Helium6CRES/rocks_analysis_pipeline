@@ -308,11 +308,22 @@ class PostProcessing:
             base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
         )
 
-        file_df_path = rid_ai_dir / Path(
+        # Prefer the offline-processed version if available
+        file_df_path_offline = rid_ai_dir / Path(
+            f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
+        )
+        file_df_path_normal = rid_ai_dir / Path(
             f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
         )
 
-        return file_df_path
+        if file_df_path_offline.exists():
+            return file_df_path_offline
+        elif file_df_path_normal.exists():
+            return file_df_path_normal
+        else:
+            raise FileNotFoundError(
+                f"No root file df found for run_id={run_id}, aid={self.analysis_id}"
+                )
 
     def load_root_files_df(self):
 
@@ -593,7 +604,7 @@ class PostProcessing:
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
-
+            print(f"Finding offline beta monitor rate for files in rid {rid}")
             # Step 1. Find the ealiest UTC time present in the given run_id.
             dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
@@ -609,6 +620,7 @@ class PostProcessing:
                 raise UserWarning("No matching caen_run found in the database.")
             else:
                 caen_run_path = Path(caen_log['runname'].iloc[0])
+                print("caen run path:", caen_run_path)
 
                 # Build path to run.info on rocks
                 rocks_caen_run_info_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path('run.info')
