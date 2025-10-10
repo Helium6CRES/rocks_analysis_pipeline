@@ -487,7 +487,7 @@ class PostProcessing:
 
         # Step 0: Make sure the root_files_df has a tz aware dt column.
         root_files_df["pst_time"] = root_files_df["root_file_path"].apply(
-            lambda x: self.get_utc_time(x)
+            lambda x: self.get_pst_time(x)
         )
         root_files_df["pst_time"] = root_files_df["pst_time"].dt.tz_localize(
             "US/Pacific"
@@ -498,12 +498,12 @@ class PostProcessing:
         root_files_df = self.add_field(root_files_df)
 
         # BLINDING! DON'T ADD BETA MONITOR!
-        root_files_df["arduino_monitor_rate"] = 1
-        '''
+        #root_files_df["arduino_monitor_rate"] = 1
+        
         root_files_df = self.add_arduino_monitor_rate(root_files_df)
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
-        '''
+        
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
 
@@ -512,13 +512,15 @@ class PostProcessing:
 
         return root_files_df
 
-    def get_utc_time(self, root_file_path):
+    def get_pst_time(self, root_file_path):
         # USED in add_env_data()
+        # Makes a naive datetime object from the root file name. Note that the ms padding is very important!
         if self.ms_standard:
             #print("User specified run_ids are all in ms standard.")
+            # root file name is in local PST!
             time_str = root_file_path[-32:-9]
             time_str_padded = time_str + "000"  # Pad with zeros to get microseconds
-            datetime_object = datetime.datetime.strptime(time_str, "%Y-%m-%d-%H-%M-%S-%f")
+            datetime_object = datetime.datetime.strptime(time_str_padded, "%Y-%m-%d-%H-%M-%S-%f")
 
         else:
             print("User specified run_ids are all in second standard.")
@@ -575,7 +577,7 @@ class PostProcessing:
                 condition = (root_files_df["run_id"] == rid) & (
                     root_files_df["file_id"] == fid
                 )
-                root_files_df["arduino_monitor_rate"][condition] = arduino_monitor_rate
+                root_files_df.loc[condition, "arduino_monitor_rate"] = arduino_monitor_rate
 
         if root_files_df["arduino_monitor_rate"].isnull().values.any():
             raise UserWarning(f"Some arduino_monitor_rate data was not collected.")
@@ -585,6 +587,7 @@ class PostProcessing:
     def add_offline_monitor_counts(self, root_files_df):
         # For now works with just the trigger channel (CH4)
         # Does not computer offline coincidence!
+        # 10/09/2025 Checked for timestamp consistency. All clear! 
         # USED in add_env_data()
         root_files_df["offline_monitor_counts"] = np.nan
 
@@ -629,7 +632,7 @@ class PostProcessing:
                 caen_run_time_start = np.datetime64(dt_utc)
 
                 # Build path to compass data csv on rocks
-                rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH4@DT5725_1146_{caen_run_path.name}.csv')
+                rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH0@DT5725_1146_{caen_run_path.name}.csv')
                 # Read in the compass data csv to caen_df
                 caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
 
@@ -649,6 +652,7 @@ class PostProcessing:
 
     # Define a function to count events for each row in df_A
     def count_events(self, row, caen_df):
+        # 10/09/2025 Checked for timestamp consistency. All clear! 
         end_time = row['utc_time'] #spec(k) file name is immediatly after write time, not before
         start_time = end_time - pd.Timedelta(seconds=1)
         #print("start time: ", start_time, " end time: ", end_time)
