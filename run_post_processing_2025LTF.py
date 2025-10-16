@@ -594,7 +594,7 @@ class PostProcessing:
         return root_files_df
 
     def add_offline_monitor_counts(self, root_files_df):
-        # For now works with just the trigger channel (CH4)
+        # For now works with just the trigger channel (CH0)
         # Does not computer offline coincidence!
         # 10/09/2025 Checked for timestamp consistency. All clear! 
         # USED in add_env_data()
@@ -645,6 +645,9 @@ class PostProcessing:
                 rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH0@DT5725_1146_{caen_run_path.name}.csv')
                 # Read in the compass data csv to caen_df
                 caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
+
+                #add a naive cut above the 511s? At ADC 4000
+                caen_df = caen_df[caen_df['ENERGY']<4000]
 
                 # Add new column to caen_df for absolute UTC timestamp for each hit
                 # Convert TIMETAG from picoseconds to nanoseconds

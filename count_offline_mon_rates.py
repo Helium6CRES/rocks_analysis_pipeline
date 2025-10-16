@@ -37,7 +37,7 @@ def count_offline_mon_for_run(run_id: int, analysis_id: int, ms_standard: int = 
     print(f"Loading {file_df_path}")
     file_df = pd.read_csv(file_df_path)
 
-    # Compute offline monitor counts
+    # Add other environmental data
     updated_df = pp.add_env_data(file_df)
 
     # Compute offline monitor counts

@@ -44,7 +44,7 @@ With the container, after getting an account on WULF, you should be all set to g
 
 ### Update katydid on ROCKS:
 * cd into katydid directory, stash existing version and run 
-    * $ `git pull origin feature/FreqDomainInput.`
+    * $ `git pull origin feature/FreqDomainInput`
 * Check permissions. Go back to /data/raid2eliza4/he6_cres/ and run 
     * $ `chmod -R 777 katydid`
 * Enter apptainer and bind the local file system on the wulf head node.
@@ -81,6 +81,11 @@ With the container, after getting an account on WULF, you should be all set to g
 		* Note that you want to include "-fn 3" here in case a node failed before even creating the  
 
 ### Post Processing:
+
+First if you want to use ude the offline beta monitor counting, run this on each rid with
+`./rocks_analysis_pipeline/sbatch_count_offline_mon_rates.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9`
+
+This will go rid by rid and add environmental data and the offline monitor counts to the root file csvs rid_df_405_009.csv and write the output to  -> rid_df_405_009_with_offline_mon.csv. Leter when you run the track and event post processing, it will check if this was already done. If so, it iwll jsut use these. If not, it will add the environmental data during stage 0
 
 * **Overview:** This is a three stage process. Run each stage without changing anything but the -stage argument. the -ms_standard argument determines the expected
 spec(k) file name time format for the data you want to process.
@@ -144,7 +149,7 @@ This elog is not currently backfilled from before the first phase-II data campai
 		
 * **BASH:**
 	* Pretty print a csv in bash (useful for sanity checking):
-		* `column -s, -t < root_files.csv | less -#2 -N -S`
+		* `column -s, -t < /data/raid2/eliza4/he6_cres/katydid_analysis/saved_experiments/Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_aid_13/tracks.csv | less -#2 -N -S`
 		* `.q` to exit. 
 	* Check number of rows in a csv (useful for checking len of df/csv): 
 		* `column -s, -t < events.csv | less -#2 -N -S | wc -l`

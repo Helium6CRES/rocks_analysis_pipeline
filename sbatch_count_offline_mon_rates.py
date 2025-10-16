@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """
-Submit a SLURM array job to count offline beta monitor rates for many run_ids.
+Submit a SLURM array job to add environment data and count offline beta monitor rates for many run_ids.
 
 Usage:
   sbatch_count_offline_mon_rates.py -rids 1748 1749 ... -aid 13
-
-This script:
-  1. Builds a temporary SLURM script with your run_id list embedded.
-  2. Submits it as an array job (one run_id per SLURM task).
 """
 
 import subprocess as sp
