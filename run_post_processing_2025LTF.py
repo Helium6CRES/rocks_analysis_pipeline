@@ -331,9 +331,9 @@ class PostProcessing:
         )
 
         if file_df_path_offline.exists():
-            return file_df_path_offline
+            return file_df_path_offline, False
         elif file_df_path_normal.exists():
-            return file_df_path_normal
+            return file_df_path_normal, True
         else:
             raise FileNotFoundError(
                 f"No root file df found for run_id={run_id}, aid={self.analysis_id}"
