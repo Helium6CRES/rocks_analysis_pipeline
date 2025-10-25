@@ -209,10 +209,36 @@ class PostProcessing:
             self.build_analysis_dir()
             self.root_files_df = self.get_experiment_files()
             print(self.root_files_df)
-            # Add per-file nmr and monitor rate data.
-            if self.envir_data_missing:
-                self.root_files_df = self.add_env_data(self.root_files_df)
 
+            # Only run add_env_data on rows missing environmental data
+            missing_mask = self.root_files_df["envir_data_missing"]
+            if missing_mask.any():
+                print(f"Adding environmental data for {missing_mask.sum()} files...")
+
+                # Select only the subset of missing env data
+                subset_df = self.root_files_df.loc[missing_mask].copy()
+                subset_df = self.add_env_data(subset_df)
+
+                # Define join keys — use whatever uniquely identifies a row
+                join_keys = ["run_id", "file_id"]
+
+                # Merge back, overwriting existing columns from subset_df
+                self.root_files_df = (
+                    self.root_files_df.drop(columns=subset_df.columns.intersection(self.root_files_df.columns), errors="ignore")
+                    .merge(subset_df, on=join_keys, how="outer", suffixes=("", "_new"))
+                )
+
+                # Clean up suffixes (keep new columns)
+                for col in self.root_files_df.columns:
+                    if col.endswith("_new"):
+                        base = col[:-4]
+                        self.root_files_df[base] = self.root_files_df[col]
+                        self.root_files_df.drop(columns=[col], inplace=True)
+
+                # Mark that these now have env data
+                self.root_files_df.loc[missing_mask, "envir_data_missing"] = False
+
+            
             # Write the root_files_df to disk for use in the subsequent stages.
             self.root_files_df.to_csv(self.root_files_df_path)
 
@@ -273,26 +299,19 @@ class PostProcessing:
 
     def get_experiment_files(self):
 
-        # Step 0: Make sure that all of the listed rids/aid exists.
         file_df_list = []
+        missing_flags = []
+
         for run_id in self.run_ids:
-            file_df_path = self.build_file_df_path(run_id)
+            file_df_path, envir_missing = self.build_file_df_path(run_id)
+            missing_flags.append(envir_missing)
 
-            if file_df_path.is_file():
-
-                file_df = pd.read_csv(file_df_path)
-                file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                    lambda x: check_if_exists(x)
-                )
-                file_df_list.append(file_df)
-
-            # This file_df should already exist.
-            else:
-                raise UserWarning(
-                    f"run_id {run_id} has no analysis_id {self.analysis_id}"
-                )
+            file_df = pd.read_csv(file_df_path)
+            file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
+            file_df_list.append(file_df)
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
+        root_files_df["envir_data_missing"] = missing_flags * (len(root_files_df) // len(missing_flags))
 
         return root_files_df
 
@@ -310,14 +329,10 @@ class PostProcessing:
         file_df_path_normal = rid_ai_dir / Path(
             f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
         )
-        self.envir_data_missing = False
+
         if file_df_path_offline.exists():
-            print("Found offline monitor file with environmental data. Using this!")
-            self.envir_data_missing = False
             return file_df_path_offline
         elif file_df_path_normal.exists():
-            print("Did not find offline monitor file with environmental data. Using base path.")
-            self.envir_data_missing = True
             return file_df_path_normal
         else:
             raise FileNotFoundError(
