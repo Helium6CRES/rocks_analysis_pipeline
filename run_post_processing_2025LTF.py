@@ -312,9 +312,11 @@ class PostProcessing:
         )
         self.envir_data_missing = False
         if file_df_path_offline.exists():
+            print("Found offline monitor file with environmental data. Using this!")
             self.envir_data_missing = False
             return file_df_path_offline
         elif file_df_path_normal.exists():
+            print("Did not find offline monitor file with environmental data. Using base path.")
             self.envir_data_missing = True
             return file_df_path_normal
         else:
@@ -492,7 +494,7 @@ class PostProcessing:
         return start_freq_cond
 
     def add_env_data(self, root_files_df):
-
+        print("adding environmental data!")
         # Step 0: Make sure the root_files_df has a tz aware dt column.
         root_files_df["pst_time"] = root_files_df["root_file_path"].apply(
             lambda x: self.get_pst_time(x)
@@ -647,7 +649,7 @@ class PostProcessing:
                 caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
 
                 #add a naive cut above the 511s? At ADC 4000
-                caen_df = caen_df[caen_df['ENERGY']<4000]
+                caen_df = caen_df[caen_df['ENERGY']>4000]
 
                 # Add new column to caen_df for absolute UTC timestamp for each hit
                 # Convert TIMETAG from picoseconds to nanoseconds

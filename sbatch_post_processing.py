@@ -56,14 +56,6 @@ def main():
                     single files. 
             """,
     )
-
-    arg(
-        "-offline_mon",
-        "--count_beta_mon_events_offline",
-        type=int,
-        default=0,
-        help="Flag indicating to do an offline beta monitor event count (1) or not (0).",
-    )
     arg(
         "-ms_standard",
         "--ms_standard",
@@ -91,7 +83,7 @@ def main():
         "/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing_2025LTF.py "
         "-rids {rids} -aid {aid} -name \"{name}\" "
         "-nft {nft} -fid {fid} -stage {stage} "
-        "-offline_mon {offline_mon} -ms_standard {ms_standard}"
+        "-ms_standard {ms_standard}"
     )
 
     rids_formatted = " ".join(str(rid) for rid in args.run_ids)
@@ -105,7 +97,6 @@ def main():
             nft=args.num_files_tracks,
             fid=file_id,
             stage=args.stage,
-            offline_mon=args.count_beta_mon_events_offline,
             ms_standard=args.ms_standard
         )
         cmd = apptainer_prefix + f"{post_processing_cmd}'\""
@@ -127,7 +118,6 @@ def main():
                 nft=args.num_files_tracks,
                 fid=file_id,
                 stage=args.stage,
-                offline_mon=args.count_beta_mon_events_offline,
                 ms_standard=args.ms_standard
             )
             cmd = apptainer_prefix + f"{post_processing_cmd}'\""
@@ -144,7 +134,6 @@ def main():
             nft=args.num_files_tracks,
             fid=file_id,
             stage=args.stage,
-            offline_mon=args.count_beta_mon_events_offline,
             ms_standard=args.ms_standard
         )
         cmd = apptainer_prefix + f"{post_processing_cmd}'\""

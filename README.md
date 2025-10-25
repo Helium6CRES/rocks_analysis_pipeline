@@ -149,7 +149,7 @@ This elog is not currently backfilled from before the first phase-II data campai
 		
 * **BASH:**
 	* Pretty print a csv in bash (useful for sanity checking):
-		* `column -s, -t < /data/raid2/eliza4/he6_cres/katydid_analysis/saved_experiments/Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_aid_13/tracks.csv | less -#2 -N -S`
+		* `column -s, -t < katydid_analysis/root_files/rid_1856/aid_015/rid_df_1856_015.csv | less -#2 -N -S`
 		* `.q` to exit. 
 	* Check number of rows in a csv (useful for checking len of df/csv): 
 		* `column -s, -t < events.csv | less -#2 -N -S | wc -l`
