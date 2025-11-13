@@ -219,12 +219,16 @@ class PostProcessing:
                 subset_df = self.root_files_df.loc[missing_mask].copy()
                 subset_df = self.add_env_data(subset_df)
 
-                # Define join keys — use whatever uniquely identifies a row
+                # Define join keys
                 join_keys = ["run_id", "file_id"]
 
-                # Merge back, overwriting existing columns from subset_df
+                # Columns to drop (common ones, except join keys)
+                cols_to_drop = [c for c in subset_df.columns.intersection(self.root_files_df.columns) if c not in join_keys]
+
+                # Merge back safely
                 self.root_files_df = (
-                    self.root_files_df.drop(columns=subset_df.columns.intersection(self.root_files_df.columns), errors="ignore")
+                    self.root_files_df
+                    .drop(columns=cols_to_drop, errors="ignore")
                     .merge(subset_df, on=join_keys, how="outer", suffixes=("", "_new"))
                 )
 
