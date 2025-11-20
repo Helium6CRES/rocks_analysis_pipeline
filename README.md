@@ -67,25 +67,25 @@ With the container, after getting an account on WULF, you should be all set to g
 * **Step 0:** Run katydid for the first time on a list of run_ids: 
 	* Log on to rocks. 
 	* `cd /data/raid2/eliza4/he6_cres`
-	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3`
+	* `./rocks_analysis_pipeline/sbatch_katydid.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -nid 1716 -b "2-12_LTF_MBEB_tausnr7_2400.yaml" -fn 1000`
 		* The above will run at most fn files for each run_id listed using the base config file provided. 
 		* For reference the above jobs (one job per run_id) were mostly finished in 30 mins. 
 		* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
-		* A job log for each run_id will be created. Example: rid_0440_009.txt
+		* A job log for each run_id will be created. Example: rid_1801_009.txt
 
 * **Step 1:** Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
 	* Log on to rocks. 
 	* `cd /data/raid2/eliza4/he6_cres`
-	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 373 380 385 393 399 405 411 418 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 3 -aid 9`
+	* `./rocks_analysis_pipeline/sbatch_katydid.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -nid 1716 -b "2-12_LTF_MBEB_tausnr7_2400.yaml" -fn 1000 -aid 9`
 		* The above will rerun all of the files in analysis_id 9 that haven't yet been created.
 		* Note that you want to include "-fn 3" here in case a node failed before even creating the  
 
 ### Post Processing:
 
 First if you want to use ude the offline beta monitor counting, run this on each rid with
-`./rocks_analysis_pipeline/sbatch_count_offline_mon_rates.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9`
+`./rocks_analysis_pipeline/sbatch_count_offline_mon_rates.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -aid 9`
 
-This will go rid by rid and add environmental data and the offline monitor counts to the root file csvs rid_df_405_009.csv and write the output to  -> rid_df_405_009_with_offline_mon.csv. Leter when you run the track and event post processing, it will check if this was already done. If so, it iwll jsut use these. If not, it will add the environmental data during stage 0
+This will go rid by rid and add environmental data and the offline monitor counts to the root file csvs rid_df_1801_009.csv and write the output to  -> rid_df_1801_009_with_offline_mon.csv. Leter when you run the track and event post processing, it will check if this was already done. If so, it iwll jsut use these. If not, it will add the environmental data during stage 0
 
 * **Overview:** This is a three stage process. Run each stage without changing anything but the -stage argument. the -ms_standard argument determines the expected
 spec(k) file name time format for the data you want to process.
@@ -95,18 +95,20 @@ spec(k) file name time format for the data you want to process.
 		* Log on to rocks. 
 		* `cd /data/raid2/eliza4/he6_cres`
 * **Stage 0:** Set-up.  
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -ms_standard 1 -stage 0`
-		* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]). 
+	* `./rocks_analysis_pipeline/sbatch_post_processing.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1857 1863 1864 1865 1866 1868 1869 1874 1875 1878 1879 1880 1886 1888 1891 1899 1901 1903 1905 -aid 15 -name "Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_511cut" -nft 1000 -ms_standard 1 -stage 0`
+		* The above will first build the saved_experiment directory and then collect all of the `root_files.csv` files in the given list of run_ids and gather them into one csv that will be written into the saved_experiment directory ([name]_aid_[aid]).
+		* If rid_df_1801_009_with_offline_mon.csv exists, it will use these.
 		* Before moving on to stage 1, check to see that the directory was made and the `root_files.csv` is present. 
+		* `-ms_standard` flag: if spec file names are in s (0) or ms (1) format.
 * **Stage 1:** Processing.  
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -ms_standard 1 -stage 1`	
-		* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and nfe files worth of events for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (tracks_[fid].csv, events_[fid].csv) are built for each fid. 
+	* `./rocks_analysis_pipeline/sbatch_post_processing.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1857 1863 1864 1865 1866 1868 1869 1874 1875 1878 1879 1880 1886 1888 1891 1899 1901 1903 1905 -aid 15 -name "Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_511cut" -nft 1000 -ms_standard 1 -stage 1`	
+		* This is the meat and potatoes of the post processing. nft files worth of tracks for each run_id, and ntf files worth of tracks for each run_id are written to disk as csvs. In order to allow for this to be done in parallel, each node is handed one file_id and processes all of the files with that file_id across all run_ids. Two files (track_points_[fid].csv, tracks_[fid].csv) are built for each fid. 
 		* Before moving on to stage 2, check to see that the directory contains nft tracks and nfe events csvs. 
-		* If for some reason (most likely failed nodes) all of the events_{n}.csv's aren't created rerun the exact same command. It will detect the missing ones and rerun those. 
-		* `-dbscan` flag: Flag to run the default dbscan colinear event clustering (1) or not (0). Note that right now there are only default EventTimeIntc eps values (found by Heather via histogramming event time intercepts) for .75 - 3.25 in .25 T steps. This needs to be generalized at some point. 
+		* If for some reason (most likely failed nodes) all of the trackss_{n}.csv's aren't created rerun the exact same command. It will detect the missing ones and rerun those. 
+		* Note: should change it to add an optional lower number of files (or zero) to output track_points_[fid].csv for as this file is quite large and only useful for some SNR and slope studies 
 * **Stage 2:** Clean-up. 
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 373 380 385 393 399 405 411 418 424 430 436 -aid 9 -name "rocks_demo" -nft 2 -nfe 3 -dbscan 1 -ms_standard 1 -stage 2`
-		* The above will gather all of the events and tracks csvs (respectively) into one csv. 
+	* `./rocks_analysis_pipeline/sbatch_post_processing.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1857 1863 1864 1865 1866 1868 1869 1874 1875 1878 1879 1880 1886 1888 1891 1899 1901 1903 1905 -aid 15 -name "Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_511cut" -nft 1000 -ms_standard 1 -stage 2`
+		* The above will gather all of the track points and tracks csvs (respectively) into one csv. 
 
 ### Document your analysis
 There is an elog for analyses run on ROCKS. Please see https://maxwell.npl.washington.edu/elog/he6cres/Katydid+analysis/ under our software elog. When you finish running a new analysis as described above, you should document it here. The title should be the "experiment_name" entered in the post-processing, and should contain
@@ -118,7 +120,20 @@ This elog is not currently backfilled from before the first phase-II data campai
 ### Tools to investigate event classification quality and to conduct analysis. 
 
 * **Investigate results:**
-	* Grab the saved experiment and investigate the quality of the analysis. 
+	* Grab the saved experiment and investigate the quality of the analysis.
+	* Download the files locally to your computer to do further analysis. eg.
+	* `scp heathh6@wulf.npl.washington.edu:/data/raid2/eliza4/he6_cres/katydid_analysis/saved_experiments/Ne19_Spectrum2025_QSTQWP_1millKp_07272025_LTF2025_MBEB_511cut_aid_15/tracks.csv .`
+	* Suggestion is to use `Helium6CRES/coral_reef/heather/Harrington2025Analysis`
+	* `LoadData2025` correctly combines 1s environment data and monitor rates from root_files.csv with tracks_[fid].csv
+	* Edit `LoadData2025` to apply standardized cuts on tracks, field-wise cuts, and monitor rate cuts.
+	* Read in data with the standardized
+	`file_summary, rid_summary, field_summary, valid_tracks = LoadData2025.get_valid_tracks_and_mon_norm(exp_name, aid, drop_rids, offline=use_offline_counts, mon_cut=mon_cut)`
+	* Produces three summary dataframes and a df of all the remaining valid tracks with additional environmental data added.
+	* `Helium6CRES/coral_reef/heather/Harrington2025Analysis` contains example scripts for several specific studies, as well as the GeneralTrakPlotting.py whihc contains gernal plotting functions that I use often.
+
+
+
+	* (old) This was Drew's pipeline and has not been maintained. Use at your own risk.
 	* This is to be done locally using `class ExperimentResults` in module `results.py`.
 	* A full demo of how this is done is here: `/rocks_analysis_pipeline/demo/rocks_analysis_demo.ipynb`. 
 	* Copy the `.ipynb` into your own directory suitable for analysis and give it a try. Make neat plots like the one you see in the top of this readme. 
@@ -159,102 +174,14 @@ This elog is not currently backfilled from before the first phase-II data campai
 * **Rocks:**
 	* To check on rocks use this site (won't work when on the cenpa VPN): 
 		* `http://cenpa-rocks.npl.washington.edu/ganglia/?r=hour&cs=&ce=&m=load_one&s=by+name&c=&tab=m&vn=&hide-hf=false`
+
+* **RGA patches:**
+	* oh no, you realized that some of your data is missing pressure information? This can be caused by the RGA Flask app using the old log file’s base time (fileUTCstamp) even after the RGA software started a new log. During that period, the DAQ stored zero partial pressures and large time_since_write values (~94 000 s), because the Flask app thought the last line was “nearly a day old.” Once the Flask app was restarted or began reading the new log correctly, everything lined up again — only ~12 s of nominal polling delay between DAQ and RGA. The verification script (`check_rga_sql_consistency.py`) can be used to compare RGA log vs. SQL table showed two regimes:
+		* Early entries → Δt ≈ +6.4e4 s
+		* Later entries → Δt ≈ +12 s (healthy)
+	* A Python patch script (`rga_patch_by_created_at.sql`) was written to:
+		* Parse the correct RGA .txt log,
+		* Match each bad SQL row (identified by created_at < first good entry) to the most recent valid RGA line,
+		* Update all partial-pressure columns, total, utc_write_time, and time_since_write accordingly
+	* Hopefully you don't have to use it, but I'm leaving it here as a utility.
 --------------------------------------------------------------------------------
-
-## Testing: 
-
-* 11/18/22: Getting back into this and finishing up the documentation. Testing to see how things are working as of 11/18/22. I had to uninstall he6cresspec sims. Ran the following: 
-	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -fn 2
-	* ./rocks_analysis_pipeline/qsub_katydid.py -rids 393 424 430 436 -nid 436 -b "2-12_dbscan_high_energy.yaml" -aid 2
-	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 0
-	* ./rocks_analysis_pipeline/qsub_post_processing.py -rids 393 424 430 436 -aid 2 -name "test_11182022" -nft 2 -nfe 2 -stage 1
-	* **Summary:** Things are working well. I uninstalled he6-cres-spec-sims and instead just pointed to the local directory on rocks. So these two repos are intertwined now. 
-
-
-## TODOs + Improvements to Make: 
-
-* **General**
-	* Make sure that the files with no tracks are still getting kept track of somehow. Maybe just in the file df? How is this being dealt with at the moment? Need some way to keep track of the total number of files at each field.
-	* Add docstrings for each module and class. 
-	* Make some progress on documenting what is actually done at each stage and how things are passed around. This will save me (and others) a ton of headaches. 
-	* It would be nice for the root files df to contain a col for if this file is included in the tracks or events df. Right now it's a bit hard to tell which is a problem. 
-	* Helper function for viewing the noise spectrum from a root file in the results class. 
-	* Add RGA data into root files table. 
-	* Add in a summary function where you just list the run_ids and aid and it prints to screen the summary of how many root files there are and such...
-	* I think the set_permissions() method of rocks_utility is used too frequently. It may take a long time so may be slowing things down. 
-	* Need to work on protecting the permissions of the data files. Not sure how exactly to do this but this is important. 
-* **run_katydid.py**
-	* The time that is printed to the log for how long katydid took on one file doesn't align with how long the jobs take to run? Why is this?
-	* Make sure a representative .yaml is being written to the aid_xxx directory not just the generic unedited one. 
-* **run_post_processing.py**
-	* Indexing of the root_files df is still off. 
-	* Fix indexing of events and tracks df. 
-	* Why are there these random (clearly unphysical) events that cross the whole second of data? Need a cut to deal with this.  
-	* Are the files with no tracks or events being dealt with intelligently?
-* **results.py**
-	* Check to make sure this works on other people's machines. 
-
-
-## Log of changes: 
-
-* 12/1/22: 
-	* Adding option for self noise floot with nid = -1. 
-	* Also building out the event properties. 
-	* Testing changes with: 
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 393 -nid 393 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-		`./rocks_analysis_pipeline/qsub_katydid.py -rids 393 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-* 12/2/22: 
-	* The above worked and now I'm moving on to a sanity check with the entire Ne dataset: 
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 4`
-		* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 4 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
-			* The above is failing because of the permissions issues. ehh. 
-			* 1435: Ok actually it failed because katydid didn't seem to run... 
-
-		* Ok now I've come to understand that katydid is working it was just the noise file being -1 that was causing issues. Not sure how exactly. Need to try that again. 
-		* Ok it's hacky but the chmod is working now with suppressed output. 
-		* The self noise file still doesn't work. Would like to get that working. 
-* 12/09/22:	Running the following to get the noise floor for each run_id for ne: 12/09/22 
-	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-	* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 7`
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
-	* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 1`
-	* Notes for next time: 
-		* stage 1 is failing because of the order of the event features being added to the tracks. Push those changes to the remote and then pull on rocks and make it work. 
-		* They try stage 2. 
-		* Then pull locally and make sure it's working ok. 
-		* Then make a plot of the noise floors over time. Make a function for doing this so you can do it for He as well. 
-		* Then think about submitting a new analysis for the full He and Ne sets (see the new submissions in the google doc). Get this banged out. 
-* 12/20/22:
-	* Trying to get back into this and make it work!
-	* Task 1: Get the selfing noise file to work and make a plot for the noise file over time for both the ne and he data. 
-		* Running the following to that end: 
-			* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -aid 7 -name "new_event_features_test" -nft 2 -nfe 2 -stage 0`
-			* Stage 1 of the above fails with this: 
-				* `Index(['EventTimeIntc'], dtype='object')] are in the [columns]`
-			* Ok this seems to be working now. Need to make sure the visualizations still work!
-	* For tomorrow: 
-		* Get the noise floors plots and post!
-		* Use this file to do it: `rocks_analysis_notebooks/plotting_scripts/noise_floors_over_time.py`
-		* Then on to Task 2: getting the analysis working for 8,9,10 SNR cuts. 
-* 12/21/22: 
-	* The above worked, and I was able to make the noise files for Neon over the entire course of the data taking. Now working on doing the same for Helium. 
-	* Running things through rocks: 
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy.yaml" -fn 2`
-		
-		* FOR NEXT TIME RUN THE FOLLOWING: 
-			* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy.yaml" -aid 10`
-			* `./rocks_analysis_pipeline/qsub_post_processing.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 381 380 377 376 375 374 373 -aid 10 -name "he_noise_floors_test" -nft 2 -nfe 2 -stage 0`
-			* Then check that the above works and push through all the stages.
-* 12/22/22: 
-	* The Helium all went fine. But run_id 381 is messed up and this is causing issues. 
-	* Also (BIG and ANNOYING) the event reconstruction seems broken now... check on the Helium and Neon datasets.  
-	* Ok working on different SNR cuts. Will take notes of all the files I run here. Going to start with something managable like 10 files per run_id first, and build the machinery to compare the ratio plots and such for each. 
-	* SNR tests: 
-	* SNR cut_9
-	* Neon: (submitted 12/22/22 1338)
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 561 560 559 558 557 555 554 553 552 551 549 548 546 545 544 543 542 540 539 538 537 536 534 533 532 531 530 528 527 526 525 524 522 521 520 519 518 516 515 514 513 512 510 509 508 507 506 504 503 502 501 500 496 495 494 493 492 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`
-	* Helium: (submitted 12/22/22 1338)
-		* `./rocks_analysis_pipeline/qsub_katydid.py -rids 440 439 438 437 436 434 433 432 431 430 428 427 426 425 424 422 421 420 419 418 416 415 414 413 412 411 409 408 407 406 405 403 402 401 400 399 397 396 395 394 393 391 390 389 388 387 384 383 382 380 377 376 375 374 373 -nid -1 -b "2-12_dbscan_high_energy_snr8.yaml" -fn 2`
-* 2/22/23: 
-	* Now the post processing is all run within the singularity container as well. There was an issue with uproot vs uproot4. When I swiched to uproot everything started working fine. The requirements.txt has been updated accordingly but be sure to enter the image then pip install as is described above. 
