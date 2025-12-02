@@ -39,16 +39,6 @@ import he6_cres_spec_sims.experiment as exp
 
 ############################################################################
 
-#def B_linear(nIndices, BMin = 0.75, BMax = 3.6, nFields = 16):
-#    return np.around(np.linspace(BMin,BMax,nFields,endpoint=True), 5)[nIndices]
-#
-#def B_exponential(nIndices, BMin = 0.75, BMax = 3.6, nFields = 16):
-#    return np.around(BMin * (BMax / BMin)**np.linspace(0,1,nFields,endpoint=True), 5)[nIndices]
-#
-#def trap_depth_ppt_to_A(fields, ppts=1.5):
-#    return np.around(fields*ppts*0.16596729890987147,6)
-
-
 def main():
     umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
 
@@ -239,19 +229,24 @@ class RunSpecSims:
         run_params["base_config_path"] = str(yaml_config_full)
         run_params["rand_seeds"] = [self.seed] * len(run_params["fields_T"])
 
+
+        #define where the MC results are going to be written to
+        base_run_dir = Path("/data/raid2/eliza4/he6_cres/simulation/sim_results/runs")
+        #base_run_dir = Path("/Users/buzinsky/Builds/spec_sims_SNR/he6-cres-spec-sims/config_files/tmp")
+
+        base_experiment_dir = base_run_dir / Path(self.run_name)
+        print(base_experiment_dir)
+
+        ## Make the base_run_dir if it doesn't exist
+        if not base_experiment_dir.is_dir():
+            base_experiment_dir.mkdir()
+            print("Created directory: {} ".format(base_experiment_dir))
+
+        run_params["output_path"] = base_experiment_dir / Path(f"subrun_{self.subrun_id}")
+        print(run_params["output_path"])
+
         if yaml_dict["Settings"]["sim_daq"] == True:
             yaml_dict["DAQ"]["noise_paths"] = self.get_noise_fp()
-
-        # copy first config file to the analysis directory for future reference.
-        # XXX What is the analysis directory???
-        #if self.subrun_id == 0:
-        #    #analysis_dir = Path(file_df["root_file_path"]).parents[0]
-        #    saved_config_path = analysis_dir / Path(self.yaml_config)
-        #    copyfile(yaml_config_path, saved_config_path)
-
-        #    print( f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n")
-
-        # Run spec-sims on the edited spec-sims config file.
 
         print(yaml_dict)
 
