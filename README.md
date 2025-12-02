@@ -34,7 +34,7 @@ The container can be found at: \
 `/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 
 To enter an interactive appt session, run \
-`apptainer shell --bind /data/raid2/eliza4/he6_cres \ /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
+`apptainer shell --bind /data/raid2/eliza4/he6_cres /data/raid2/eliza4/he6_cres/containers/he6cres-base.sif`
 
 Here you can, for example, check which python version is in the container: \
 `which python3`

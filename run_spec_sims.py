@@ -192,7 +192,9 @@ class RunSpecSims:
             if not noise_file.is_file():
                 raise UserWarning(f"{noise_file} doesn't exist")
 
-        return noise_file_path
+        str_wulf_noise_paths = [str(wnp) for wnp in wulf_noise_paths]
+
+        return str_wulf_noise_paths
 
     def run(self):
         # Force a write to the log.
@@ -256,7 +258,8 @@ class RunSpecSims:
         for key, val in run_params.items():
             print("{}: {}".format(key, val))
 
-        exp.Experiment(run_params)
+        #exp.Experiment(run_params)
+        exp.Experiment(run_params,yaml_dict)
         #############################################################
         t_stop = time.process_time()
         elapsed = t_stop - t_start
