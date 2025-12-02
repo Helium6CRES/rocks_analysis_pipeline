@@ -51,7 +51,7 @@ def sbatch_job(run_name, subrun_id, cmd, tlim, dry_run):
     Replaces SGE qsub with Slurm sbatch.
     Uses --wrap for inline command submission.
     """
-    log_path = f"/data/raid2/eliza4/he6_cres/simulations/job_logs/spec_sims/{run_name}_{subrun_id:03d}.txt"
+    log_path = f"/data/raid2/eliza4/he6_cres/simulation/sim_logs/spec_sims/{run_name}_{subrun_id:03d}.txt"
 
     sbatch_opts = [
         "--job-name", f"{run_name}_s{subrun_id}",
