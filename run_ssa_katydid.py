@@ -101,30 +101,24 @@ class RunKatydid:
         # Step 2. Collect the file_df. This means deciding if cleanup or new analysis.
         self.file_df = self.collect_file_df()
 
-        # Step 3. Run katydid on all files in file_df that don't already have root files that exist.
-#        condition = (self.file_df["root_file_exists"] != True) & (self.file_df["exists"] == True)
-#        print(f"\nRunning katydid on {condition.sum()} of {len(self.file_df)} files.")
-#        # Alert which run_ids files do not exist on ROCKS
-#        print("The following files don't seem to exist yet on ROCKS!")
-#        # Print file_id where exists is False
-#        for rocks_file_path in self.file_df.loc[~self.file_df['exists'], 'rocks_file_path']:
-#            print(rocks_file_path)
-#        # Run katydid on each row/spec file in file_df.
-#        #self.file_df[condition].apply(lambda row: self.run_katydid(row), axis=1)
-#        for idx, row in self.file_df[condition].iterrows():
-#            try:
-#                print(f"\nProcessing file_id {row['file_id']} at PST time: {get_pst_time()}")
-#                sys.stdout.flush()
-#                self.run_katydid(row)
-#                print(f"Finished file_id {row['file_id']} at PST time: {get_pst_time()}")
-#                sys.stdout.flush()
-#            except Exception as e:
-#                print(f"Exception while processing file_id {row['file_id']}: {e}")
-#                sys.stdout.flush()
-#                continue
-#
-#        # Clean up any half baked root files.
-#        self.clean_up_root_dir(self.file_df)
+        # Step 3. Run katydid on all files in file_df that don't already have root files
+        condition = (self.file_df["root_file_exists"] != True)
+        print(f"\nRunning katydid on {condition.sum()} of {len(self.file_df)} files.")
+        # Run katydid on each row/spec file in file_df.
+        for idx, row in self.file_df[condition].iterrows():
+            #try:
+            print(f"\nProcessing file_id {row['file_id']} at PST time: {get_pst_time()}")
+            sys.stdout.flush()
+            self.run_katydid(row)
+            print(f"Finished file_id {row['file_id']} at PST time: {get_pst_time()}")
+            sys.stdout.flush()
+            #except Exception as e:
+            #    print(f"Exception while processing file_id {row['file_id']}: {e}")
+            #    sys.stdout.flush()
+            #    continue
+
+        # Clean up any half baked root files.
+        self.clean_up_root_dir(self.file_df)
 
         # set_permissions()
 
@@ -159,18 +153,6 @@ class RunKatydid:
             file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.loads)
             file_df["rocks_noise_file_path"] = file_df["rocks_noise_file_path"].apply(json.loads)
 
-            # The following is a sanity check to make sure the number of files in the clean-up
-            # match the number of files that were originally run. Then trim the df according
-            # to the file_num arg.
-
-            if self.file_num != len(file_df):
-                print(
-                    f"Warning: The file_num specified in this cleanup \
-                    doesn't match the file_num originally run with ({len(file_df)}).\
-                    Trimming to match current file_num ({self.file_num})"
-                )
-                file_df = file_df[: self.file_num]
-
             # Check to see which root files already exist.
             file_df["root_file_exists"] = file_df["root_file_path"].apply( lambda x: check_if_exists(x))
 
@@ -181,7 +163,7 @@ class RunKatydid:
         return file_df
 
     def build_full_file_df(self):
-        file_df = self.create_base_file_df(self.run_name)
+        file_df = self.create_base_file_df()
 
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False
@@ -223,11 +205,11 @@ class RunKatydid:
 
         return file_df
 
-    def create_base_file_df(self, run_name):
+    def create_base_file_df(self):
         #trawls through spec-sims/sim_results/run_name, get all the speck files. Initialize w/ columns:
         #rocks_file_path, run_name, subrun_id, spec_sims_yaml, seed, main_field, trap_current
-        print(str(self.machine_path) + "/simulation/sim_results/" + run_name + "/subrun_*/*/*.speck")
-        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/" + run_name + "/subrun_*/*/spec_files/*.speck")
+        print(str(self.machine_path) + "/simulation/sim_results/" + self.run_name + "/subrun_*/*/*.speck")
+        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/" + self.run_name + "/subrun_*/*/spec_files/*.speck")
 
         print("Found speck files: ", speck_files)
 
@@ -247,8 +229,6 @@ class RunKatydid:
         yaml_files = [str(yfp) for yfp in yaml_file_paths]
 
         file_df = pd.DataFrame(speck_files, columns=["rocks_file_path"])
-
-        file_df["run_name"] = run_name
         file_df["subrun_id"] = subrun_ids
         file_df["acquisition"] = acqs
         file_df["channel"] = channels
@@ -261,6 +241,9 @@ class RunKatydid:
               .agg(rocks_file_path=("rocks_file_path", list))
               .reset_index()
         )
+
+        file_df["run_name"] = self.run_name
+        file_df["analysis_id"] = self.analysis_id
 
         #for each yaml, load, get seeds, main_fields, trap currents
         seeds = []
@@ -468,10 +451,10 @@ class RunKatydid:
         # Note that you need to have Katydid configured as a bash executable for this to
         # work (as is standard).
         t_start = time.process_time()
-        proc = sp.run(
-            ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", str(config_path)],
-            capture_output=True,
-        )
+        #proc = sp.run(
+        #    ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", str(config_path)],
+        #    capture_output=True,
+        #)
 
         # Decode logs (avoid escape noise)
         out = proc.stdout.decode(errors="replace")
@@ -520,30 +503,30 @@ class RunKatydid:
 
         return None
 
-#    def clean_up_root_dir(self, file_df):
-#
-#        # Delete all root files that aren't in our df.
-#        # TODO: Fix this.
-#
-#        run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
-#
-#        real_path_list = run_id_aid_dir.glob("*.root")
-#        desired_path_list = file_df["root_file_path"].to_list()
-#        desired_path_list = [Path(path) for path in desired_path_list]
-#        remove_list = list(set(real_path_list) - set(desired_path_list))
-#
-#        if len(remove_list) == 0:
-#            print("Cleaning up root file dir. No files to remove.")
-#        else:
-#            print("\nCleaning up. Removing the following files: \n")
-#            for path in remove_list:
-#                print(str(path))
-#                path.unlink()
-#
-#        # Force a write to the log.
-#        sys.stdout.flush()
-#
-#        return None
+    def clean_up_root_dir(self, file_df):
+
+        # Delete all root files that aren't in our df.
+        # TODO: Fix this.
+
+        run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
+
+        real_path_list = run_id_aid_dir.glob("*.root")
+        desired_path_list = file_df["root_file_path"].to_list()
+        desired_path_list = [Path(path) for path in desired_path_list]
+        remove_list = list(set(real_path_list) - set(desired_path_list))
+
+        if len(remove_list) == 0:
+            print("Cleaning up root file dir. No files to remove.")
+        else:
+            print("\nCleaning up. Removing the following files: \n")
+            for path in remove_list:
+                print(str(path))
+                #path.unlink()
+
+        # Force a write to the log.
+        sys.stdout.flush()
+
+        return None
 
 
 if __name__ == "__main__":
