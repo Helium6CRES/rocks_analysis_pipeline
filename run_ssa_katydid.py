@@ -200,12 +200,11 @@ class RunKatydid:
         # Collect either the given noise id or assign 'self' to noise file path.
         if self.noise_run_id == -1:
             print("\nUsing 'self' as noise file in katydid analysis.\n")
-            file_df["rocks_noise_file_path"] = file_df["rocks_file_path"]
+            file_df["rocks_noise_file_path"] = file_df["rocks_file_path"].apply(json.loads)
         else:
             noise_fp_list = self.get_noise_fp()
             print("Noise file list: ", noise_fp_list)
-            #convert channel number (0,1) to correct noise file path
-            file_df["rocks_noise_file_path"] = file_df["channel"].apply(lambda i: noise_fp_list[i])
+            file_df["rocks_noise_file_path"] = [noise_fp_list] * len(file_df)
 
         print(file_df)
 
@@ -232,10 +231,13 @@ class RunKatydid:
 
         print("Found speck files: ", speck_files)
 
-        #parse file paths for info about runs
+        #regular expression parse file paths for info about runs. (Pulls integers \d+ from parentheses matching pattern)
         subrun_ids = [int(re.search(r"subrun_(\d+)", p).group(1)) for p in speck_files]
+        acqs = [int(re.search(r"(\d+)_\d+\.speck$", Path(p).name).group(1)) for p in speck_files]
         channels = [int(re.search(r"_(\d+)\.speck$", Path(p).name).group(1)) for p in speck_files]
+
         print("subrun_ids", subrun_ids )
+        print("acqs:", acqs)
         print("channels", channels )
 
         #*paths are path objects, *_files are same, but string objects
@@ -248,8 +250,17 @@ class RunKatydid:
 
         file_df["run_name"] = run_name
         file_df["subrun_id"] = subrun_ids
+        file_df["acquisition"] = acqs
         file_df["channel"] = channels
         file_df["spec_sims_yaml"] = yaml_files
+
+        #merge rocks_file_path's into a list for rows with the same field, subrun, acq.
+        file_df = (
+            file_df.sort_values("channel")
+              .groupby(["spec_sims_yaml", "subrun_id","acquisition"])
+              .agg(rocks_file_path=("rocks_file_path", list))
+              .reset_index()
+        )
 
         #for each yaml, load, get seeds, main_fields, trap currents
         seeds = []
@@ -270,7 +281,6 @@ class RunKatydid:
                     print(e)
                     print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
-        print("bbbbb")
         print(file_df)
 
         # Group by file_inAcq and apply the aggregation function XXX (what do?)
@@ -374,10 +384,9 @@ class RunKatydid:
         root_path = file_df["output_dir"] + "/"
         root_path += str(file_df["subrun_id"]) + "_"
         root_path += str(file_df["true_field"]) + "T_"
+        root_path += str(file_df["acquisition"])
         #+ str(file_df["analysis_id"]) + "_" #we already know the analysis id from the directory! redundant!
-        root_path += str(file_df["channel"])
         root_path += footer
-        print(root_path)
         return root_path
 
     def run_katydid(self, file_df):
