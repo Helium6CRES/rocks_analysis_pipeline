@@ -209,8 +209,8 @@ class RunKatydid:
 
         print(file_df)
 
-        file_df["root_file_path"] = file_df.apply( lambda row: self.build_root_file_path(row), axis=1)
-        file_df["slew_file_path"] = file_df.apply( lambda row: self.build_slew_file_path(row), axis=1)
+        file_df["root_file_path"] = file_df.apply( lambda row: self.build_slew_root_filename(row,".root"), axis=1)
+        file_df["slew_file_path"] = file_df.apply( lambda row: self.build_slew_root_filename(row,"_SlewTimes.txt"), axis=1)
 
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
@@ -269,7 +269,6 @@ class RunKatydid:
                 except yaml.YAMLError as e:
                     print(e)
                     print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-
 
         print("bbbbb")
         print(file_df)
@@ -370,14 +369,16 @@ class RunKatydid:
 
         return str_wulf_noise_paths
 
-    ###XXXX this won't work for me, as MC has repeated names, can happen at the same time. Need different file naming scheme
-    def build_root_file_path(self, file_df, aid):
-        root_path = Path(file_df["output_dir"]) / str( Path(file_df["rocks_file_path"][0]).stem[:-2] + aid + ".root")
-        return str(root_path)
-
-    def build_slew_file_path(self, file_df, aid):
-        slew_path = Path(file_df["output_dir"]) / str( Path(file_df["rocks_file_path"][0]).stem[:-2] + aid + "_SlewTimes.txt")
-        return str(slew_path)
+    #footer (_SlewTimes.txt, .root)
+    def build_slew_root_filename(self, file_df, footer):
+        root_path = file_df["output_dir"] + "/"
+        root_path += str(file_df["subrun_id"]) + "_"
+        root_path += str(file_df["true_field"]) + "T_"
+        #+ str(file_df["analysis_id"]) + "_" #we already know the analysis id from the directory! redundant!
+        root_path += str(file_df["channel"])
+        root_path += footer
+        print(root_path)
+        return root_path
 
     def run_katydid(self, file_df):
 
