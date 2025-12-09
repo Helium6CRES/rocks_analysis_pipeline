@@ -171,10 +171,6 @@ class RunKatydid:
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
-        dbscan_r = self.get_dbscan_radius(file_df["approx_slope"][0])
-        file_df["dbscan_radius_0"] = dbscan_r[0]
-        file_df["dbscan_radius_1"] = dbscan_r[1]
-
         file_df["base_config_path"] = self.get_base_config_path()
         #spec_sims_analysis/root_files/r_run_name
         file_df["output_dir"] = self.build_dir_structure()
@@ -287,21 +283,6 @@ class RunKatydid:
 
         return approx_slope
 
-    def get_dbscan_radius(
-        self, approx_slope: float, dbscan_base_radius: List[float] = [5.0e-4, 40e6]
-    ) -> List[float]:
-        """
-        This does work. I just checked the math. Use the fact that dbscan_base_radius[1]/dbscan_base_radius[0]
-        = base_slope.
-        """
-
-        dbscan_radius = [
-            dbscan_base_radius[1] / approx_slope,
-            dbscan_base_radius[0] * approx_slope,
-        ]
-
-        return dbscan_radius
-
     def get_base_config_path(self):
         base_config_full = self.machine_path / Path(f"spec_sims_analysis/base_configs/{self.base_config}")
 
@@ -393,10 +374,6 @@ class RunKatydid:
 
         katydid_command_list.append("--long-tr-find.initial-slope="+str(file_df["approx_slope"]))
         katydid_command_list.append("--long-tr-find.min-slope="+str(file_df["approx_slope"] - 1e10))
-
-        #deprecated....
-        #for i in range(2):
-        #    katydid_command_list +=[f"--dbscan.radii.{i}", str(file_df[f"dbscan_radius_{i}"])]
 
         katydid_command_list.append("--rtw.output-file="+file_df["root_file_path"])
         katydid_command_list.append("--brw.output-file="+file_df["root_file_path"])
