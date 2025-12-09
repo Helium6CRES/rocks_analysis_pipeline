@@ -20,8 +20,8 @@ import json
 import re
 
 # Local imports.
-#sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
-sys.path.append("/Users/buzinsky/Builds/spec_sims_SNR/he6-cres-spec-sims/src")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
+#sys.path.append("/Users/buzinsky/Builds/spec_sims_SNR/he6-cres-spec-sims/src")
 
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
@@ -89,8 +89,8 @@ class RunKatydid:
         self.noise_run_id = noise_run_id
         self.base_config = base_config
 
-        #self.machine_path = Path("/data/raid2/eliza4/he6_cres")
-        self.machine_path = Path("/Users/buzinsky/Builds/fake_wulf")
+        self.machine_path = Path("/data/raid2/eliza4/he6_cres")
+        #self.machine_path = Path("/Users/buzinsky/Builds/fake_wulf")
 
         # Step 0. Print run summary.
         self.print_run_summary()
@@ -350,8 +350,8 @@ class RunKatydid:
         print(f"Noise path: {noise_file_path}")
 
         #Convert to directory structure on wulf
-        #wulf_noise_paths = [Path("/data/raid2/eliza4/he6_cres/") / Path(old).relative_to("/mnt") for old in noise_file_path]
-        wulf_noise_paths = [Path("/Users/buzinsky/Builds/DAQ/He6DAQ/pyqt5_GUI/temp/") / Path(old).name for old in noise_file_path]
+        wulf_noise_paths = [Path("/data/raid2/eliza4/he6_cres/") / Path(old).relative_to("/mnt") for old in noise_file_path]
+        #wulf_noise_paths = [Path("/Users/buzinsky/Builds/DAQ/He6DAQ/pyqt5_GUI/temp/") / Path(old).name for old in noise_file_path]
         print(wulf_noise_paths)
 
         for noise_file in wulf_noise_paths:
