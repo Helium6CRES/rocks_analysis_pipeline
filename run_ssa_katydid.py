@@ -204,8 +204,8 @@ class RunKatydid:
     def create_base_file_df(self):
         #trawls through spec-sims/sim_results/run_name, get all the speck files. Initialize w/ columns:
         #rocks_file_path, run_name, subrun_id, spec_sims_yaml, seed, main_field, trap_current
-        print(str(self.machine_path) + "/simulation/sim_results/" + self.run_name + "/subrun_*/*/*.speck")
-        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/" + self.run_name + "/subrun_*/*/spec_files/*.speck")
+        print(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_*/*/*.speck")
+        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_*/*/spec_files/*.speck")
 
         print("Found speck files: ", speck_files)
 
@@ -367,10 +367,10 @@ class RunKatydid:
         katydid_command_list = ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", base_config_path]
 
         for i in range(2):
-            katydid_command_list.append(f"--spec1.filenames.{i}="+file_df["rocks_noise_file_path"][i])
+            katydid_command_list.append(f"--spec1.filenames_{i}="+file_df["rocks_noise_file_path"][i])
 
         for i in range(2):
-            katydid_command_list.append(f"--spec2.filenames.{i}="+file_df["rocks_file_path"][i])
+            katydid_command_list.append(f"--spec2.filenames_{i}="+file_df["rocks_file_path"][i])
 
         katydid_command_list.append("--long-tr-find.initial-slope="+str(file_df["approx_slope"]))
         katydid_command_list.append("--long-tr-find.min-slope="+str(file_df["approx_slope"] - 1e10))
