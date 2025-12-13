@@ -58,8 +58,8 @@ def sbatch_job(experiment_name: str, run_name: str, analysis_id: int, cmd: str, 
     """
     Submit an inline command via Slurm's --wrap.
     """
-    #machine_path = Path("/data/raid2/eliza4/he6_cres")
-    machine_path = Path("/Users/buzinsky/fake_wulf/")
+    machine_path = Path("/data/raid2/eliza4/he6_cres")
+    #machine_path = Path("/Users/buzinsky/fake_wulf/")
     log_dir = machine_path / Path("spec_sims_analysis/job_logs/post_processing")
     #log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"{experiment_name}_a_{analysis_id}.txt"
