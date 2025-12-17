@@ -17,6 +17,7 @@ def main():
     arg("-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run.")
     arg("-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id.")
     arg("-aid", "--analysis_id", type=int, default=-1, help="analysis_id used to label directories. If -1, creates unique aid automatically")
+    arg("-n", "--num_subruns", type=int,default=1, help="number of sub-runs. Each subrun is the same except for the seed")
     arg("-d", "--dry_run", action='store_true', help='Skip slurm submission')
 
     args = par.parse_args()
@@ -42,15 +43,16 @@ def main():
     ).format(r"\n")
 
     for run_name in args.run_names:
-        default_katydid_sub = (
-                f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_ssa_katydid.py "
-            f"-r {run_name} -nid {args.noise_run_id} -aid {analysis_id} -b \"{args.base_config}\" "
-        )
-        cmd = apptainer_prefix + f"{default_katydid_sub}'\""
-        sbatch_job(run_name, analysis_id, cmd, tlim, args.dry_run)
+        for subrun_id in range(args.num_subruns):
+            default_katydid_sub = (
+                    f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_ssa_katydid.py "
+                f"-r {run_name} -nid {args.noise_run_id} -aid {analysis_id} -sr {subrun_id} -b \"{args.base_config}\" "
+            )
+            cmd = apptainer_prefix + f"{default_katydid_sub}'\""
+            sbatch_job(run_name, analysis_id, subrun_id, cmd, tlim, args.dry_run)
 
 
-def sbatch_job(run_name, analysis_id, cmd, tlim, dry_run):
+def sbatch_job(run_name, analysis_id, subrun_id, cmd, tlim, dry_run):
     """
     Replaces SGE qsub with Slurm sbatch.
     Uses --wrap for inline command submission.
@@ -58,10 +60,10 @@ def sbatch_job(run_name, analysis_id, cmd, tlim, dry_run):
     machine_base_path = "/data/raid2/eliza4/he6_cres"
     #machine_base_path = "/Users/buzinsky/Builds/fake_wulf"
 
-    log_path = machine_base_path + f"/spec_sims_analysis/job_logs/katydid/{run_name}_{analysis_id}.txt"
+    log_path = machine_base_path + f"/spec_sims_analysis/job_logs/katydid/{run_name}_s{subrun_id}_{analysis_id}.txt"
 
     sbatch_opts = [
-        "--job-name", f"{run_name}_{analysis_id}",
+        "--job-name", f"{run_name}_s{subrun_id}_{analysis_id}",
         "--time", tlim,
         "--output", log_path,
         "--export=ALL",

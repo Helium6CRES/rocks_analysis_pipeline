@@ -51,7 +51,9 @@ def main():
     arg("-r", "--run_name", type=str, help="spec_sims run_name to run katydid on.")
     arg( "-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run. If -1 then will use self as noise file.",)
     arg( "-aid", "--analysis_id", type=int, help="analysis_id used to label directories.",)
+    arg( "-sr", "--subrun_id", type=int, help="subrun_id, for parallelization of Katydid-side",)
     arg( "-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id, should exist in base config directory.",)
+
     args = par.parse_args()
 
     print(f"\nRunning Katydid. STARTING at PST time: {get_pst_time()}\n")
@@ -70,6 +72,7 @@ def main():
     run_katydid = RunKatydid(
         args.run_name,
         args.analysis_id,
+        args.subrun_id,
         args.noise_run_id,
         args.base_config,
     )
@@ -82,10 +85,11 @@ def main():
 
 
 class RunKatydid:
-    def __init__(self, run_name, analysis_id, noise_run_id, base_config):
+    def __init__(self, run_name, analysis_id, subrun_id, noise_run_id, base_config):
 
         self.run_name = run_name
         self.analysis_id = analysis_id
+        self.subrun_id = subrun_id
         self.noise_run_id = noise_run_id
         self.base_config = base_config
 
@@ -204,17 +208,17 @@ class RunKatydid:
     def create_base_file_df(self):
         #trawls through spec-sims/sim_results/run_name, get all the speck files. Initialize w/ columns:
         #rocks_file_path, run_name, subrun_id, spec_sims_yaml, seed, main_field, trap_current
-        print(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_*/*/*.speck")
-        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_*/*/spec_files/*.speck")
+        print(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_"+str(self.subrun_id)+"/*/*.speck")
+        speck_files = glob(str(self.machine_path) + "/simulation/sim_results/runs/" + self.run_name + "/subrun_"+str(self.subrun_id)+"/*/spec_files/*.speck")
 
         print("Found speck files: ", speck_files)
 
         #regular expression parse file paths for info about runs. (Pulls integers \d+ from parentheses matching pattern)
-        subrun_ids = [int(re.search(r"subrun_(\d+)", p).group(1)) for p in speck_files]
+        #subrun_ids = [int(re.search(r"subrun_(\d+)", p).group(1)) for p in speck_files]
         acqs = [int(re.search(r"(\d+)_\d+\.speck$", Path(p).name).group(1)) for p in speck_files]
         channels = [int(re.search(r"_(\d+)\.speck$", Path(p).name).group(1)) for p in speck_files]
 
-        print("subrun_ids", subrun_ids )
+        #print("subrun_ids", subrun_ids )
         print("acqs:", acqs)
         print("channels", channels )
 
@@ -225,7 +229,7 @@ class RunKatydid:
         yaml_files = [str(yfp) for yfp in yaml_file_paths]
 
         file_df = pd.DataFrame(speck_files, columns=["rocks_file_path"])
-        file_df["subrun_id"] = subrun_ids
+        file_df["subrun_id"] = self.subrun_id
         file_df["acquisition"] = acqs
         file_df["channel"] = channels
         file_df["spec_sims_yaml"] = yaml_files
@@ -297,7 +301,7 @@ class RunKatydid:
         run_name_dir = base_path / Path(f"r_{self.run_name}")
 
         if not run_name_dir.is_dir():
-            raise UserWarning("This directory should have been made already.")
+            raise UserWarning("This directory should have been made already. Did you force an aid in katydid? Why?")
 
         current_analysis_dir = run_name_dir / Path(f"aid_{self.analysis_id}")
         if not current_analysis_dir.is_dir():
