@@ -130,8 +130,44 @@ class PostProcessing:
         self.root_files_df = self.load_root_files_df()
         self.process_tracks_and_events()
 
+        print("\nPostProcessing stage 1.5: merge MC truth csvs")
+        for run_name in run_names:
+            #returns lists of bands.csv's, dmtracks.csvs
+            mc_truth_csv_paths = self.get_mc_truth_csv_paths(run_name)
+            self.write_mc_truth_csvs(mc_truth_csv_paths[0],"bands.csv")
+            self.write_mc_truth_csvs(mc_truth_csv_paths[1],"dmtracks.csv")
+
         print("\nPostProcessing stage 2: clean-up.")
         self.sanity_check()
+
+        return None
+
+    def get_mc_truth_csv_paths(self, run_name):
+        local_path = Path("simulation/sim_results/runs")
+        sim_res_dir = self.machine_path / local_path / Path( f"{run_name}")
+        bands_csvs = glob(str(sim_res_dir) + "/subrun_*/*/bands.csv")
+        dmtracks_csvs = glob(str(sim_res_dir) + "/subrun_*/*/dmtracks.csv")
+        print("Found ", len(bands_csvs), " bands.csv's!")
+        print("Found ", len(dmtracks_csvs), " dmtracks.csv's!")
+
+        return bands_csvs, dmtracks_csvs
+
+    def write_mc_truth_csvs(self, input_filenames, output_filename):
+        #for csv_file_list in
+        file_df_list = []
+
+        for input_filename in input_filenames:
+            print("ifn", input_filename)
+            file_df = pd.read_csv(input_filename)
+            file_df["root_file_path"] = input_filename
+            file_df_list.append(file_df)
+
+        combined_df = pd.concat(file_df_list).reset_index(drop=True)
+        print(combined_df)
+
+        #writes to analysis dir. Probably fine...
+        write_path = self.analysis_dir / Path(output_filename)
+        combined_df.to_csv(write_path)
 
         return None
 
@@ -171,8 +207,17 @@ class PostProcessing:
 
         file_df_path = rid_ai_dir / Path( f"rid_df_{run_name}_{self.analysis_id}.csv")
         print("Root file path: ", file_df_path )
+        subrun_csvs = glob(str(rid_ai_dir) + f"rid_df_{run_name}_s*_{self.analysis_id}.csv")
 
         if file_df_path.exists():
+            return file_df_path
+        elif len(subrun_csvs):
+            # if the single rid_df csv does not exist, but the subrun csv's do (from parallel katydid jobs)
+            #then merge them into the single csv, just use that
+            csv_df_list = [ pd.read_csv(sr_csv) for sr_csv in subrun_csvs]
+            combined_df = pd.concat(csv_df_list).reset_index(drop=True)
+            print(combined_df)
+            combined_df.to_csv(file_df_path)
             return file_df_path
         else:
             raise FileNotFoundError( f"No root file df found for run_name={run_name}, aid={self.analysis_id}")
