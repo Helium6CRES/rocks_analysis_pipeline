@@ -139,7 +139,7 @@ class RunKatydid:
         base_path = self.machine_path / Path("spec_sims_analysis/root_files")
 
         rid_ai_dir = base_path / Path(f"r_{self.run_name}") / Path(f"aid_{self.analysis_id}")
-        file_df_path = rid_ai_dir / Path( f"rid_df_{self.run_name}_{self.analysis_id}.csv")
+        file_df_path = rid_ai_dir / Path( f"rid_df_{self.run_name}_s{self.subrun_id}_{self.analysis_id}.csv")
         return file_df_path
 
 

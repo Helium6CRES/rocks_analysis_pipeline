@@ -207,7 +207,7 @@ class PostProcessing:
 
         file_df_path = rid_ai_dir / Path( f"rid_df_{run_name}_{self.analysis_id}.csv")
         print("Root file path: ", file_df_path )
-        subrun_csvs = glob(str(rid_ai_dir) + f"rid_df_{run_name}_s*_{self.analysis_id}.csv")
+        subrun_csvs = glob(str(rid_ai_dir) + f"/rid_df_{run_name}_s*_{self.analysis_id}.csv")
 
         if file_df_path.exists():
             return file_df_path
