@@ -82,10 +82,10 @@ With the container, after getting an account on WULF, you should be all set to g
 
 ### Post Processing:
 
-First if you want to use ude the offline beta monitor counting, run this on each rid with
+First if you want to use the offline beta monitor counting, run this on each rid with
 `./rocks_analysis_pipeline/sbatch_count_offline_mon_rates.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -aid 9`
 
-This will go rid by rid and add environmental data and the offline monitor counts to the root file csvs rid_df_1801_009.csv and write the output to  -> rid_df_1801_009_with_offline_mon.csv. Leter when you run the track and event post processing, it will check if this was already done. If so, it iwll jsut use these. If not, it will add the environmental data during stage 0
+This will go rid by rid and add environmental data and the offline monitor counts to the root file csvs rid_df_1801_009.csv and write the output to  -> rid_df_1801_009_with_offline_mon.csv. Later when you run the track and event post processing, it will check if this was already done. If so, it iwll jsut use these. If not, it will add the environmental data during stage 0
 
 * **Overview:** This is a three stage process. Run each stage without changing anything but the -stage argument. the -ms_standard argument determines the expected
 spec(k) file name time format for the data you want to process.

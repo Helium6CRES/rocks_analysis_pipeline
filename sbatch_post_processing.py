@@ -44,6 +44,13 @@ def main():
         help="number of files for which to save track data per run_id.",
     )
 
+    arg(
+        "-nfp",
+        "--num_files_points",
+        type=int,
+        help="number of files for which to save track points data per run_id.",
+    )
+
     # Pipeline options (keep parity with existing run_post_processing.py flags)
     arg(
         "-stage",
@@ -95,6 +102,7 @@ def main():
             aid=args.analysis_id,
             name=args.experiment_name,
             nft=args.num_files_tracks,
+            nfp=args.num_files_points,
             fid=file_id,
             stage=args.stage,
             ms_standard=args.ms_standard
@@ -116,6 +124,7 @@ def main():
                 aid=args.analysis_id,
                 name=args.experiment_name,
                 nft=args.num_files_tracks,
+                nfp=args.num_files_points,
                 fid=file_id,
                 stage=args.stage,
                 ms_standard=args.ms_standard
@@ -132,6 +141,7 @@ def main():
             aid=args.analysis_id,
             name=args.experiment_name,
             nft=args.num_files_tracks,
+            nfp=args.num_files_points,
             fid=file_id,
             stage=args.stage,
             ms_standard=args.ms_standard
