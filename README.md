@@ -131,9 +131,7 @@ This elog is not currently backfilled from before the first phase-II data campai
 	* Produces three summary dataframes and a df of all the remaining valid tracks with additional environmental data added.
 	* `Helium6CRES/coral_reef/heather/Harrington2025Analysis` contains example scripts for several specific studies, as well as the GeneralTrakPlotting.py whihc contains gernal plotting functions that I use often.
 
-
-
-	* (old) This was Drew's pipeline and has not been maintained. Use at your own risk.
+* **(old) This was Drew's pipeline and has not been maintained. Use at your own risk:**
 	* This is to be done locally using `class ExperimentResults` in module `results.py`.
 	* A full demo of how this is done is here: `/rocks_analysis_pipeline/demo/rocks_analysis_demo.ipynb`. 
 	* Copy the `.ipynb` into your own directory suitable for analysis and give it a try. Make neat plots like the one you see in the top of this readme. 

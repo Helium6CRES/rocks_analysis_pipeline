@@ -102,6 +102,12 @@ def main():
         type=int,
         help="number of files for which to save track data per run_id.",
     )
+    arg(
+        "-nfp",
+        "--num_files_points",
+        type=int,
+        help="number of files for which to save track points data per run_id.",
+    )
 
     arg(
         "-fid",
@@ -155,6 +161,7 @@ def main():
         args.analysis_id,
         args.experiment_name,
         args.num_files_tracks,
+        args.num_files_points,
         args.file_id,
         args.stage,
         args.ms_standard
@@ -178,6 +185,7 @@ class PostProcessing:
         analysis_id,
         experiment_name,
         num_files_tracks,
+        num_files_points,
         file_id,
         stage,
         ms_standard
@@ -187,6 +195,7 @@ class PostProcessing:
         self.analysis_id = analysis_id
         self.experiment_name = experiment_name
         self.num_files_tracks = num_files_tracks
+        self.num_files_points = num_files_points
         self.file_id = file_id
         self.stage = stage
         #self.count_beta_mon_events_offline = count_beta_mon_events_offline
@@ -261,7 +270,7 @@ class PostProcessing:
                 print(
                     f"No processing necessary. tracks csv already processed: {tracks_path}"
                 )
-
+                
             else:
 
                 # Now gather tracks, clean them up, and write csv to disk.
@@ -365,9 +374,10 @@ class PostProcessing:
         #processed_tracks = self.clean_up_tracks(tracks)
         processed_tracks = tracks
 
-        # Write out tracks to csv for first nft file_ids (command line argument).
+        # Write out tracks to csv for first nft file_ids, and write out points for first ntp
         if self.file_id < self.num_files_tracks:
             self.write_to_csv(self.file_id, processed_tracks, file_name="tracks")
+        if self.file_id < self.num_files_points:
             self.write_to_csv(self.file_id, track_points, file_name="track_points")
 
         print(f"\nProcessing file_id: {self.file_id}")
@@ -916,13 +926,13 @@ class PostProcessing:
         #now track points csvs
         track_points_path_list = [
             self.analysis_dir / Path(f"track_points_{i}.csv")
-            for i in range(self.num_files_tracks)
+            for i in range(self.num_files_points)
         ]
 
         track_points_path_exists = [path.is_file() for path in track_points_path_list]
 
         if not all(track_points_path_exists):
-            print(f"Not all {self.num_files_tracks} track points csvs are present for merging csvs.")
+            print(f"Not all {self.num_files_points} track points csvs are present for merging csvs.")
 
         # Filter the lists to include only the paths that exist
         track_points_path_list = [path for path in track_points_path_list if path.is_file()]
