@@ -89,7 +89,7 @@ def main():
         "/opt/python3.7/bin/python3.7 -u "
         "/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing_2025LTF.py "
         "-rids {rids} -aid {aid} -name \"{name}\" "
-        "-nft {nft} nfp {nfp} -fid {fid} -stage {stage} "
+        "-nft {nft} -nfp {nfp} -fid {fid} -stage {stage} "
         "-ms_standard {ms_standard}"
     )
 
