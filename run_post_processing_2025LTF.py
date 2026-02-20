@@ -317,14 +317,14 @@ class PostProcessing:
 
         for run_id in self.run_ids:
             file_df_path, envir_missing = self.build_file_df_path(run_id)
-            missing_flags.append(envir_missing)
 
             file_df = pd.read_csv(file_df_path)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
             file_df_list.append(file_df)
+            missing_flags.extend(len(file_df) * [envir_missing])
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
-        root_files_df["envir_data_missing"] = missing_flags * (len(root_files_df) // len(missing_flags))
+        root_files_df["envir_data_missing"] = missing_flags
 
         return root_files_df
 
