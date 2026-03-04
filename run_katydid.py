@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-import os
-import time
+"""
+Runs katydid on every file in a run_id.
+Luciano 3/4/26: I am attempting to refactor the sbatch pipeline to submit separate jobs for each file in the run. My only planned modification to this file s to move the run_katydid() method to a file run_katydid_file.py, then import that here since it makes no references to RunKatydid self. I will otherwise preserve this script and reuse some code to write a similar pipeline per file_id.
+"""
 import argparse
 import pandas as pd
-import datetime
 from glob import glob
 
-from shutil import copyfile
-import psycopg2
-from psycopg2 import Error
+# import psycopg2
+# from psycopg2 import Error
 import typing
 from typing import List
-import pandas.io.sql as psql
+# import pandas.io.sql as psql
 from pathlib import Path
-import yaml
+# import yaml
 import sys
 import subprocess as sp
 import json
+
+from run_katydid_file import run_katydid
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
@@ -197,6 +199,9 @@ class RunKatydid:
         return file_df
 
     def build_file_df_path(self):
+        """
+        Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
+        """
         base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
         rid_ai_dir = (
             base_path
@@ -210,6 +215,9 @@ class RunKatydid:
         return file_df_path
 
     def build_full_file_df(self):
+        """
+        Populate df of spec(k) files with metadata and path information. 
+        """
 
         file_df = self.create_base_file_df(self.run_id)
         file_df["analysis_id"] = self.analysis_id
@@ -268,6 +276,9 @@ class RunKatydid:
 
     def create_base_file_df(self, run_id: int):
         # DOCUMENT.
+        """
+        Query He6-CRES db for spec(k) files corresponding to a given rid, construct a dataframe of spec(k) files grouped by file_id.
+        """
         query_he6_db = """
                         SELECT r.run_id, f.spec_id, f.file_in_acq, f.channel, f.file_path, r.true_field, r.set_field
                         FROM he6cres_runs.run_log as r
@@ -399,139 +410,6 @@ class RunKatydid:
 
         return str(slew_path)
 
-    def run_katydid(self, file_df):
-
-        # Force a write to the log.
-        sys.stdout.flush()
-
-        base_config_path = Path(file_df["base_config_path"])
-        
-        # Grab the config_dict from the katydid config file.
-        with open(base_config_path, "r") as f:
-            try:
-                config_dict = yaml.load(f, Loader=yaml.FullLoader)
-                #print(config_dict)
-            except yaml.YAMLError as e:
-                print(e)
-
-        # Copy the katydid config file (in same dir) so that we can write to the copy not
-        # the original.
-        rid = file_df["run_id"]
-        aid = file_df["analysis_id"]
-
-        config_path = base_config_path.parent / str(
-            base_config_path.stem + f"_{rid:04d}_{aid:03d}" + base_config_path.suffix
-        )
-
-        # copy base config file to edit
-        copyfile(base_config_path, config_path)
-
-        # Check the file extension of the first path in rocks_file_path list
-        rocks_file_path = file_df["rocks_file_path"]
-        first_rock_file = rocks_file_path[0] if rocks_file_path else ""
-        if first_rock_file.endswith(".spec"):
-            for processor in config_dict['processor-toolbox']['processors']:
-                if processor['name'] == 'spec2':
-                    processor['type'] = 'spec-processor'
-        elif first_rock_file.endswith(".speck"):
-            for processor in config_dict['processor-toolbox']['processors']:
-                if processor['name'] == 'spec2':
-                    processor['type'] = 'speck-processor'
-
-        config_dict["spec1"]["filenames"] = file_df["rocks_noise_file_path"]
-        config_dict["spec2"]["filenames"] = file_df["rocks_file_path"]
-
-        for key, val in config_dict.items():
-            for inner_key, inner_val in val.items():
-                if inner_key == "output-file":
-                    config_dict[key][inner_key] = file_df["root_file_path"]
-
-                if inner_key == "initial-slope":
-                    config_dict[key][inner_key] = file_df["approx_slope"]
-
-                if inner_key == "min-slope":
-                    config_dict[key][inner_key] = file_df["approx_slope"]-1e10
-
-                if inner_key == "radii":
-                    config_dict[key][inner_key] = [
-                        file_df["dbscan_radius_0"],
-                        file_df["dbscan_radius_1"],
-                    ]
-        config_dict["stv"]["output-file"] = file_df["slew_file_path"]
-
-        # Dump the altered config_dict into the copy of the config file.
-        # Note that the comments are all lost because you only write the contents of the
-        # confic dict.
-        with open(config_path, "w") as f:
-            yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
-
-        
-        # copy first config file to the analysis directory for future reference.
-        if file_df["file_id"] == 0:
-            analysis_dir = Path(file_df["root_file_path"]).parents[0]
-            config_path_name = Path(config_path).name
-            saved_config_path = analysis_dir / config_path_name
-            copyfile(config_path, saved_config_path)
-
-            print(
-                f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
-            )
-
-        # Run katydid on the edited katydid config file.
-        # Note that you need to have Katydid configured as a bash executable for this to
-        # work (as is standard).
-        t_start = time.process_time()
-        proc = sp.run(
-            ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", str(config_path)],
-            capture_output=True,
-        )
-
-        # Decode logs (avoid escape noise)
-        out = proc.stdout.decode(errors="replace")
-        err = proc.stderr.decode(errors="replace")
-
-        print("Katydid stdout (tail 1k):", out[-1000:])
-        if err.strip():
-            print("Katydid stderr (tail 1k):", err[-1000:])
-
-        t_stop = time.process_time()
-        elapsed = t_stop - t_start
-
-        root_path = Path(file_df["root_file_path"])
-        root_exists = root_path.is_file()
-        root_size = root_path.stat().st_size if root_exists else 0
-
-        # Only claim success if returncode==0 and the file exists and is non-empty
-        if proc.returncode == 0 and root_exists and root_size > 0:
-            print(
-                f"\nfile {file_df['file_id']}."
-                f"\ntime to run: {elapsed:.2f} s."
-                f"\ncurrent time: {get_pst_time()}."
-                f"\nroot file created {root_path}\n"
-            )
-            # Safe to remove the temp config
-            if Path(config_path).exists():
-                Path(config_path).unlink()
-
-        else:
-            print(
-                f"\nfile {file_df['file_id']} FAILED."
-                f"\ntime: {elapsed:.2f} s."
-                f"\nreturncode: {proc.returncode}"
-                f"\nroot exists: {root_exists} size: {root_size}\n"
-                f"Config kept for debug: {config_path}\n"
-            )
-            # Optionally rename to mark failure
-            fail_cfg = config_path.with_suffix(config_path.suffix + ".failed")
-            try:
-                config_path.rename(fail_cfg)
-                print(f"Saved failing config as: {fail_cfg}")
-            except Exception as e:
-                print(f"Could not rename failing config: {e}")
-            # Re-raise or just return; your choice:
-            # raise RuntimeError("Katydid failed")
-
-        return None
 
     def clean_up_root_dir(self, file_df):
 
