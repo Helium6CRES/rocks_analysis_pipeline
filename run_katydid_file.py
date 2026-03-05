@@ -14,7 +14,7 @@ from rocks_utility import (
 # Import settings
 pd.set_option("display.max_columns", 100)
 
-def run_katydid(file_df_row: pd.Series):
+def run_katydid_file(file_df_row: pd.Series):
     """
     Runs katydid on a single file based on configuration data in a specific row of a file_df
 

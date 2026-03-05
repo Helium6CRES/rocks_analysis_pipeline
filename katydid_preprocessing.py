@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
 """
-Runs katydid on every file in a run_id.
-Luciano 3/4/26: I am attempting to refactor the sbatch pipeline to submit separate jobs for each file in the run. My only planned modification to this file s to move the run_katydid() method to a file run_katydid_file.py, then import that here since it makes no references to RunKatydid self. I will otherwise preserve this script and reuse some code to write a similar pipeline per file_id.
+Perform all the preprocessing for a run_id before submitting sbatch for each job
 """
 import argparse
 import pandas as pd
 from glob import glob
 
-# import psycopg2
-# from psycopg2 import Error
+import psycopg2
+from psycopg2 import Error
 import typing
 from typing import List
-# import pandas.io.sql as psql
+import pandas.io.sql as psql
 from pathlib import Path
-# import yaml
 import sys
-import subprocess as sp
 import json
-
-from run_katydid_file import run_katydid_file
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
@@ -36,76 +31,41 @@ from rocks_utility import (
 # Import settings.
 pd.set_option("display.max_columns", 100)
 
+def run_katydid_preprocessing(
+        run_id,
+        analysis_id,
+        noise_run_id,
+        base_config,
+        file_num,
+        ):
 
-def main():
-    """
-    DOCUMENT
-
-    """
-
-    umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
-
-    # Parse command line arguments.
-    par = argparse.ArgumentParser()
-    arg = par.add_argument
-    arg("-id", "--run_id", type=int, help="run_id to run katydid on.")
-    arg(
-        "-nid",
-        "--noise_run_id",
-        type=int,
-        help="run_id to use for noise floor in katydid run. If -1 then will use self as noise file.",
-    )
-    arg(
-        "-aid",
-        "--analysis_id",
-        type=int,
-        help="analysis_id used to label directories.",
-    )
-    arg(
-        "-b",
-        "--base_config",
-        type=str,
-        help="base .yaml katydid config file to be run on run_id, should exist in base config directory.",
-    )
-    arg(
-        "-fn",
-        "--file_num",
-        default=-1,
-        type=int,
-        help="Number of files in run id to analyze (<= number of files in run_id)",
-    )
-
-    args = par.parse_args()
-
-    print(f"\nRunning Katydid. STARTING at PST time: {get_pst_time()}\n")
+    print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
 
     # Print summary of katydid running.
-    print(f"\nProcessing: run_id: {args.run_id}.\n")
+    print(f"\nPreprocessing: run_id: {run_id}.\n")
 
     # Force a write to the log.
     sys.stdout.flush()
 
-    # Done at the beginning and end of main to ensure all users have
     # appropriate access.
     set_permissions()
 
-    # Begin running Katydid.
-    run_katydid = RunKatydid(
-        args.run_id,
-        args.analysis_id,
-        args.noise_run_id,
-        args.base_config,
-        args.file_num,
-    )
+    file_df = RunKatydidPreprocessing(
+        run_id,
+        analysis_id,
+        noise_run_id,
+        base_config,
+        file_num,
+    ).file_df
 
     # set_permissions()
 
-    print(f"\nRunning Katydid on {args.run_id} DONE at PST time: {get_pst_time()}\n")
+    print(f"\nRunning Katydid preprocessing on {args.run_id} DONE at PST time: {get_pst_time()}\n")
     log_file_break()
-    return None
+    return file_df
 
 
-class RunKatydid:
+class RunKatydidPreprocessing:
     def __init__(self, run_id, analysis_id, noise_run_id, base_config, file_num):
 
         self.run_id = run_id
@@ -131,24 +91,6 @@ class RunKatydid:
         # Print file_id where exists is False
         for rocks_file_path in self.file_df.loc[~self.file_df['exists'], 'rocks_file_path']:
             print(rocks_file_path)
-        # Run katydid on each row/spec file in file_df.
-        #self.file_df[condition].apply(lambda row: run_katydid_file(row), axis=1)
-        for idx, row in self.file_df[condition].iterrows():
-            try:
-                print(f"\nProcessing file_id {row['file_id']} at PST time: {get_pst_time()}")
-                sys.stdout.flush()
-                run_katydid_file(row)
-                print(f"Finished file_id {row['file_id']} at PST time: {get_pst_time()}")
-                sys.stdout.flush()
-            except Exception as e:
-                print(f"Exception while processing file_id {row['file_id']}: {e}")
-                sys.stdout.flush()
-                continue
-                        
-        # Clean up any half baked root files.
-        self.clean_up_root_dir(self.file_df)
-
-        # set_permissions()
 
         return None
 
@@ -411,31 +353,3 @@ class RunKatydid:
         return str(slew_path)
 
 
-    def clean_up_root_dir(self, file_df):
-
-        # Delete all root files that aren't in our df.
-        # TODO: Fix this.
-
-        run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
-
-        real_path_list = run_id_aid_dir.glob("*.root")
-        desired_path_list = file_df["root_file_path"].to_list()
-        desired_path_list = [Path(path) for path in desired_path_list]
-        remove_list = list(set(real_path_list) - set(desired_path_list))
-
-        if len(remove_list) == 0:
-            print("Cleaning up root file dir. No files to remove.")
-        else:
-            print("\nCleaning up. Removing the following files: \n")
-            for path in remove_list:
-                print(str(path))
-                path.unlink()
-
-        # Force a write to the log.
-        sys.stdout.flush()
-
-        return None
-
-
-if __name__ == "__main__":
-    main()
