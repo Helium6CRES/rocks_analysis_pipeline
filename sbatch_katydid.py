@@ -4,6 +4,7 @@ import argparse
 from typing import List
 from pathlib import Path
 
+from run_katydid_preprocessing import run_katydid_preprocessing
 
 def main():
     """
@@ -32,6 +33,46 @@ def main():
     else:
         analysis_id = args.analysis_id
 
+
+    for run_id in args.runids:
+        # preprocess run_id
+        file_df = run_katydid_preprocessing(
+                run_id,
+                analysis_id,
+                args.noise_run_id,
+                args.file_num
+                )
+        # Run katydid on all files in file_df that don't already have root files that exist.
+        condition = (file_df["root_file_exists"] != True) & (file_df["exists"] == True)
+
+        # Run katydid on each row/spec file in file_df.
+        # file_df[condition].apply(lambda row: run_katydid(row), axis=1)
+        for idx, row in file_df[condition].iterrows():
+            sbatch_job(row, tlim)
+
+        # set_permissions()
+        return None
+
+
+
+def sbatch_job(file_df_row, cmd, tlim):
+    """
+    Replaces SGE qsub with Slurm sbatch.
+    Uses --wrap for inline command submission.
+    """
+    run_id = file_df_row["run_id"]
+    file_id = file_df_row["file_id"]
+    analysis_id = file_df_row["analysis_id"]
+    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{file_id:04d}_{analysis_id:03d}.txt"
+
+    sbatch_opts = [
+        "--job-name", f"r{run_id}_a{analysis_id}",
+        "--time", tlim,
+        "--output", log_path,
+        "--export=ALL",
+        "--mail-type=NONE",
+    ]
+
     # Command to run inside the container
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
 
@@ -41,29 +82,11 @@ def main():
         "/bin/bash -c $'umask 002; source /data/raid2/eliza4/he6_cres/.bashrc {} "
     ).format(r"\n")
 
-    for run_id in args.runids:
-        default_katydid_sub = (
-                f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid.py "
-            f"-id {run_id} -nid {args.noise_run_id} -aid {analysis_id} -b \"{args.base_config}\" -fn {args.file_num} "
-        )
-        cmd = apptainer_prefix + f"{default_katydid_sub}'\""
-        sbatch_job(run_id, analysis_id, cmd, tlim)
-
-
-def sbatch_job(run_id, analysis_id, cmd, tlim):
-    """
-    Replaces SGE qsub with Slurm sbatch.
-    Uses --wrap for inline command submission.
-    """
-    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{analysis_id:03d}.txt"
-
-    sbatch_opts = [
-        "--job-name", f"r{run_id}_a{analysis_id}",
-        "--time", tlim,
-        "--output", log_path,
-        "--export=ALL",
-        "--mail-type=NONE",
-    ]
+    default_katydid_sub = (
+            f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py "
+        f"\"{json.dumps(row.to_dict())}\""
+    )
+    cmd = apptainer_prefix + f"{default_katydid_sub}'\""
 
     sbatch_str = " ".join(sbatch_opts)
     batch_cmd = f"sbatch {sbatch_str} --wrap={cmd}"
