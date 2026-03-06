@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 """
-Manages looping over all rids and file_ids from within apptainer to submit an sbatch for each file
+Manages looping over file_ids from within apptainer to submit an sbatch for each file
 """
 
 import argparse
-import subprocess as sp
 import sys
 from pathlib import Path
-import json
 # import glob
 
+from rocks_utility import sbatch_job
 from run_katydid_preprocessing import KatydidPreprocessing
 
 def main():
-    """
-    Parent loop over all rids
-    """
     par = argparse.ArgumentParser()
     arg =  par.add_argument
 
-    arg("-t", "--tlim", nargs=1, default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
-    arg("-rids", "--runids", nargs="+", type=int, help="run ids to analyze")
+    arg("-t", "--tlim", default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
+    arg("-rid", "--run_id", type=int, help="run id to analyze")
     arg("-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run.")
     arg("-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id.")
     arg("-fn", "--file_num", default=-1, type=int, help="Number of files in run id to analyze.")
@@ -28,17 +24,16 @@ def main():
 
     args = par.parse_args()
 
-    for run_id in args.runids:
-        launch_katydid_rid(
-                args.tlim,
-                run_id,
-                args.analysis_id,
-                args.noise_run_id,
-                args.base_config,
-                args.file_num,
-                )
+    launch_katydid(
+            args.tlim,
+            args.run_id,
+            args.analysis_id,
+            args.noise_run_id,
+            args.base_config,
+            args.file_num,
+            )
 
-def launch_katydid_rid(tlim, run_id, analysis_id, noise_run_id, base_config, file_num):
+def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_num):
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
     """
@@ -50,6 +45,7 @@ def launch_katydid_rid(tlim, run_id, analysis_id, noise_run_id, base_config, fil
         file_num,
     )
     file_df = preprocessor.file_df
+    file_df_path = preprocessor.file_df_path
 
     condition = (~file_df["root_file_exists"]) & (file_df["exists"])
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
@@ -65,54 +61,26 @@ def launch_katydid_rid(tlim, run_id, analysis_id, noise_run_id, base_config, fil
             print(rocks_file_path)
 
     for idx, row in file_df[condition].iterrows():
-        sbatch_katydid_file(row, tlim)
+        sbatch_katydid_file(file_df_path, row, idx, tlim)
 
     # clean_up_root_dir(file_df)
 
-def sbatch_katydid_file(file_df_row, tlim):
-    """
-    Uses --wrap for inline command submission.
-    """
+def sbatch_katydid_file(file_df_path, file_df_row, row_idx, tlim):
     run_id = file_df_row["run_id"]
-    file_id = file_df_row["file_id"]
     analysis_id = file_df_row["analysis_id"]
-    row_json = json.dumps(file_df_row.to_dict())
+    file_id = file_df_row["file_id"]
 
-    # Build the command to run inside the container
-    container_cmd = (
-        f"umask 002; "
-        f"source /data/raid2/eliza4/he6_cres/.bashrc; "
+    job_name = f"r{run_id}_a{analysis_id}_f{file_id}"
+    log_name = f"rid_{run_id}_aid_{analysis_id}_fid_{file_id}.txt"
+    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
+
+    cmd = (
         f"/opt/python3.7/bin/python3.7 -u "
-        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py {row_json}"
+        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py "
+        f"--file_df_path {file_df_path} --idx {row_idx}"
     )
 
-    # Full Apptainer command
-    apptainer_cmd = (
-        "apptainer exec "
-        "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
-        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
-        f"/bin/bash -c \"{container_cmd}\""
-    )
-
-    # SBATCH job options
-    log_path = (
-        f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/"
-        f"rid_{run_id:04d}_{file_id:04d}_{analysis_id:03d}.txt"
-        )
-
-    sbatch_opts = [
-        "--job-name", f"r{run_id}_a{analysis_id}_f{file_id}",
-        "--time", tlim,
-        "--output", log_path,
-        "--export=ALL",
-        "--mail-type=NONE",
-    ]
-    sbatch_str = " ".join(sbatch_opts)
-
-    batch_cmd = f"sbatch {sbatch_str} --wrap=\"{apptainer_cmd}\""
-    print("\n\n", batch_cmd, "\n\n")
-    sp.run(batch_cmd, shell=True)
-
+    sbatch_job(cmd, job_name, tlim, log_path, run_in_apptainer = True)
 
 def clean_up_root_dir(file_df):
 

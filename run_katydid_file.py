@@ -1,9 +1,9 @@
 import sys
+import argparse
 import time
 from pathlib import Path
 from shutil import copyfile
 import yaml
-import json
 import subprocess as sp
 import pandas as pd
 
@@ -16,19 +16,36 @@ from rocks_utility import (
 pd.set_option("display.max_columns", 100)
 
 def main():
-    """
-    Pass a json dump of a file_df row, e.g.
-        python run_katydid_file.py {json.dumps(row.to_dict())}
-    """
     # umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
+
+    par = argparse.ArgumentParser()
+    arg =  par.add_argument
+
+    arg("--file_df_path", type=str, help="Path to file_df csv. Read in as pandas dataframe")
+    arg("-id", "--idx", type=int, help="Integer index of row to load from file_df.")
+
+    args = par.parse_args()
+
+    # load file_df, then access a specific row. 
+    # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
+    try:
+        file_df = pd.read_csv(args.file_df_path)
+    except pd.errors.ParserError as e:
+        print(f"Exception: Could not load file_df from {args.file_df_path}.")
+        print(e)
+        print("Returning.\n")
+        return
+
+    try:
+        file_df_row = file_df.iloc[args.idx]
+    except IndexError as e:
+        print(f"Exception: Index {args.idx} not found in {args.file_df_path}.\n{e}\nReturning.") 
+        print(e)
+        print("Returning.\n")
+        return
 
     # Force a write to the log.
     sys.stdout.flush()
-
-    # read file_df row data (from json passed to argv) as a pandas series
-    file_df_row_dict = json.loads(sys.argv[1])
-    file_df_row = pd.Series(file_df_row_dict)
-
     try:
         print(f"\nProcessing file_id {file_df_row['file_id']} at PST time: {get_pst_time()}")
         sys.stdout.flush()

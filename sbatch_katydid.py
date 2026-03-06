@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI entry point for submitting katydid runs via sbatch. Misleadingly named, this actually starts run_katydid() in the apptainer which then handles looping over run_ids and submitting an sbatch for each file
+CLI entry point for submitting katydid runs via sbatch. 
 """
 import subprocess as sp
 import argparse
@@ -10,7 +10,7 @@ def main():
     par = argparse.ArgumentParser()
     arg = par.add_argument
 
-    arg("-t", "--tlim", nargs=1, default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
+    arg("-t", "--tlim", default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
     arg("-rids", "--runids", nargs="+", type=int, help="run ids to analyze")
     arg("-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run.")
     arg("-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id.")
@@ -31,14 +31,15 @@ def main():
     else:
         analysis_id = args.analysis_id
 
-    launch_katydid(
-            args.tlim,
-            args.runids,
-            analysis_id,
-            args.noise_run_id,
-            args.base_config,
-            args.file_num,
-            )
+    for run_id in args.runids:
+        launch_katydid(
+                args.tlim,
+                run_id,
+                analysis_id,
+                args.noise_run_id,
+                args.base_config,
+                args.file_num,
+                )
 
 
 def get_analysis_id(run_ids):
@@ -70,31 +71,28 @@ def get_analysis_id(run_ids):
 
 def launch_katydid(
         tlim,
-        run_ids,
+        run_id,
         analysis_id,
         noise_run_id,
         base_config,
         file_num,
         ):
 
-    # Build the command to run inside the container
-    container_cmd = (
-        f"umask 002; "
-        f"source /data/raid2/eliza4/he6_cres/.bashrc; "
-        f"/opt/python3.7/bin/python3.7 -u "
-        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/launch_katydid.py "
-        f"-t {tlim} -rids {run_ids} -nid {noise_run_id} -aid {analysis_id} -b {base_config} -fn {file_num}"
-    )
+    base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
+    python_venv = base_dir / ".venv/bin/python"
+    script = base_dir / "launch_katydid.py"
+    args = (
+        f"-t {tlim} "
+        f"-rid {run_id} "
+        f"-nid {noise_run_id} "
+        f"-aid {analysis_id} "
+        f"-b {base_config} "
+        f"-fn {file_num} "
+        )
 
-    # Full Apptainer command
-    apptainer_cmd = (
-        "apptainer exec "
-        "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
-        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
-        f"/bin/bash -c \"{container_cmd}\""
-    )
-
-    cmd = f"{apptainer_cmd}"
+    # TODO: sbatch job for each RID instead of running preprocessing in login node
+    cmd = f"{python_venv} {script} {args}"
+    print(cmd)
     sp.run(cmd, shell = True)
 
 if __name__ == "__main__":
