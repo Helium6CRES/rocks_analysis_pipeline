@@ -4,13 +4,12 @@ Perform all the preprocessing for a run_id before submitting sbatch for each job
 """
 import argparse
 import pandas as pd
-from glob import glob
 
-import psycopg2
-from psycopg2 import Error
-import typing
+# import psycopg2
+# from psycopg2 import Error
+# import typing
 from typing import List
-import pandas.io.sql as psql
+# import pandas.io.sql as psql
 from pathlib import Path
 import sys
 import json
@@ -48,18 +47,7 @@ def main():
 
     args = par.parse_args()
 
-    print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
-
-    # Print summary of katydid running.
-    print(f"\nPreprocessing: run_id: {args.run_id}.\n")
-
-    # Force a write to the log.
-    sys.stdout.flush()
-
-    # appropriate access.
-    set_permissions()
-
-    preprocessor = RunKatydidPreprocessing(
+    KatydidPreprocessing(
         args.run_id,
         args.analysis_id,
         args.noise_run_id,
@@ -67,13 +55,8 @@ def main():
         args.file_num,
     )
 
-    # set_permissions()
 
-    print(f"\nRunning Katydid preprocessing on {args.run_id} DONE at PST time: {get_pst_time()}\n")
-    log_file_break()
-
-
-class RunKatydidPreprocessing:
+class KatydidPreprocessing:
     def __init__(self, run_id, analysis_id, noise_run_id, base_config, file_num):
 
         self.run_id = run_id
@@ -82,25 +65,28 @@ class RunKatydidPreprocessing:
         self.base_config = base_config
         self.file_num = file_num
 
-        # Step 0. Print run summary.
+        print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
+        print(f"\nPreprocessing: run_id: {run_id}.\n")
+
+        # Force a write to the log.
+        sys.stdout.flush()
+
+        # appropriate access.
+        set_permissions()
+
+        # Print run summary.
         self.print_run_summary()
 
-        # Step 1. Build the path to the file_df.
+        # Build the path to the file_df.
         self.file_df_path = self.build_file_df_path()
 
-        # Step 2. Collect the file_df. This means deciding if cleanup or new analysis.
+        # Collect the file_df. This means deciding if cleanup or new analysis.
         self.file_df = self.collect_file_df()
 
-        # Step 3. Run katydid on all files in file_df that don't already have root files that exist.
-        condition = (self.file_df["root_file_exists"] != True) & (self.file_df["exists"] == True)
-        print(f"\nRunning katydid on {condition.sum()} of {len(self.file_df)} files.")
-        # Alert which run_ids files do not exist on ROCKS
-        print("The following files don't seem to exist yet on ROCKS!")
-        # Print file_id where exists is False
-        for rocks_file_path in self.file_df.loc[~self.file_df['exists'], 'rocks_file_path']:
-            print(rocks_file_path)
+        # set_permissions()
 
-        return None
+        print(f"\nRunning Katydid preprocessing on {run_id} DONE at PST time: {get_pst_time()}\n")
+        log_file_break()
 
     def print_run_summary(self):
         print("\nRun Summary:")
@@ -144,7 +130,7 @@ class RunKatydidPreprocessing:
 
         # New analysis.
         else:
-            print(f"Analysis Type: New analysis. \nBuilding file_df.\n")
+            print("Analysis Type: New analysis. \nBuilding file_df.\n")
             file_df = self.build_full_file_df()
         return file_df
 

@@ -20,7 +20,7 @@ def main():
     Pass a json dump of a file_df row, e.g.
         python run_katydid_file.py {json.dumps(row.to_dict())}
     """
-    umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
+    # umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -38,8 +38,6 @@ def main():
     except Exception as e:
         print(f"Exception while processing file_id {file_df_row['file_id']}: {e}")
         sys.stdout.flush()
-
-    clean_up_root_dir(file_df_row)
 
 
 def run_katydid_file(file_df_row: pd.Series):
@@ -184,32 +182,6 @@ def run_katydid_file(file_df_row: pd.Series):
         # raise RuntimeError("Katydid failed")
 
     return None
-
-def clean_up_root_dir(file_df):
-
-    # Delete all root files that aren't in our df.
-    # TODO: Fix this.
-
-    run_id_aid_dir = Path(file_df["root_file_path"][0]).parents[0]
-
-    real_path_list = run_id_aid_dir.glob("*.root")
-    desired_path_list = file_df["root_file_path"].to_list()
-    desired_path_list = [Path(path) for path in desired_path_list]
-    remove_list = list(set(real_path_list) - set(desired_path_list))
-
-    if len(remove_list) == 0:
-        print("Cleaning up root file dir. No files to remove.")
-    else:
-        print("\nCleaning up. Removing the following files: \n")
-        for path in remove_list:
-            print(str(path))
-            path.unlink()
-
-    # Force a write to the log.
-    sys.stdout.flush()
-
-    return None
-
 
 if __name__ == "__main__":
     main()

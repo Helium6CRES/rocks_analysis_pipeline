@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
+"""
+CLI entry point for submitting katydid runs via sbatch. Misleadingly named, this actually starts run_katydid() in the apptainer which then handles looping over run_ids and submitting an sbatch for each file
+"""
 import subprocess as sp
 import argparse
-from typing import List
 from pathlib import Path
-import json
-
-from run_katydid_preprocessing import run_katydid_preprocessing
 
 def main():
-    """
-    Slurm submission script for Katydid analysis.
-    """
     par = argparse.ArgumentParser()
-    arg, st = par.add_argument, "store_true"
+    arg = par.add_argument
 
     arg("-t", "--tlim", nargs=1, default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
     arg("-rids", "--runids", nargs="+", type=int, help="run ids to analyze")
@@ -35,66 +31,14 @@ def main():
     else:
         analysis_id = args.analysis_id
 
-
-    for run_id in args.runids:
-        # preprocess run_id
-        file_df = run_katydid_preprocessing(
-                run_id,
-                analysis_id,
-                args.noise_run_id,
-                args.file_num
-                )
-        # Run katydid on all files in file_df that don't already have root files that exist.
-        condition = (file_df["root_file_exists"] != True) & (file_df["exists"] == True)
-
-
-        # Run katydid on each row/spec file in file_df.
-        # file_df[condition].apply(lambda row: run_katydid(row), axis=1)
-        if not file_df[condition].empty:
-            for idx, row in file_df[condition].iterrows():
-                sbatch_job(row, tlim)
-
-    # set_permissions()
-
-
-
-def sbatch_job(file_df_row, tlim):
-    """
-    Replaces SGE qsub with Slurm sbatch.
-    Uses --wrap for inline command submission.
-    """
-    run_id = file_df_row["run_id"]
-    file_id = file_df_row["file_id"]
-    analysis_id = file_df_row["analysis_id"]
-    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/rid_{run_id:04d}_{file_id:04d}_{analysis_id:03d}.txt"
-
-    sbatch_opts = [
-        "--job-name", f"r{run_id}_a{analysis_id}",
-        "--time", tlim,
-        "--output", log_path,
-        "--export=ALL",
-        "--mail-type=NONE",
-    ]
-
-    # Command to run inside the container
-    # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
-    apptainer_prefix = (
-        "\"apptainer exec --bind /data/raid2/eliza4/he6_cres/ "
-        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
-        "/bin/bash -c $'umask 002; source /data/raid2/eliza4/he6_cres/.bashrc {} "
-    ).format(r"\n")
-
-    default_katydid_sub = (
-        f"/opt/python3.7/bin/python3.7 -u "
-        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py "
-        f"{json.dumps(file_df_row.to_dict())}"
-    )
-
-    sbatch_str = " ".join(sbatch_opts)
-    batch_cmd = f"sbatch {sbatch_str} --wrap='{apptainer_prefix}{default_katydid_sub}'"
-
-    print("\n\n", batch_cmd, "\n\n")
-    sp.run(batch_cmd, shell=True)
+    launch_katydid(
+            args.tlim,
+            args.runids,
+            analysis_id,
+            args.noise_run_id,
+            args.base_config,
+            args.file_num,
+            )
 
 
 def get_analysis_id(run_ids):
@@ -124,6 +68,35 @@ def get_analysis_id(run_ids):
 
     return max(max_analysis_ids) + 1
 
+def launch_katydid(
+        tlim,
+        run_ids,
+        analysis_id,
+        noise_run_id,
+        base_config,
+        file_num,
+        ):
+
+    # Build the command to run inside the container
+    container_cmd = (
+        f"umask 002; "
+        f"source /data/raid2/eliza4/he6_cres/.bashrc; "
+        f"/opt/python3.7/bin/python3.7 -u "
+        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/launch_katydid.py "
+        f"-t {tlim} -rids {run_ids} -nid {noise_run_id} -aid {analysis_id} -b {base_config} -fn {file_num}"
+    )
+
+    # Full Apptainer command
+    apptainer_cmd = (
+        "apptainer exec "
+        "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
+        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
+        f"/bin/bash -c \"{container_cmd}\""
+    )
+
+    cmd = f"{apptainer_cmd}"
+    sp.run(cmd, shell = True)
 
 if __name__ == "__main__":
     main()
+
