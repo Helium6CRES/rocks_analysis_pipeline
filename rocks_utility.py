@@ -108,3 +108,46 @@ def log_file_break():
     print("################################################################")
     print("\n\n")
     return None
+
+def sbatch_job(
+        cmd: str, 
+        job_name: str, 
+        tlim: str, 
+        log_path: str, 
+        run_in_apptainer = False
+        ):
+    sbatch_opts = [
+        "--job-name", job_name,
+        "--time", tlim,
+        "--output", log_path,
+        "--export=ALL",
+        "--mail-type=NONE",
+    ]
+
+    if run_in_apptainer:
+        # Build the command to run inside the container
+        container_cmd = (
+            f"umask 002; "
+            f"source /data/raid2/eliza4/he6_cres/.bashrc; "
+        )
+
+        # Full Apptainer command
+        full_cmd = (
+            "apptainer exec "
+            "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
+            "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
+            f"/bin/bash -c '{container_cmd}{cmd}'"
+        )
+    else:
+        full_cmd = cmd
+
+    sbatch_cmd = ["sbatch"] + sbatch_opts
+    
+    print("\n\n", " ".join(sbatch_cmd + [full_cmd]), "\n\n")
+    proc = sp.run(
+        sbatch_cmd, 
+        input = f"#!/bin/bash\nset -euo pipefail\n{full_cmd}\n", 
+        text=True
+        )
+    return proc
+    
