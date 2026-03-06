@@ -31,18 +31,27 @@ from rocks_utility import (
 # Import settings.
 pd.set_option("display.max_columns", 100)
 
-def run_katydid_preprocessing(
-        run_id,
-        analysis_id,
-        noise_run_id,
-        base_config,
-        file_num,
-        ):
+def main():
+
+    par = argparse.ArgumentParser()
+    arg = par.add_argument()
+    arg("-id", "--run_id", type=int, 
+        help="run_id to run katydid on")
+    arg("-nid", "--noise_run_id", type=int, 
+        help="run_id to use for noise floor in katydid run. If -1 then will use self as noise file.")
+    arg("-aid", "--analysis_id", type=int,
+        help="analysis_id used to label directories.")
+    arg("-b", "--base_config", type=str,
+        help="base .yaml katydid config file to be run on run_id, should exist in base config directory.")
+    arg("-fn", "--file_num", default=-1, type=int,
+        help="Number of files in run_id to analyzie (<= number of files in run_id)")
+
+    args = par.parse_args()
 
     print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
 
     # Print summary of katydid running.
-    print(f"\nPreprocessing: run_id: {run_id}.\n")
+    print(f"\nPreprocessing: run_id: {args.run_id}.\n")
 
     # Force a write to the log.
     sys.stdout.flush()
@@ -50,19 +59,18 @@ def run_katydid_preprocessing(
     # appropriate access.
     set_permissions()
 
-    file_df = RunKatydidPreprocessing(
-        run_id,
-        analysis_id,
-        noise_run_id,
-        base_config,
-        file_num,
-    ).file_df
+    preprocessor = RunKatydidPreprocessing(
+        args.run_id,
+        args.analysis_id,
+        args.noise_run_id,
+        args.base_config,
+        args.file_num,
+    )
 
     # set_permissions()
 
     print(f"\nRunning Katydid preprocessing on {args.run_id} DONE at PST time: {get_pst_time()}\n")
     log_file_break()
-    return file_df
 
 
 class RunKatydidPreprocessing:
