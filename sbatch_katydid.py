@@ -3,6 +3,7 @@ import subprocess as sp
 import argparse
 from typing import List
 from pathlib import Path
+import json
 
 from run_katydid_preprocessing import run_katydid_preprocessing
 
@@ -13,7 +14,7 @@ def main():
     par = argparse.ArgumentParser()
     arg, st = par.add_argument, "store_true"
 
-    arg("-t", "--tlim", nargs=1, type=str, help="set time limit (HH:MM:SS)")
+    arg("-t", "--tlim", nargs=1, default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
     arg("-rids", "--runids", nargs="+", type=int, help="run ids to analyze")
     arg("-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run.")
     arg("-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id.")
@@ -22,7 +23,8 @@ def main():
 
     args = par.parse_args()
 
-    tlim = "48:00:00" if args.tlim is None else args.tlim[0]
+    if not args.runids:
+        raise ValueError("Must provide --runids")
 
     # If the analysis_id is set to -1 then a new directory is built.
     # Else you will conduct a clean-up.
@@ -45,17 +47,18 @@ def main():
         # Run katydid on all files in file_df that don't already have root files that exist.
         condition = (file_df["root_file_exists"] != True) & (file_df["exists"] == True)
 
+
         # Run katydid on each row/spec file in file_df.
         # file_df[condition].apply(lambda row: run_katydid(row), axis=1)
-        for idx, row in file_df[condition].iterrows():
-            sbatch_job(row, tlim)
+        if not file_df[condition].empty:
+            for idx, row in file_df[condition].iterrows():
+                sbatch_job(row, tlim)
 
-        # set_permissions()
-        return None
+    # set_permissions()
 
 
 
-def sbatch_job(file_df_row, cmd, tlim):
+def sbatch_job(file_df_row, tlim):
     """
     Replaces SGE qsub with Slurm sbatch.
     Uses --wrap for inline command submission.
@@ -75,7 +78,6 @@ def sbatch_job(file_df_row, cmd, tlim):
 
     # Command to run inside the container
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
-
     apptainer_prefix = (
         "\"apptainer exec --bind /data/raid2/eliza4/he6_cres/ "
         "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
@@ -83,13 +85,13 @@ def sbatch_job(file_df_row, cmd, tlim):
     ).format(r"\n")
 
     default_katydid_sub = (
-            f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py "
-        f"\"{json.dumps(row.to_dict())}\""
+        f"/opt/python3.7/bin/python3.7 -u "
+        f"/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_katydid_file.py "
+        f"{json.dumps(file_df_row.to_dict())}"
     )
-    cmd = apptainer_prefix + f"{default_katydid_sub}'\""
 
     sbatch_str = " ".join(sbatch_opts)
-    batch_cmd = f"sbatch {sbatch_str} --wrap={cmd}"
+    batch_cmd = f"sbatch {sbatch_str} --wrap='{apptainer_prefix}{default_katydid_sub}'"
 
     print("\n\n", batch_cmd, "\n\n")
     sp.run(batch_cmd, shell=True)
@@ -109,7 +111,7 @@ def get_analysis_id(run_ids):
     for run_id in run_ids:
         run_id_dir = base_path / f"rid_{run_id:04d}"
         if not run_id_dir.is_dir():
-            run_id_dir.mkdir()
+            run_id_dir.mkdir(parents = True, exist_ok = True)
             print(f"Created directory: {run_id_dir}")
         
         # Robust against deleted or missing aids.
