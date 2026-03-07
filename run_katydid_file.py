@@ -30,9 +30,9 @@ def main():
     # load file_df, then access a specific row. 
     # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
-        file_df = pd.read_json(args.file_df_path)
+        file_df = pd.read_json(args.file_df_json_path)
     except pd.errors.ParserError as e:
-        print(f"Exception: Could not load file_df from {args.file_df_path}.")
+        print(f"Exception: Could not load file_df from {args.file_df_json_path}.")
         print(e)
         print("Returning.\n")
         return
@@ -40,14 +40,11 @@ def main():
     try:
         file_df_row = file_df.iloc[args.idx]
         # Convert np types to Python types, otherwise yaml.dump will print binary for numpy types...
-        file_df_row.apply(
-            lambda x: list(x) if isinstance(x, np.ndarray) else x
-        )
         file_df_row = file_df_row.apply(
             lambda x: x.item() if isinstance(x, np.generic) else x
         )
     except IndexError as e:
-        print(f"Exception: Index {args.idx} not found in {args.file_df_path}.\n{e}\nReturning.") 
+        print(f"Exception: Index {args.idx} not found in {args.file_df_json_path}.\n{e}\nReturning.") 
         print(e)
         print("Returning.\n")
         return

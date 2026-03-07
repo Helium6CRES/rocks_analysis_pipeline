@@ -205,12 +205,12 @@ class KatydidPreprocessing:
         # This will be used during the cleanup run.
         print(f"Built file_df: {self.file_df_path}")
 
-        # Copy file_df before writing to csv and json so we don't mutate the in-memory df we return
-        file_df_copy = file_df.copy()
-        file_df_copy["rocks_file_path"] = file_df_copy["rocks_file_path"].map(json.dumps)
-        file_df_copy["rocks_noise_file_path"] = file_df_copy["rocks_noise_file_path"].map(json.dumps)
-        file_df_copy.to_csv(self.file_df_path, index=False)
-        file_df_copy.to_json(self.file_df_json_path, index=False)
+        file_df.to_json(self.file_df_json_path, index=False)
+        # Copy file_df before writing to csv so we don't mutate the in-memory df we return
+        file_df_csv = file_df.copy()
+        file_df_csv["rocks_file_path"] = file_df_csv["rocks_file_path"].map(json.dumps)
+        file_df_csv["rocks_noise_file_path"] = file_df_csv["rocks_noise_file_path"].map(json.dumps)
+        file_df_csv.to_csv(self.file_df_path, index=False)
 
         return file_df
 
