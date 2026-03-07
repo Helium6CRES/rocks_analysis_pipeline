@@ -45,7 +45,7 @@ def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_nu
         file_num,
     )
     file_df = preprocessor.file_df
-    file_df_path = preprocessor.file_df_path
+    file_df_path = preprocessor.file_df_json_path
 
     condition = (~file_df["root_file_exists"]) & (file_df["exists"])
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")

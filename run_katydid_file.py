@@ -6,6 +6,7 @@ from shutil import copyfile
 import yaml
 import subprocess as sp
 import pandas as pd
+import numpy as np
 
 # Local imports
 from rocks_utility import (
@@ -21,7 +22,7 @@ def main():
     par = argparse.ArgumentParser()
     arg =  par.add_argument
 
-    arg("--file_df_path", type=str, help="Path to file_df csv. Read in as pandas dataframe")
+    arg("--file_df_json_path", type=str, help="Path to file_df json. Read in as pandas dataframe")
     arg("-id", "--idx", type=int, help="Integer index of row to load from file_df.")
 
     args = par.parse_args()
@@ -29,7 +30,7 @@ def main():
     # load file_df, then access a specific row. 
     # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
-        file_df = pd.read_csv(args.file_df_path)
+        file_df = pd.read_json(args.file_df_path)
     except pd.errors.ParserError as e:
         print(f"Exception: Could not load file_df from {args.file_df_path}.")
         print(e)
@@ -38,6 +39,13 @@ def main():
 
     try:
         file_df_row = file_df.iloc[args.idx]
+        # Convert np types to Python types, otherwise yaml.dump will print binary for numpy types...
+        file_df_row.apply(
+            lambda x: list(x) if isinstance(x, np.ndarray) else x
+        )
+        file_df_row = file_df_row.apply(
+            lambda x: x.item() if isinstance(x, np.generic) else x
+        )
     except IndexError as e:
         print(f"Exception: Index {args.idx} not found in {args.file_df_path}.\n{e}\nReturning.") 
         print(e)
@@ -85,9 +93,10 @@ def run_katydid_file(file_df_row: pd.Series):
     # the original.
     rid = file_df_row["run_id"]
     aid = file_df_row["analysis_id"]
+    fid = file_df_row["file_id"]
 
     config_path = base_config_path.parent / str(
-        base_config_path.stem + f"_{rid:04d}_{aid:03d}" + base_config_path.suffix
+        base_config_path.stem + f"_{rid:04d}_{aid:03d}_{fid:04d}" + base_config_path.suffix
     )
 
     # copy base config file to edit

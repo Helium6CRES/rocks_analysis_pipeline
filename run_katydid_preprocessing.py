@@ -78,7 +78,7 @@ class KatydidPreprocessing:
         self.print_run_summary()
 
         # Build the path to the file_df.
-        self.file_df_path = self.build_file_df_path()
+        self.build_file_df_path()
 
         # Collect the file_df. This means deciding if cleanup or new analysis.
         self.file_df = self.collect_file_df()
@@ -145,10 +145,12 @@ class KatydidPreprocessing:
             / Path(f"aid_{self.analysis_id:03d}")
         )
 
-        file_df_path = rid_ai_dir / Path(
+        self.file_df_path = rid_ai_dir / Path(
             f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.csv"
         )
-        return file_df_path
+        self.file_df_json_path = rid_ai_dir / Path(
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
+        )
 
     def build_full_file_df(self):
         """
@@ -202,11 +204,13 @@ class KatydidPreprocessing:
         # Before running katydid write this df to the analysis dir.
         # This will be used during the cleanup run.
         print(f"Built file_df: {self.file_df_path}")
-        # CSV-only copy so we don't mutate the in-memory df we return
-        file_df_csv = file_df.copy()
-        file_df_csv["rocks_file_path"] = file_df_csv["rocks_file_path"].map(json.dumps)
-        file_df_csv["rocks_noise_file_path"] = file_df_csv["rocks_noise_file_path"].map(json.dumps)
-        file_df_csv.to_csv(self.file_df_path, index=False)
+
+        # Copy file_df before writing to csv and json so we don't mutate the in-memory df we return
+        file_df_copy = file_df.copy()
+        file_df_copy["rocks_file_path"] = file_df_copy["rocks_file_path"].map(json.dumps)
+        file_df_copy["rocks_noise_file_path"] = file_df_copy["rocks_noise_file_path"].map(json.dumps)
+        file_df_copy.to_csv(self.file_df_path, index=False)
+        file_df_copy.to_json(self.file_df_json_path, index=False)
 
         return file_df
 
