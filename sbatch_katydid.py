@@ -22,27 +22,31 @@ def main():
     if not args.runids:
         raise ValueError("Must provide --runids")
 
-    # If the analysis_id is set to -1 then a new directory is built.
+    # Get the analysis index to use for the list of jobs.
+    # If the analysis_id is set to -1 (default) then the most recent analysis is overwritten, or a new directory is built if none exist.
+    # If the analysis_id does not exist yet, then the analysis runs as normal with that analysis_id.
     # Else you will conduct a clean-up.
     if args.analysis_id == -1:
-        # Get the analysis index to use for the list of jobs.
-        analysis_id = get_analysis_id(args.runids)
+        analysis_id = get_max_analysis_id(args.runids)
         print(f"analysis_id: {analysis_id}")
+        aid_passed = False
     else:
         analysis_id = args.analysis_id
+        aid_passed = True
 
     for run_id in args.runids:
-        launch_katydid(
+        sbatch_katydid(
                 args.tlim,
                 run_id,
                 analysis_id,
                 args.noise_run_id,
                 args.base_config,
                 args.file_num,
+                aid_passed,
                 )
 
 
-def get_analysis_id(run_ids):
+def get_max_analysis_id(run_ids):
     """
     We want each analysis run simultaneously to have the same analysis number.
     This function goes through and builds the directory structure out and
@@ -67,15 +71,16 @@ def get_analysis_id(run_ids):
         # Use the fact that an empty list is boolean False.
         max_analysis_ids.append(max(analysis_ids) if analysis_ids else 0)
 
-    return max(max_analysis_ids) + 1
+    return max(max_analysis_ids)
 
-def launch_katydid(
+def sbatch_katydid(
         tlim,
         run_id,
         analysis_id,
         noise_run_id,
         base_config,
         file_num,
+        aid_passed=False,
         ):
 
     base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
@@ -89,6 +94,9 @@ def launch_katydid(
         f"-b {base_config} "
         f"-fn {file_num} "
         )
+
+    if aid_passed:
+        args += "--aid_passed "
 
     # TODO: sbatch job for each RID instead of running preprocessing in login node
     cmd = f"{python_venv} {script} {args}"
