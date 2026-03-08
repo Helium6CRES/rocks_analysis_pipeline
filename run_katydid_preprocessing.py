@@ -32,6 +32,10 @@ pd.set_option("display.max_columns", 100)
 
 def main():
 
+    """
+    CLI entry point. Not currently used: launch_katydid imports KatydidPreprocessing directly. Might delete later, but keeping for consistency for now. 
+    """
+
     par = argparse.ArgumentParser()
     arg = par.add_argument()
     arg("-id", "--run_id", type=int, 
@@ -44,6 +48,8 @@ def main():
         help="base .yaml katydid config file to be run on run_id, should exist in base config directory.")
     arg("-fn", "--file_num", default=-1, type=int,
         help="Number of files in run_id to analyzie (<= number of files in run_id)")
+    arg("--aid_passed", action="store_true",
+        help="Flag to indicate that the user specified aid explicitly, instead the default value. If so, will perform a cleanup if the aid exists or run as normal.")
 
     args = par.parse_args()
 
@@ -53,17 +59,19 @@ def main():
         args.noise_run_id,
         args.base_config,
         args.file_num,
+        args.aid_passed,
     )
 
 
 class KatydidPreprocessing:
-    def __init__(self, run_id, analysis_id, noise_run_id, base_config, file_num):
+    def __init__(self, run_id, analysis_id, noise_run_id, base_config, file_num, aid_passed=False):
 
         self.run_id = run_id
         self.analysis_id = analysis_id
         self.noise_run_id = noise_run_id
         self.base_config = base_config
         self.file_num = file_num
+        self.aid_passed = aid_passed
 
         print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
         print(f"\nPreprocessing: run_id: {run_id}.\n")
@@ -95,14 +103,14 @@ class KatydidPreprocessing:
         print(f"base_config: {self.base_config}\n")
         return None
 
+
     def collect_file_df(self):
         # This function figures out if the run is a clean up or new analysis
         # and collects the file_df.
         # This entails determining if this should be a clean-up or new analysis.
-        # If the rid_df already exists it's a cleanup
+        # Clean up if file_df csv exists and the aid was specified by the user as a command line argument.
 
-        # Clean up.
-        if self.file_df_path.is_file():
+        if self.is_cleanup:
             print(
                 f"Analysis Type: Clean up. \nfile_df {self.file_df_path} already exists.\n"
             )
@@ -124,11 +132,10 @@ class KatydidPreprocessing:
                 file_df = file_df[: self.file_num]
 
             # Check to see which root files already exist.
-            file_df["root_file_exists"] = file_df["root_file_path"].apply(
-                lambda x: check_if_exists(x)
+            file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
             )
 
-        # New analysis.
+        # New analysis if the file does not exist or the aid was not specified.
         else:
             print("Analysis Type: New analysis. \nBuilding file_df.\n")
             file_df = self.build_full_file_df()
@@ -152,6 +159,8 @@ class KatydidPreprocessing:
             f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
         )
 
+        self.is_cleanup = self.file_df_path.is_file() and self.aid_passed
+
     def build_full_file_df(self):
         """
         Populate df of spec(k) files with metadata and path information. 
@@ -161,12 +170,8 @@ class KatydidPreprocessing:
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
-        file_df["rocks_file_path"] = file_df["file_path"].apply(
-            lambda x: self.process_fp(x)
-        )
-        file_df["exists"] = file_df["rocks_file_path"].apply(
-            lambda x: check_if_exists(x)
-        )
+        file_df["rocks_file_path"] = file_df["file_path"].apply(self.process_fp)
+        file_df["exists"] = file_df["rocks_file_path"].apply(check_if_exists)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
@@ -185,9 +190,7 @@ class KatydidPreprocessing:
             noise_fp_list = self.get_noise_fp()
             file_df["noise_file_path"] = [noise_fp_list] * len(file_df)
 
-        file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(
-            lambda x: self.process_fp(x)
-        )
+        file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(self.process_fp)
 
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
@@ -304,7 +307,7 @@ class KatydidPreprocessing:
 
         current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
         if not current_analysis_dir.is_dir():
-            current_analysis_dir.mkdir()
+            current_analysis_dir.mkdir(exist_ok=True) # guard against race condition
             print(f"Created directory: {current_analysis_dir}")
 
         return str(current_analysis_dir)

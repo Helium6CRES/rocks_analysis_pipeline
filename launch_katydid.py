@@ -15,12 +15,20 @@ def main():
     par = argparse.ArgumentParser()
     arg =  par.add_argument
 
-    arg("-t", "--tlim", default="48:00:00", type=str, help="set time limit (HH:MM:SS)")
-    arg("-rid", "--run_id", type=int, help="run id to analyze")
-    arg("-nid", "--noise_run_id", type=int, help="run_id to use for noise floor in katydid run.")
-    arg("-b", "--base_config", type=str, help="base .yaml katydid config file to be run on run_id.")
-    arg("-fn", "--file_num", default=-1, type=int, help="Number of files in run id to analyze.")
-    arg("-aid", "--analysis_id", type=int, default=-1, help="analysis_id used to label directories. If -1, a new index will be created.")
+    arg("-t", "--tlim", default="48:00:00", type=str, 
+        help="set time limit (HH:MM:SS)")
+    arg("-rid", "--run_id", type=int, 
+        help="run id to analyze")
+    arg("-nid", "--noise_run_id", type=int, 
+        help="run_id to use for noise floor in katydid run.")
+    arg("-b", "--base_config", type=str, 
+        help="base .yaml katydid config file to be run on run_id.")
+    arg("-fn", "--file_num", default=-1, type=int, 
+        help="Number of files in run id to analyze.")
+    arg("-aid", "--analysis_id", type=int, default=-1, 
+        help="analysis_id used to label directories. If -1, a new index will be created.")
+    arg("--aid_passed", action="store_true",
+        help="Flag to indicate that the user specified aid explicitly, instead the default value. If so, will perform a cleanup if the aid exists or run as normal.")
 
     args = par.parse_args()
 
@@ -31,9 +39,10 @@ def main():
             args.noise_run_id,
             args.base_config,
             args.file_num,
+            args.aid_passed,
             )
 
-def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_num):
+def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_num, aid_passed=False):
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
     """
@@ -43,6 +52,7 @@ def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_nu
         noise_run_id,
         base_config,
         file_num,
+        aid_passed,
     )
     file_df = preprocessor.file_df
     file_df_json_path = preprocessor.file_df_json_path
