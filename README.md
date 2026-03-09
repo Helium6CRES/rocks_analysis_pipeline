@@ -69,16 +69,20 @@ With the container, after getting an account on WULF, you should be all set to g
 	* `cd /data/raid2/eliza4/he6_cres`
 	* `./rocks_analysis_pipeline/sbatch_katydid.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -nid 1716 -b "2-12_LTF_MBEB_tausnr7_2400.yaml" -fn 1000`
 		* The above will run at most fn files for each run_id listed using the base config file provided. 
-		* For reference the above jobs (one job per run_id) were mostly finished in 30 mins. 
 		* A analysis_id (aid) will be assigned to the analysis. Example: aid = 9.
-		* A job log for each run_id will be created. Example: rid_1801_009.txt
+		* A job log for each run_id and file_id will be created. Example: rid_1801_aid_9_fid_213.txt
+		* Monitor job progress in real time with the following commands: `tail -f /data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/JOB_LOG.txt` and `watch -n 1 squeue -u YOUR_USERNAME`
 
 * **Step 1:** Clean up. Let the above run (perhaps overnight) and then run the following clean-up script. Say the analysis_id assigned to the above katydid run was 009, then you will do the following to clean up that run. The same log files as above will be written to. Best to run the below twice if doing an analysis that has many many run_ids/spec files (greater than 500 files or so).
 	* Log on to rocks. 
 	* `cd /data/raid2/eliza4/he6_cres`
 	* `./rocks_analysis_pipeline/sbatch_katydid.py -rids 1748 1749 1750 1751 1752 1753 1754 1757 1758 1759 1760 1761 1762 1763 1767 1768 1769 1770 1771 1772 1773 1775 1776 1777 1778 1779 1780 1781 1784 1785 1786 1787 1788 1789 1790 1791 1795 1796 1797 1798 1799 1800 1801 1804 1805 1806 1807 1808 1809 1810 1813 1814 1815 1816 1817 1818 1819 1821 1822 1823 1824 1825 1826 1827 1829 1830 1831 1832 1833 1834 1835 1843 1844 1845 1846 1847 1848 1849 1853 1854 1855 1856 1857 1858 1859 1863 1864 1865 1866 1867 1868 1869 1874 1875 1876 1877 1878 1879 1880 1885 1886 1887 1888 1889 1890 1891 1899 1900 1901 1902 1903 1904 1905 -nid 1716 -b "2-12_LTF_MBEB_tausnr7_2400.yaml" -fn 1000 -aid 9`
 		* The above will rerun all of the files in analysis_id 9 that haven't yet been created.
-		* Note that you want to include "-fn 3" here in case a node failed before even creating the  
+
+Analysis ID logic:
+* No `-aid` argument: Runs new analysis. If no existing aid exists, will run analysis 0. Otherwise, it will **overwrite the highest existing aid**. This is by design to prevent accumulating unused root files.
+* `-aid` passed but aid does not exist: New analysis at that aid. Use this if you want to run with a new config while preserving old analyses.
+* `-aid` passed for an existing aid: Cleanup, reruns katydid on any `run_id`s and `file_id`s that were not successfully completed. 
 
 ### Post Processing:
 
