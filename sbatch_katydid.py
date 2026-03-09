@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env .venv/bin/python3
 """
 CLI entry point for submitting katydid runs via sbatch. 
 """
-import subprocess as sp
 import argparse
 from pathlib import Path
+from rocks_utility import sbatch_job
 
 def main():
     par = argparse.ArgumentParser()
@@ -98,10 +98,13 @@ def sbatch_katydid(
     if aid_passed:
         args += "--aid_passed "
 
-    # TODO: sbatch job for each RID instead of running preprocessing in login node
-    cmd = f"{python_venv} {script} {args}"
-    print(cmd)
-    sp.run(cmd, shell = True)
+    cmd = f"{python_venv} -u {script} {args}"
+
+    job_name = f"r{run_id}_a{analysis_id}"
+    log_name = f"rid_{run_id}_aid_{analysis_id}.txt"
+    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
+
+    sbatch_job(cmd, job_name, tlim, log_path)
 
 if __name__ == "__main__":
     main()
