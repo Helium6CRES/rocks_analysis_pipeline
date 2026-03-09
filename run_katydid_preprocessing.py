@@ -140,6 +140,11 @@ class KatydidPreprocessing:
             file_df["rocks_file_path"] = file_df["rocks_file_path"].apply(json.loads)
             file_df["rocks_noise_file_path"] = file_df["rocks_noise_file_path"].apply(json.loads)
 
+            if self.get_base_config_path() != file_df["base_config_path"]:
+                raise ValueError(
+                        f"Trying to run cleanup using config at {self.get_base_config_path()}, but original run used {file_df['base_config_path']}. Rerun using the same config or run as new analysis."
+                        )
+
             # The following is a sanity check to make sure the number of files in the clean-up
             # match the number of files that were originally run. Then trim the df according
             # to the file_num arg.
