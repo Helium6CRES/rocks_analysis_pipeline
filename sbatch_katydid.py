@@ -85,7 +85,7 @@ def sbatch_katydid(
 
     base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
     python_venv = base_dir / ".venv/bin/python"
-    script = base_dir / "launch_katydid.py"
+    script = base_dir / "run_katydid_rid.py"
     args = (
         f"-t {tlim} "
         f"-rid {run_id} "

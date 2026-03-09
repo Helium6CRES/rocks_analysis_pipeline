@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Manages looping over file_ids from within apptainer to submit an sbatch for each file
+Manages looping over file_ids in a run_id from within apptainer to submit an sbatch for each file
 """
 
 import argparse
