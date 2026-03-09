@@ -104,6 +104,27 @@ class KatydidPreprocessing:
         return None
 
 
+    def build_file_df_path(self):
+        """
+        Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
+        """
+        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
+        rid_ai_dir = (
+            base_path
+            / Path(f"rid_{self.run_id:04d}")
+            / Path(f"aid_{self.analysis_id:03d}")
+        )
+
+        self.file_df_path = rid_ai_dir / Path(
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.csv"
+        )
+        self.file_df_json_path = rid_ai_dir / Path(
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
+        )
+
+        self.is_cleanup = self.aid_passed and self.file_df_path.is_file()
+
+
     def collect_file_df(self):
         # This function figures out if the run is a clean up or new analysis
         # and collects the file_df.
@@ -140,26 +161,6 @@ class KatydidPreprocessing:
             print("Analysis Type: New analysis. \nBuilding file_df.\n")
             file_df = self.build_full_file_df()
         return file_df
-
-    def build_file_df_path(self):
-        """
-        Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
-        """
-        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
-        rid_ai_dir = (
-            base_path
-            / Path(f"rid_{self.run_id:04d}")
-            / Path(f"aid_{self.analysis_id:03d}")
-        )
-
-        self.file_df_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.csv"
-        )
-        self.file_df_json_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
-        )
-
-        self.is_cleanup = self.file_df_path.is_file() and self.aid_passed
 
     def build_full_file_df(self):
         """
