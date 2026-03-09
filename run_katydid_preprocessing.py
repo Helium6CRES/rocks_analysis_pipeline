@@ -122,7 +122,7 @@ class KatydidPreprocessing:
             f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
         )
 
-        self.is_cleanup = self.aid_passed and self.file_df_path.is_file()
+        self.is_cleanup = self.aid_passed and self.file_df_path.is_file() and self.file_df_json_path.is_file()
 
 
     def collect_file_df(self):
@@ -154,7 +154,6 @@ class KatydidPreprocessing:
 
             # Check to see which root files already exist.
             file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
-            )
 
         # New analysis if the file does not exist or the aid was not specified.
         else:
