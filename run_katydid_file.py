@@ -16,7 +16,7 @@ from rocks_utility import get_pst_time
 pd.set_option("display.max_columns", 100)
 
 
-def main():
+def main() -> None:
     par = argparse.ArgumentParser()
     arg = par.add_argument
 
@@ -64,7 +64,7 @@ def main():
         )
 
 
-def run_katydid_file(file_df_row: dict):
+def run_katydid_file(file_df_row: dict) -> None:
     """
     Runs katydid on a single file based on configuration data in a specific row of a file_df
 
@@ -207,8 +207,6 @@ def run_katydid_file(file_df_row: dict):
             print(f"Could not rename failing config: {e}")
         # Re-raise or just return; your choice:
         # raise RuntimeError("Katydid failed")
-
-    return None
 
 
 if __name__ == "__main__":

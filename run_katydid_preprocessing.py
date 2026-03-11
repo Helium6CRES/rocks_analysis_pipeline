@@ -5,6 +5,7 @@ Perform all the preprocessing for a run_id before submitting sbatch for each job
 
 import argparse
 import pandas as pd
+from pandas.core.groupby.generic import DataFrameGroupBy # type hint
 # import pandas.io.sql as psql
 
 # import psycopg2
@@ -31,7 +32,7 @@ from rocks_utility import (
 # Import settings.
 pd.set_option("display.max_columns", 100)
 
-def main():
+def main() -> None:
 
     """
     CLI entry point. Not currently used: launch_katydid imports KatydidPreprocessing directly. Might delete later, but keeping for consistency for now. 
@@ -105,14 +106,13 @@ class KatydidPreprocessing:
         print(f"\nRunning Katydid preprocessing on {run_id} DONE at PST time: {get_pst_time()}\n")
         log_file_break()
 
-    def print_run_summary(self):
+    def print_run_summary(self) -> None:
         print("\nRun Summary:")
         print(f"run_id: {self.run_id}")
         print(f"analysis_id: {self.analysis_id}")
         print(f"base_config: {self.base_config}\n")
-        return None
 
-    def build_file_df_path(self):
+    def build_file_df_path(self) -> None:
         """
         Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
         """
@@ -136,11 +136,13 @@ class KatydidPreprocessing:
             and self.file_df_json_path.is_file()
         )
 
-    def collect_file_df(self):
-        # This function figures out if the run is a clean up or new analysis
-        # and collects the file_df.
-        # This entails determining if this should be a clean-up or new analysis.
-        # Clean up if file_df csv exists and the aid was specified by the user as a command line argument.
+    def collect_file_df(self) -> pd.DataFrame:
+        """
+        This function figures out if the run is a clean up or new analysis
+        and collects the file_df.
+        This entails determining if this should be a clean-up or new analysis.
+        Clean up if file_df csv exists and the aid was specified by the user as a command line argument.
+        """
 
         if self.is_cleanup:
             print(
@@ -177,7 +179,7 @@ class KatydidPreprocessing:
             file_df = self.build_full_file_df()
         return file_df
 
-    def build_full_file_df(self):
+    def build_full_file_df(self) -> pd.DataFrame:
         """
         Populate df of spec(k) files with metadata and path information.
         """
@@ -233,7 +235,7 @@ class KatydidPreprocessing:
 
         return file_df
 
-    def create_base_file_df(self, run_id: int):
+    def create_base_file_df(self, run_id: int) -> pd.DataFrame:
         # DOCUMENT.
         """
         Query He6-CRES db for spec(k) files corresponding to a given rid, construct a dataframe of spec(k) files grouped by file_id.
@@ -273,8 +275,10 @@ class KatydidPreprocessing:
         file_df = file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
         return file_df
 
-    # Define a function to aggregate file_path into a list ordered by channel
-    def aggregate_paths(self, group):
+    def aggregate_paths(self, group: DataFrameGroupBy) -> None:
+        """
+        Define a function to aggregate file_path into a list ordered by channel
+        """
         ordered_paths = group.sort_values(by='channel')['file_path'].apply(str).tolist()
         return pd.Series({
             'run_id': group['run_id'].iloc[0],
@@ -282,13 +286,19 @@ class KatydidPreprocessing:
             'file_path': ordered_paths
         })
 
-    def process_fp(self, daq_fp_list):
+    def process_fp(self, daq_fp_list: List[str]) -> List[str]:
+        """
+        Properly format filepaths on Wulf. 
+        TODO: rewrite with pathlib for robustness?
+        """
         #print(daq_fp_list)
         rocks_fp_list = ["/data/raid2/eliza4/he6_cres/" + daq_fp[5:] for daq_fp in daq_fp_list]
         return rocks_fp_list
 
-    def get_slope(self, true_field, frequency: float = 19.15e9):
-
+    def get_slope(self, true_field: float, frequency: float = 19.15e9) -> float:
+        """
+        Get Larmor slope using spec sims utilities
+        """
         approx_power = sc.power_larmor(true_field, frequency)
         approx_energy = sc.freq_to_energy(frequency, true_field)
         approx_slope = sc.df_dt(approx_energy, true_field, approx_power)
@@ -310,7 +320,7 @@ class KatydidPreprocessing:
 
         return dbscan_radius
 
-    def get_base_config_path(self):
+    def get_base_config_path(self) -> str:
 
         base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/base_configs")
         base_config_full = base_path / Path(self.base_config)
@@ -320,7 +330,7 @@ class KatydidPreprocessing:
 
         return str(base_config_full)
 
-    def build_dir_structure(self):
+    def build_dir_structure(self) -> str:
 
         base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
 
@@ -336,7 +346,7 @@ class KatydidPreprocessing:
 
         return str(current_analysis_dir)
 
-    def get_noise_fp(self):
+    def get_noise_fp(self) -> str:
         """
         DOCUMENT
         Note: just takes the first file in this run_id (assumption is it's a one file acq)
@@ -371,7 +381,7 @@ class KatydidPreprocessing:
 
         return noise_file_path
 
-    def build_root_file_path(self, file_df):
+    def build_root_file_path(self, file_df: pd.DataFrame) -> str:
         root_path = Path(file_df["output_dir"]) / str(
             Path(file_df["rocks_file_path"][0]).stem[:-2]
             + file_df["output_dir"][-4:]
@@ -380,7 +390,7 @@ class KatydidPreprocessing:
 
         return str(root_path)
 
-    def build_slew_file_path(self, file_df):
+    def build_slew_file_path(self, file_df: pd.DataFrame) -> str:
         slew_path = Path(file_df["output_dir"]) / str(
             Path(file_df["rocks_file_path"][0]).stem[:-2]
             + file_df["output_dir"][-4:]

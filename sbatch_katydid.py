@@ -8,7 +8,7 @@ from pathlib import Path
 from rocks_utility import sbatch_job
 
 
-def main():
+def main() -> None:
     par = argparse.ArgumentParser()
     arg = par.add_argument
 
@@ -54,7 +54,7 @@ def main():
         )
 
 
-def get_max_analysis_id(run_ids):
+def get_max_analysis_id(run_ids) -> int:
     """
     We want each analysis run simultaneously to have the same analysis number.
     This function goes through and builds the directory structure out and
@@ -81,14 +81,14 @@ def get_max_analysis_id(run_ids):
 
 
 def sbatch_katydid(
-    tlim,
-    run_id,
-    analysis_id,
-    noise_run_id,
-    base_config,
-    file_num,
+    tlim: str,
+    run_id: int,
+    analysis_id: int,
+    noise_run_id: int,
+    base_config: str,
+    file_num: int,
     aid_passed=False,
-):
+) -> None:
 
     base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
     python_venv = base_dir / ".venv/bin/python"
@@ -111,7 +111,14 @@ def sbatch_katydid(
     log_name = f"rid_{run_id}_aid_{analysis_id}.txt"
     log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
 
-    sbatch_job(cmd, job_name, tlim, log_path, cpus_per_task=1, mem=4)
+    sbatch_job(
+        cmd, 
+        job_name, 
+        tlim, 
+        log_path, 
+        cpus_per_task=1, 
+        mem=4
+    )
 
 
 if __name__ == "__main__":

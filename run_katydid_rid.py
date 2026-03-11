@@ -12,7 +12,7 @@ from rocks_utility import sbatch_job
 from run_katydid_preprocessing import KatydidPreprocessing
 
 
-def main():
+def main() -> None:
     par = argparse.ArgumentParser()
     arg =  par.add_argument
 
@@ -52,7 +52,7 @@ def launch_katydid(
     base_config: str,
     file_num: int,
     aid_passed: bool = False,
-):
+) -> None:
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
     """
@@ -87,7 +87,11 @@ def launch_katydid(
     # clean_up_root_dir(file_df)
 
 
-def sbatch_katydid_file_array(file_df, file_df_json_path, tlim):
+def sbatch_katydid_file_array(
+    file_df, 
+    file_df_json_path: str, 
+    tlim: str,
+) -> None:
     n_files = len(file_df)
 
     run_id = int(file_df["run_id"].iloc[0])
@@ -117,7 +121,7 @@ def sbatch_katydid_file_array(file_df, file_df_json_path, tlim):
     )
 
 
-def clean_up_root_dir(file_df):
+def clean_up_root_dir(file_df) -> None:
 
     # Delete all root files that aren't in our df.
     # TODO: Fix this.
