@@ -92,6 +92,8 @@ def sbatch_katydid_file_array(file_df, file_df_json_path, tlim):
         f"--file_df_json_path {file_df_json_path} --idx ${{SLURM_ARRAY_TASK_ID}}"
     )
 
+    # katydid is single threaded, cpu_per_task = 1
+    # feel free to play with memory limit or add a concurrency limit as needed
     sbatch_job(cmd, job_name, tlim, log_path, array = n_files, cpus_per_task = 1, mem = 4, run_in_apptainer = True)
 
 
