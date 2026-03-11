@@ -114,8 +114,13 @@ def sbatch_job(
         job_name: str, 
         tlim: str, 
         log_path: str, 
-        run_in_apptainer = False
+        array: int = 0,
+        max_concurrent: int = 0,
+        cpus_per_task: int = 0,
+        mem: int = 0,
+        run_in_apptainer = False,
         ):
+
     sbatch_opts = [
         "--job-name", job_name,
         "--time", tlim,
@@ -123,6 +128,17 @@ def sbatch_job(
         "--export=ALL",
         "--mail-type=NONE",
     ]
+
+    if array:
+        if not max_concurrent:
+            max_concurrent = array
+        sbatch_opts.append(f"--array=0-{array-1}%{max_concurrent}")
+
+    if cpus_per_task:
+        sbatch_opts.append(f"--cpus-per-task={cpus_per_task}")
+
+    if mem:
+        sbatch_opts.append(f"--mem={mem}G")
 
     if run_in_apptainer:
         # Build the command to run inside the container
