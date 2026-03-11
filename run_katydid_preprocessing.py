@@ -227,17 +227,25 @@ class KatydidPreprocessing:
         """
         Query He6-CRES db for spec(k) files corresponding to a given rid, construct a dataframe of spec(k) files grouped by file_id.
         """
-        query_he6_db = """
-                        SELECT r.run_id, f.spec_id, f.file_in_acq, f.channel, f.file_path, r.true_field, r.set_field
-                        FROM he6cres_runs.run_log as r
-                        RIGHT JOIN he6cres_runs.spec_files as f
-                        ON r.run_id = f.run_id
-                        WHERE r.run_id = {}
-                        ORDER BY r.created_at DESC
-                      """.format(
-            run_id
-        )
-
+        query_he6_db = f"""
+            SELECT 
+                r.run_id, 
+                f.spec_id, 
+                f.file_in_acq, 
+                f.channel, 
+                f.file_path, 
+                r.true_field, 
+                r.set_field
+            FROM 
+                he6cres_runs.run_log AS r
+            RIGHT JOIN 
+                he6cres_runs.spec_files AS f
+                ON r.run_id = f.run_id
+            WHERE 
+                r.run_id = {run_id} 
+            ORDER BY 
+                r.created_at DESC
+          """ # lol you can SQL inject the He6-CRES analysis chain
         file_df = he6cres_db_query(query_he6_db)
 
         # print(file_df['true_field'])
@@ -322,16 +330,20 @@ class KatydidPreprocessing:
         DOCUMENT
         Note: just takes the first file in this run_id (assumption is it's a one file acq)
         """
-        query_he6_db = """
-                        SELECT f.run_id, f.file_path, f.file_in_acq, f.channel
-                        FROM he6cres_runs.spec_files as f
-                        WHERE f.run_id = {}
-                        ORDER BY f.channel
-                        LIMIT 2
-                      """.format(
-            self.noise_run_id
-        )
-
+        query_he6_db = f"""
+            SELECT 
+                f.run_id, 
+                f.file_path, 
+                f.file_in_acq, 
+                f.channel
+            FROM 
+                he6cres_runs.spec_files AS f
+            WHERE 
+                f.run_id = {self.noise_run_id}
+            ORDER BY 
+                f.channel
+            LIMIT 2
+        """ # Little Bobby Tables
         noise_file_df = he6cres_db_query(query_he6_db)
 	
         # Group by file_inAcq and apply the aggregation function
