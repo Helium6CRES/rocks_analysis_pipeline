@@ -2,6 +2,7 @@
 """
 Perform all the preprocessing for a run_id before submitting sbatch for each job
 """
+
 import argparse
 import pandas as pd
 # import pandas.io.sql as psql
@@ -64,7 +65,15 @@ def main():
 
 
 class KatydidPreprocessing:
-    def __init__(self, run_id, analysis_id, noise_run_id, base_config, file_num, aid_passed=False):
+    def __init__(
+        self, 
+        run_id: int, 
+        analysis_id: int, 
+        noise_run_id: int, 
+        base_config: str, 
+        file_num: int,
+        aid_passed: bool = False,
+    ):
 
         self.run_id = run_id
         self.analysis_id = analysis_id
@@ -103,7 +112,6 @@ class KatydidPreprocessing:
         print(f"base_config: {self.base_config}\n")
         return None
 
-
     def build_file_df_path(self):
         """
         Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
@@ -122,10 +130,11 @@ class KatydidPreprocessing:
             f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
         )
 
-        self.is_cleanup = (self.aid_passed 
-                       and self.file_df_path.is_file() 
-                       and self.file_df_json_path.is_file())
-
+        self.is_cleanup = (
+            self.aid_passed
+            and self.file_df_path.is_file()
+            and self.file_df_json_path.is_file()
+        )
 
     def collect_file_df(self):
         # This function figures out if the run is a clean up or new analysis
@@ -144,8 +153,8 @@ class KatydidPreprocessing:
 
             if (file_df["base_config_path"] != self.get_base_config_path()).any():
                 raise ValueError(
-                        f"Trying to run cleanup using config at {self.get_base_config_path()}, but original run used {file_df['base_config_path']}. Rerun using the same config or run as new analysis."
-                        )
+                    f"Trying to run cleanup using config at {self.get_base_config_path()}, but original run used {file_df['base_config_path']}. Rerun using the same config or run as new analysis."
+                )
 
             # The following is a sanity check to make sure the number of files in the clean-up
             # match the number of files that were originally run. Then trim the df according
@@ -170,7 +179,7 @@ class KatydidPreprocessing:
 
     def build_full_file_df(self):
         """
-        Populate df of spec(k) files with metadata and path information. 
+        Populate df of spec(k) files with metadata and path information.
         """
 
         file_df = self.create_base_file_df(self.run_id)
@@ -322,7 +331,7 @@ class KatydidPreprocessing:
 
         current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
         if not current_analysis_dir.is_dir():
-            current_analysis_dir.mkdir(exist_ok=True) # guard against race condition
+            current_analysis_dir.mkdir(exist_ok=True)  # guard against race condition
             print(f"Created directory: {current_analysis_dir}")
 
         return str(current_analysis_dir)
@@ -345,13 +354,17 @@ class KatydidPreprocessing:
             ORDER BY 
                 f.channel
             LIMIT 2
-        """ # Little Bobby Tables
+        """  # Little Bobby Tables
         noise_file_df = he6cres_db_query(query_he6_db)
-	
+
         # Group by file_inAcq and apply the aggregation function
-        #make dummy true_field column to use agg function. this is dumb fix later
+        # make dummy true_field column to use agg function. this is dumb fix later
         noise_file_df["true_field"] = 0
-        noise_file_df = noise_file_df.groupby('file_in_acq').apply(self.aggregate_paths).reset_index(drop=True)
+        noise_file_df = (
+            noise_file_df.groupby("file_in_acq")
+            .apply(self.aggregate_paths)
+            .reset_index(drop=True)
+        )
 
         noise_file_path = noise_file_df["file_path"].iloc[0]
         print(f"Noise path: {noise_file_path}")
@@ -360,16 +373,18 @@ class KatydidPreprocessing:
 
     def build_root_file_path(self, file_df):
         root_path = Path(file_df["output_dir"]) / str(
-            Path(file_df["rocks_file_path"][0]).stem[:-2] + file_df["output_dir"][-4:] + ".root"
+            Path(file_df["rocks_file_path"][0]).stem[:-2]
+            + file_df["output_dir"][-4:]
+            + ".root"
         )
 
         return str(root_path)
 
     def build_slew_file_path(self, file_df):
         slew_path = Path(file_df["output_dir"]) / str(
-            Path(file_df["rocks_file_path"][0]).stem[:-2] + file_df["output_dir"][-4:] + "_SlewTimes.txt"
+            Path(file_df["rocks_file_path"][0]).stem[:-2]
+            + file_df["output_dir"][-4:]
+            + "_SlewTimes.txt"
         )
 
         return str(slew_path)
-
-

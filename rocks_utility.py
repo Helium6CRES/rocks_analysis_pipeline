@@ -113,15 +113,18 @@ def sbatch_job(
         cmd: str, 
         job_name: str, 
         tlim: str, 
-        log_path: str, 
+        log_path: str | Path, 
         array: int = 0,
         max_concurrent: int = 0,
         cpus_per_task: int = 0,
         mem: int = 0,
         run_in_apptainer = False,
-        ):
+        ) -> sp.CompletedProcess:
 
-    sbatch_opts = [
+    log_path = str(log_path)
+
+    sbatch_cmd = [
+        "sbatch",
         "--job-name", job_name,
         "--time", tlim,
         "--output", log_path,
@@ -129,16 +132,16 @@ def sbatch_job(
         "--mail-type=NONE",
     ]
 
-    if array:
-        if not max_concurrent:
+    if array > 0:
+        if max_concurrent <= 0:
             max_concurrent = array
-        sbatch_opts.append(f"--array=0-{array-1}%{max_concurrent}")
+        sbatch_cmd.append(f"--array=0-{array-1}%{max_concurrent}")
 
-    if cpus_per_task:
-        sbatch_opts.append(f"--cpus-per-task={cpus_per_task}")
+    if cpus_per_task > 0:
+        sbatch_cmd.append(f"--cpus-per-task={cpus_per_task}")
 
-    if mem:
-        sbatch_opts.append(f"--mem={mem}G")
+    if mem > 0:
+        sbatch_cmd.append(f"--mem={mem}G")
 
     if run_in_apptainer:
         # Build the command to run inside the container
@@ -148,6 +151,7 @@ def sbatch_job(
         )
 
         # Full Apptainer command
+        # Wrapping cmd in single quotes means literal text: no variable expansion etc
         full_cmd = (
             "apptainer exec "
             "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
@@ -157,13 +161,19 @@ def sbatch_job(
     else:
         full_cmd = cmd
 
-    sbatch_cmd = ["sbatch"] + sbatch_opts
-    
     print("\n\n", " ".join(sbatch_cmd + [full_cmd]), "\n\n")
+
+    script = f"""#!/bin/bash
+    set -euo pipefail
+    {full_cmd}
+    """
+
     proc = sp.run(
         sbatch_cmd, 
-        input = f"#!/bin/bash\nset -euo pipefail\n{full_cmd}\n", 
-        text=True
-        )
+        input = script, 
+        check=True,
+        text=True, 
+        # capture_output=True, 
+    )
     return proc
     

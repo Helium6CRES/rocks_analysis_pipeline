@@ -9,25 +9,25 @@ import pandas as pd
 import numpy as np
 
 # Local imports
-from rocks_utility import (
-        get_pst_time,
-    )
+from rocks_utility import get_pst_time
+
 
 # Import settings
 pd.set_option("display.max_columns", 100)
 
+
 def main():
-    # umask = sp.run(["umask u=rwx,g=rwx,o=rx"], executable="/bin/bash", shell=True)
-
     par = argparse.ArgumentParser()
-    arg =  par.add_argument
+    arg = par.add_argument
 
-    arg("--file_df_json_path", type=str, help="Path to file_df json. Read in as pandas dataframe")
-    arg("-id", "--idx", type=int, help="Integer index of row to load from file_df.")
+    arg("--file_df_json_path", type=str,
+        help="Path to file_df json. Read in as pandas dataframe")
+    arg("-id", "--idx", type=int, 
+        help="Integer index of row to load from file_df.")
 
     args = par.parse_args()
 
-    # load file_df, then access a specific row. 
+    # load file_df, then access a specific row.
     # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
         file_df = pd.read_json(args.file_df_json_path)
@@ -38,13 +38,9 @@ def main():
         return
 
     try:
-        file_df_row = file_df.iloc[args.idx]
-        # Convert np types to Python types, otherwise yaml.dump will print binary for numpy types...
-        file_df_row = file_df_row.apply(
-            lambda x: x.item() if isinstance(x, np.generic) else x
-        )
+        file_df_row = file_df.iloc[args.idx].to_dict()
     except IndexError as e:
-        print(f"Exception: Index {args.idx} not found in {args.file_df_json_path}.\n{e}\nReturning.") 
+        print(f"Exception: Index {args.idx} not found in {args.file_df_json_path}.")
         print(e)
         print("Returning.\n")
         return
@@ -52,37 +48,43 @@ def main():
     # Force a write to the log.
     sys.stdout.flush()
     try:
-        print(f"\nProcessing file_id {file_df_row['file_id']} at PST time: {get_pst_time()}")
-        sys.stdout.flush()
+        print(
+            f"\nProcessing file_id {file_df_row['file_id']} at PST time: {get_pst_time()}",
+            flush=True
+        )
         run_katydid_file(file_df_row)
-        print(f"Finished file_id {file_df_row['file_id']} at PST time: {get_pst_time()}")
-        sys.stdout.flush()
+        print(
+            f"Finished file_id {file_df_row['file_id']} at PST time: {get_pst_time()}",
+            flush=True
+        )
     except Exception as e:
-        print(f"Exception while processing file_id {file_df_row['file_id']}: {e}")
-        sys.stdout.flush()
+        print(
+            f"Exception while processing file_id {file_df_row['file_id']}: {e}",
+            flush=True
+        )
 
 
-def run_katydid_file(file_df_row: pd.Series):
+def run_katydid_file(file_df_row: dict):
     """
     Runs katydid on a single file based on configuration data in a specific row of a file_df
 
     Parameters
     ----------
-    file_df_row: pd.Series
-        Columns used: 
-          run_id, file_id, analysis_id, 
-          base_config_path, rocks_file_path, rocks_noise_file_path, root_file_path, slew_file_path, 
+    file_df_row: dict
+        Loaded from a pd.Series of a file_df row. 
+        Keys used:
+          run_id, file_id, analysis_id,
+          base_config_path, rocks_file_path, rocks_noise_file_path, root_file_path, slew_file_path,
           approx_slope, dbscan_radius_0, dbscan_radius_1
     """
 
-
     base_config_path = Path(file_df_row["base_config_path"])
-    
+
     # Grab the config_dict from the katydid config file.
     with open(base_config_path, "r") as f:
         try:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
-            #print(config_dict)
+            # print(config_dict)
         except yaml.YAMLError as e:
             print(e)
 
@@ -93,7 +95,9 @@ def run_katydid_file(file_df_row: pd.Series):
     fid = file_df_row["file_id"]
 
     config_path = base_config_path.parent / str(
-        base_config_path.stem + f"_{rid:04d}_{aid:03d}_{fid:04d}" + base_config_path.suffix
+        base_config_path.stem
+        + f"_{rid:04d}_{aid:03d}_{fid:04d}"
+        + base_config_path.suffix
     )
 
     # copy base config file to edit
@@ -103,13 +107,13 @@ def run_katydid_file(file_df_row: pd.Series):
     rocks_file_path = file_df_row["rocks_file_path"]
     first_rock_file = rocks_file_path[0] if rocks_file_path else ""
     if first_rock_file.endswith(".spec"):
-        for processor in config_dict['processor-toolbox']['processors']:
-            if processor['name'] == 'spec2':
-                processor['type'] = 'spec-processor'
+        for processor in config_dict["processor-toolbox"]["processors"]:
+            if processor["name"] == "spec2":
+                processor["type"] = "spec-processor"
     elif first_rock_file.endswith(".speck"):
-        for processor in config_dict['processor-toolbox']['processors']:
-            if processor['name'] == 'spec2':
-                processor['type'] = 'speck-processor'
+        for processor in config_dict["processor-toolbox"]["processors"]:
+            if processor["name"] == "spec2":
+                processor["type"] = "speck-processor"
 
     config_dict["spec1"]["filenames"] = file_df_row["rocks_noise_file_path"]
     config_dict["spec2"]["filenames"] = file_df_row["rocks_file_path"]
@@ -123,7 +127,7 @@ def run_katydid_file(file_df_row: pd.Series):
                 config_dict[key][inner_key] = file_df_row["approx_slope"]
 
             if inner_key == "min-slope":
-                config_dict[key][inner_key] = file_df_row["approx_slope"]-1e10
+                config_dict[key][inner_key] = file_df_row["approx_slope"] - 1e10
 
             if inner_key == "radii":
                 config_dict[key][inner_key] = [
@@ -134,11 +138,13 @@ def run_katydid_file(file_df_row: pd.Series):
 
     # Dump the altered config_dict into the copy of the config file.
     # Note that the comments are all lost because you only write the contents of the
-    # confic dict.
+    # config dict.
     with open(config_path, "w") as f:
+        # Convert np types to pure Python types, otherwise yaml.dump will print binary for numpy types
+        config_dict = {k: (v.item() if isinstance(v, np.generic) else v) 
+                            for k, v in config_dict.items()}
         yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
-    
     # copy first config file to the analysis directory for future reference.
     if file_df_row["file_id"] == 0:
         analysis_dir = Path(file_df_row["root_file_path"]).parents[0]
@@ -154,18 +160,18 @@ def run_katydid_file(file_df_row: pd.Series):
     # Note that you need to have Katydid configured as a bash executable for this to
     # work (as is standard).
     t_start = time.process_time()
-    proc = sp.run(
-        ["/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid", "-c", str(config_path)],
-        capture_output=True,
-    )
+    cmd = [
+        "/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid",
+        "-c",
+        str(config_path),
+    ]
+
+    proc = sp.run(cmd, capture_output=True, text=True, errors="replace")
 
     # Decode logs (avoid escape noise)
-    out = proc.stdout.decode(errors="replace")
-    err = proc.stderr.decode(errors="replace")
-
-    print("Katydid stdout (tail 1k):", out[-1000:])
-    if err.strip():
-        print("Katydid stderr (tail 1k):", err[-1000:])
+    print("Katydid stdout (tail 1k):", proc.stdout[-1000:], flush=True)
+    if proc.stderr.strip():
+        print("Katydid stderr (tail 1k):", proc.stderr[-1000:], flush=True)
 
     t_stop = time.process_time()
     elapsed = t_stop - t_start
@@ -182,9 +188,7 @@ def run_katydid_file(file_df_row: pd.Series):
             f"\ncurrent time: {get_pst_time()}."
             f"\nroot file created {root_path}\n"
         )
-        # Safe to remove the temp config
-        if Path(config_path).exists():
-            Path(config_path).unlink()
+        Path(config_path).unlink(missing_ok=True)
 
     else:
         print(
@@ -205,6 +209,7 @@ def run_katydid_file(file_df_row: pd.Series):
         # raise RuntimeError("Katydid failed")
 
     return None
+
 
 if __name__ == "__main__":
     main()

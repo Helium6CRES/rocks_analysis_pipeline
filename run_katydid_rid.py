@@ -11,6 +11,7 @@ from pathlib import Path
 from rocks_utility import sbatch_job
 from run_katydid_preprocessing import KatydidPreprocessing
 
+
 def main():
     par = argparse.ArgumentParser()
     arg =  par.add_argument
@@ -33,16 +34,25 @@ def main():
     args = par.parse_args()
 
     launch_katydid(
-            args.tlim,
-            args.run_id,
-            args.analysis_id,
-            args.noise_run_id,
-            args.base_config,
-            args.file_num,
-            args.aid_passed,
-            )
+        args.tlim,
+        args.run_id,
+        args.analysis_id,
+        args.noise_run_id,
+        args.base_config,
+        args.file_num,
+        args.aid_passed,
+    )
 
-def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_num, aid_passed=False):
+
+def launch_katydid(
+    tlim: str, 
+    run_id: int,
+    analysis_id: int,
+    noise_run_id: int,
+    base_config: str,
+    file_num: int,
+    aid_passed: bool = False,
+):
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
     """
@@ -61,7 +71,7 @@ def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_nu
     print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
 
     # Alert which run_ids files do not exist on ROCKS
-    no_file_df = file_df.loc[~file_df['exists'], 'rocks_file_path']
+    no_file_df = file_df.loc[~file_df["exists"], "rocks_file_path"]
     if no_file_df.empty:
         print("All files found on Wulf!")
     else:
@@ -75,6 +85,7 @@ def launch_katydid(tlim, run_id, analysis_id, noise_run_id, base_config, file_nu
     sbatch_katydid_file_array(file_df, file_df_json_path, tlim)
 
     # clean_up_root_dir(file_df)
+
 
 def sbatch_katydid_file_array(file_df, file_df_json_path, tlim):
     n_files = len(file_df)
@@ -94,7 +105,16 @@ def sbatch_katydid_file_array(file_df, file_df_json_path, tlim):
 
     # katydid is single threaded, cpu_per_task = 1
     # feel free to play with memory limit or add a concurrency limit as needed
-    sbatch_job(cmd, job_name, tlim, log_path, array = n_files, cpus_per_task = 1, mem = 4, run_in_apptainer = True)
+    sbatch_job(
+        cmd,
+        job_name,
+        tlim,
+        log_path,
+        array=n_files,
+        cpus_per_task=1,
+        mem=4,
+        run_in_apptainer=True,
+    )
 
 
 def clean_up_root_dir(file_df):
@@ -117,9 +137,8 @@ def clean_up_root_dir(file_df):
             print(str(path))
             path.unlink()
 
-     # Force a write to the log.
+    # Force a write to the log.
     sys.stdout.flush()
-
 
 
 if __name__ == "__main__":
