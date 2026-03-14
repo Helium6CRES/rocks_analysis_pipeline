@@ -422,7 +422,7 @@ class PostProcessing:
         tracks_df = pd.DataFrame()
 
         rootfile = uproot.open(root_files_df_row["root_file_path"])
-
+        #If present, use MBEB TTree
         if "MB-events;1" in rootfile.keys():
             tracks_root = rootfile["MB-events;1"]["MultiBandEvent"]["fTracks"]
             cols = {}
@@ -432,6 +432,21 @@ class PostProcessing:
                     continue
 
                 tracks_df[key[9:]] = self.flat(branch.array())
+
+            if cols:
+                tracks_df = pd.DataFrame(cols)
+        #If not present, get tracks from tracks TTree
+        elif "tracks;1" in rootfile.keys():
+            tracks_root = rootfile["tracks;1"]["Track"]
+            cols = {}
+            for key, branch in tracks_root.items():
+                if key =='fPoints'
+                    continue
+                # Skip object/pointer branches that trigger the “arbitrary pointer” error
+                if branch.interpretation.__class__.__name__ == "AsObjects":
+                    continue
+
+                tracks_df[key[1:]] = self.flat(branch.array())
 
             if cols:
                 tracks_df = pd.DataFrame(cols)
