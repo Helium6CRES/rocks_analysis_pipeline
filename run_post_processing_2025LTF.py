@@ -440,7 +440,7 @@ class PostProcessing:
             tracks_root = rootfile["tracks;1"]["Track"]
             cols = {}
             for key, branch in tracks_root.items():
-                if key =='fPoints'
+                if key =='fPoints':
                     continue
                 # Skip object/pointer branches that trigger the “arbitrary pointer” error
                 if branch.interpretation.__class__.__name__ == "AsObjects":
