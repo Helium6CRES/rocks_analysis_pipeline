@@ -162,7 +162,7 @@ class KatydidPreprocessing:
             # match the number of files that were originally run. Then trim the df according
             # to the file_num arg.
 
-            if self.file_num != len(file_df):
+            if (self.file_num != len(file_df)):
                 print(
                     f"Warning: The file_num specified in this cleanup \
                     doesn't match the file_num originally run with ({len(file_df)}).\
@@ -189,7 +189,6 @@ class KatydidPreprocessing:
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
         file_df["rocks_file_path"] = file_df["file_path"].apply(self.process_fp)
-        file_df["exists"] = file_df["rocks_file_path"].apply(check_if_exists)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 

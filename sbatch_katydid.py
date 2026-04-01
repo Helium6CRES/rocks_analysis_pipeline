@@ -1,4 +1,4 @@
-#!/usr/bin/env /data/raid2/eliza4/he6_cres/.venv/bin/python3
+#!/usr/bin/env /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/.venv/bin/python3
 """
 CLI entry point for submitting katydid runs via sbatch.
 """
@@ -111,15 +111,7 @@ def sbatch_katydid(
     log_name = f"rid_{run_id}_aid_{analysis_id}.txt"
     log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
 
-    sbatch_job(
-        cmd, 
-        job_name, 
-        tlim, 
-        log_path, 
-        cpus_per_task=1, 
-        mem=4
-    )
-
+    sbatch_job(cmd, job_name, tlim, log_path, cpus_per_task = 1, mem=2)
 
 if __name__ == "__main__":
     main()
