@@ -438,9 +438,10 @@ class PostProcessing:
         #If not present, get tracks from tracks TTree
         elif "tracks;1" in rootfile.keys():
             tracks_root = rootfile["tracks;1"]["Track"]
+            print(list(tracks_root.keys()))
             cols = {}
             for key, branch in tracks_root.items():
-                if key =='fPoints':
+                if str(key).startswith('fPoints'):
                     continue
                 # Skip object/pointer branches that trigger the “arbitrary pointer” error
                 if branch.interpretation.__class__.__name__ == "AsObjects":
