@@ -30,12 +30,17 @@ def main() -> None:
     # load file_df, then access a specific row.
     # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
-        file_df = pd.read_json(args.file_df_json_path)
+        file_df_loaded = pd.read_json(args.file_df_json_path)
     except pd.errors.ParserError as e:
         print(f"Exception: Could not load file_df from {args.file_df_json_path}.")
         print(e)
         print("Returning.\n")
         return
+
+    # Filter which root files to run
+    # Make sure condition matches what's in run_katydid_rid.py or the indexing will be messed up!
+    condition = (~file_df_loaded["root_file_exists"]) & (file_df_loaded["exists"])
+    file_df = file_df_loaded[condition]
 
     try:
         file_df_row = file_df.iloc[args.idx].to_dict()

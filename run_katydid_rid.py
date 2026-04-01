@@ -80,9 +80,7 @@ def launch_katydid(
         for rocks_file_path in no_file_df:
             print(rocks_file_path)
 
-    # for idx, row in file_df[condition].iterrows():
-    #     sbatch_katydid_file(file_df_json_path, row, idx, tlim)
-    sbatch_katydid_file_array(file_df, file_df_json_path, tlim)
+    sbatch_katydid_file_array(file_df[condition], file_df_json_path, tlim)
 
     # clean_up_root_dir(file_df)
 
