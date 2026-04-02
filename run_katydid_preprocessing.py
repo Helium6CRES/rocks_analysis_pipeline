@@ -189,6 +189,7 @@ class KatydidPreprocessing:
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
         file_df["rocks_file_path"] = file_df["file_path"].apply(self.process_fp)
+        file_df["exists"] = file_df["rocks_file_path"].apply(check_if_exists)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
 
