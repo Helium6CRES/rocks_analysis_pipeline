@@ -562,6 +562,7 @@ class PostProcessing:
         '''
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
+        root_files_df = self.add_voltage(root_files_df)
 
         # Step 3. Add the set_field by rounding to nearest 100th place.
         root_files_df["set_field"] = root_files_df["field"].round(decimals=2)
@@ -897,6 +898,53 @@ class PostProcessing:
         # Check for missing data
         if root_files_df[sensor_names].isnull().any().any():
             print("Some temp data was not collected.")
+
+        return root_files_df
+
+    def add_voltage(self, root_files_df):
+
+        root_files_df["voltage"] = np.nan
+
+        # Step 0. Group by run_id.
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the extreme times present in the given run_id.
+            # The idea is that we want to be careful about the amount of queries we do to get this info.
+            # Here we only do one query per run_id (instead of one per file)
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            query = """SELECT n.dmm_id, n.utc_write_time, n.voltage
+                       FROM he6cres_runs.ddm as n 
+                       WHERE n.utc_write_time >= '{}'::timestamp
+                           AND n.utc_write_time <= '{}'::timestamp + interval '1 minute'
+                    """.format(
+                dt_min, dt_max
+            )
+            voltage_log = he6cres_db_query(query)
+            if voltage_log.empty:
+                voltage_log["utc_write_time"] = np.nan
+            else:    
+                voltage_log["utc_write_time"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
+
+                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+
+                    if len(file_path) != 1:
+                        raise UserWarning(
+                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                        )
+
+                    # Get voltage during second of data
+                    voltage = self.get_nearest(voltage_log, file_path.utc_time.iloc[0]).voltage
+
+                    # Now get the nearest voltage for each file_id and fill those in!! Then this gets joined with the whole table.
+                    condition = (root_files_df["run_id"] == rid) & (
+                        root_files_df["file_id"] == fid
+                    )
+                    root_files_df.loc[condition, "voltage"] = voltage
+
+        if root_files_df["voltage"].isnull().values.any():
+            print("Some voltage data was not collected.")
 
         return root_files_df
 
