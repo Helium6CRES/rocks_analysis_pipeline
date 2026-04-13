@@ -99,7 +99,10 @@ def run_katydid_file(file_df_row: dict) -> None:
     aid = file_df_row["analysis_id"]
     fid = file_df_row["file_id"]
 
-    config_path = base_config_path.parent / str(
+    temp_config_dir = base_config_path.parent / "temp"
+    temp_config_dir.mkdir(exist_ok = True)
+
+    config_path = temp_config_dir / str(
         base_config_path.stem
         + f"_{rid:04d}_{aid:03d}_{fid:04d}"
         + base_config_path.suffix
@@ -164,8 +167,8 @@ def run_katydid_file(file_df_row: dict) -> None:
 
     # copy first config file to the analysis directory for future reference.
     if file_df_row["file_id"] == 0:
+        config_path_name = base_config_path.stem + f"_{rid:04d}_{aid:03d}" + base_config_path.suffix
         analysis_dir = Path(file_df_row["root_file_path"]).parents[0]
-        config_path_name = Path(config_path).name
         saved_config_path = analysis_dir / config_path_name
         copyfile(config_path, saved_config_path)
 
