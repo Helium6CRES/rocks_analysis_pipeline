@@ -456,6 +456,7 @@ class PostProcessing:
         tracks_df["file_id"] = root_files_df_row["file_id"]
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
+        tracks_df["true_voltage"] = root_files_df_row["voltage"]
         tracks_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
         tracks_df["nitrogen"] = root_files_df_row["nitrogen"]
         tracks_df["helium"] = root_files_df_row["helium"]
