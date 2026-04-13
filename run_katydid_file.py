@@ -95,19 +95,18 @@ def run_katydid_file(file_df_row: dict) -> None:
 
     # Copy the katydid config file (in same dir) so that we can write to the copy not
     # the original.
-    # Perform once per run+analysis id
     rid = file_df_row["run_id"]
     aid = file_df_row["analysis_id"]
+    fid = file_df_row["file_id"]
 
     config_path = base_config_path.parent / str(
         base_config_path.stem
-        + f"_{rid:04d}_{aid:03d}"
+        + f"_{rid:04d}_{aid:03d}_{fid:04d}"
         + base_config_path.suffix
     )
 
     # copy base config file to edit
-    if not config_path.is_file():
-        copyfile(base_config_path, config_path)
+    copyfile(base_config_path, config_path)
 
     # Check the file extension of the first path in rocks_file_path list
     rocks_file_path = file_df_row["rocks_file_path"]
