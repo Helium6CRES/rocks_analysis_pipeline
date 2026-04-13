@@ -145,9 +145,9 @@ def run_katydid_file(file_df_row: dict) -> None:
                 raise ValueError("No real positive solution (k must be > 0)")
 
             if inner_key == "frequency-acceptance":
-                config_dict[key][inner_key] = np.sqrt(90 * k)
+                config_dict[key][inner_key] = float(np.sqrt(90 * k))
             if inner_key == "time-gap-tolerance":
-                config_dict[key][inner_key] = np.sqrt(90 / k)
+                config_dict[key][inner_key] = float(np.sqrt(90 / k))
             
             if inner_key == "radii":
                 config_dict[key][inner_key] = [
@@ -161,8 +161,9 @@ def run_katydid_file(file_df_row: dict) -> None:
     # config dict.
     with open(config_path, "w") as f:
         # Convert np types to pure Python types, otherwise yaml.dump will print binary for numpy types
+        # This might be unnecessary after manually applying float(np.sqrt(...)) above, that was the main troublemaker
         config_dict = {k: (v.item() if isinstance(v, np.generic) else v) 
-                            for k, v in config_dict.items()}
+                       for k, v in config_dict.items()} # Todo: recursively explore config_dict and apply conversion only to lowest level items
         yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
     # copy first config file to the analysis directory for future reference.
@@ -208,7 +209,7 @@ def run_katydid_file(file_df_row: dict) -> None:
             f"\ncurrent time: {get_pst_time()}."
             f"\nroot file created {root_path}\n"
         )
-        Path(config_path).unlink(missing_ok=True)
+        Path(config_path).unlink()
 
     else:
         print(
