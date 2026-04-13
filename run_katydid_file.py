@@ -133,7 +133,19 @@ def run_katydid_file(file_df_row: dict) -> None:
 
             if inner_key == "min-slope":
                 config_dict[key][inner_key] = file_df_row["approx_slope"] - 1e10
+            
+            #Keep the LTF acceptance area to 45 bins (90 Hz*s) but scale f vs t with slope based on good reconstruction at 0.711T and 2.00T
+            #0.711T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
+            #2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
+            k = 0.1597 * file_df_row["approx_slope"] + 9.88e8
+            if k <= 0:
+                raise ValueError("No real positive solution (k must be > 0)")
 
+            if inner_key == "frequency-acceptance":
+                config_dict[key][inner_key] = np.sqrt(90 * k)
+            if inner_key == "time-gap-tolerance":
+                config_dict[key][inner_key] = np.sqrt(90 / k)
+            
             if inner_key == "radii":
                 config_dict[key][inner_key] = [
                     file_df_row["dbscan_radius_0"],
