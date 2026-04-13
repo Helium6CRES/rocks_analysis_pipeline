@@ -915,17 +915,20 @@ class PostProcessing:
             dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
             query = """SELECT n.dmm_id, n.utc_write_time, n.voltage
-                       FROM he6cres_runs.ddm as n 
+                       FROM he6cres_runs.dmm as n 
                        WHERE n.utc_write_time >= '{}'::timestamp
                            AND n.utc_write_time <= '{}'::timestamp + interval '1 minute'
                     """.format(
                 dt_min, dt_max
             )
+            print(query)
             voltage_log = he6cres_db_query(query)
+            # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
+            # to created_at for consistancy in get_nearest()
             if voltage_log.empty:
-                voltage_log["utc_write_time"] = np.nan
+                voltage_log["created_at"] = np.nan
             else:    
-                voltage_log["utc_write_time"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
+                voltage_log["created_at"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
 
                 for fid, file_path in root_files_df_gb.groupby(["file_id"]):
 
