@@ -119,18 +119,23 @@ def sbatch_job(
         cpus_per_task: int = 0,
         mem: int = 0,
         run_in_apptainer = False,
+        hold: bool = False,
         ) -> sp.CompletedProcess:
 
     log_path = str(log_path)
 
     sbatch_cmd = [
         "sbatch",
+        "--parsable",
         "--job-name", job_name,
         "--time", tlim,
         "--output", log_path,
         "--export=ALL",
         "--mail-type=NONE",
     ]
+
+    if hold:
+        sbatch_cmd.append("--hold")
 
     if array > 0:
         if max_concurrent <= 0:

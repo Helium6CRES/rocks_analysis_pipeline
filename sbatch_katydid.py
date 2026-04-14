@@ -23,8 +23,9 @@ def main() -> None:
     arg("-fn", "--file_num", default=-1, type=int,
         help="Number of files in run id to analyze.")
     arg("-aid", "--analysis_id", type=int, default=-1,
-        help="analysis_id used to label directories. If -1, a new index will be created.")
-
+        help="analysis_id used to label directories. If -1, most recent analysis is overwritten.")
+    arg("-hold", "--hold_array", action="store_true",
+        help="Submit arrays in held state.")
     args = par.parse_args()
 
     if not args.runids:
@@ -51,6 +52,7 @@ def main() -> None:
             args.base_config,
             args.file_num,
             aid_passed,
+            args.hold_array,
         )
 
 
@@ -88,6 +90,7 @@ def sbatch_katydid(
     base_config: str,
     file_num: int,
     aid_passed=False,
+    hold_array=False,
 ) -> None:
 
     base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
@@ -101,7 +104,8 @@ def sbatch_katydid(
         f"-b {base_config} "
         f"-fn {file_num} "
     )
-
+    if hold_array:
+        args += "--hold_array "
     if aid_passed:
         args += "--aid_passed "
 

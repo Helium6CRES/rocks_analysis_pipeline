@@ -26,6 +26,8 @@ def main() -> None:
         help="base .yaml katydid config file to be run on run_id.")
     arg("-fn", "--file_num", default=-1, type=int, 
         help="Number of files in run id to analyze.")
+    arg("-ha", "--hold_array", action="store_true",
+        help="Hold the submitted array so it does not start immediately.")
     arg("-aid", "--analysis_id", type=int, default=-1, 
         help="analysis_id used to label directories. If -1, a new index will be created.")
     arg("--aid_passed", action="store_true",
@@ -40,6 +42,7 @@ def main() -> None:
         args.noise_run_id,
         args.base_config,
         args.file_num,
+        args.hold_array,
         args.aid_passed,
     )
 
@@ -51,6 +54,7 @@ def launch_katydid(
     noise_run_id: int,
     base_config: str,
     file_num: int,
+    hold_array: bool = False,
     aid_passed: bool = False,
 ) -> None:
     """
@@ -80,7 +84,7 @@ def launch_katydid(
         for rocks_file_path in no_file_df:
             print(rocks_file_path)
 
-    sbatch_katydid_file_array(file_df[condition], file_df_json_path, tlim)
+    sbatch_katydid_file_array(file_df[condition], file_df_json_path, tlim, hold_array)
 
     # clean_up_root_dir(file_df)
 
@@ -89,6 +93,7 @@ def sbatch_katydid_file_array(
     file_df, 
     file_df_json_path: str, 
     tlim: str,
+    hold_array: bool = False,
 ) -> None:
     n_files = len(file_df)
 
@@ -107,7 +112,7 @@ def sbatch_katydid_file_array(
 
     # katydid is single threaded, cpu_per_task = 1
     # feel free to play with memory limit or add a concurrency limit as needed
-    sbatch_job(
+    proc = sbatch_job(
         cmd,
         job_name,
         tlim,
@@ -116,7 +121,18 @@ def sbatch_katydid_file_array(
         cpus_per_task=1,
         mem=4,
         run_in_apptainer=True,
+        hold = hold_array,
     )
+    
+    array_jobid = proc.stdout.strip()
+    print(f"Submitted array job ID: {array_jobid}")
+
+    if hold_array:
+        held_ids_path = Path(
+            "/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/held_array_jobids.txt"
+        )
+        with held_ids_path.open("a") as f:
+            f.write(f"{array_jobid}\n")
 
 
 def clean_up_root_dir(file_df) -> None:
