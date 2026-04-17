@@ -346,7 +346,11 @@ class KatydidPreprocessing:
         if not run_id_dir.is_dir():
             raise UserWarning("This directory should have been made already.")
 
-        current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
+        if self.fake_field is not None:
+           current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}_ff_{self.fake_field:03d}")
+        else: 
+            current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
+
         if not current_analysis_dir.is_dir():
             current_analysis_dir.mkdir(exist_ok=True)  # guard against race condition
             print(f"Created directory: {current_analysis_dir}")

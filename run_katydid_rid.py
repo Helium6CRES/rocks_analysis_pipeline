@@ -89,8 +89,8 @@ def launch_katydid(
             print(rocks_file_path)
 
     if fake_field is not None:
-        file_df['set_field']=file_df['fake_field']
-        file_df['true_field']=file_df['fake_field']
+        file_df['set_field']=fake_field
+        file_df['true_field']=fake_field
 
     sbatch_katydid_file_array(
         file_df[condition],
@@ -111,7 +111,7 @@ def sbatch_katydid_file_array(
     file_df_json_path: str,
     tlim: str,
     hold_array: bool = False,
-    fake_field: float | None = None,
+    fake_field: float = None,
 ) -> None:
     n_files = len(file_df)
 
