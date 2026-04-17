@@ -32,7 +32,8 @@ def main() -> None:
         help="analysis_id used to label directories. If -1, a new index will be created.")
     arg("--aid_passed", action="store_true",
         help="Flag to indicate that the user specified aid explicitly, instead the default value. If so, will perform a cleanup if the aid exists or run as normal.")
-
+    arg("-ff", "--fake_field", type=float, 
+        help="fake field to use for this run.")
     args = par.parse_args()
 
     launch_katydid(
@@ -44,6 +45,7 @@ def main() -> None:
         args.file_num,
         args.hold_array,
         args.aid_passed,
+        args.fake_field,
     )
 
 
@@ -56,6 +58,7 @@ def launch_katydid(
     file_num: int,
     hold_array: bool = False,
     aid_passed: bool = False,
+    fake_field=None,
 ) -> None:
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
@@ -83,6 +86,10 @@ def launch_katydid(
         # Print file_id where exists is False
         for rocks_file_path in no_file_df:
             print(rocks_file_path)
+
+    if fake_field is not None:
+        file_df['set_field']=file_df['fake_field']
+        file_df['true_field']=file_df['fake_field']
 
     sbatch_katydid_file_array(file_df[condition], file_df_json_path, tlim, hold_array)
 
