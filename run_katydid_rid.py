@@ -58,7 +58,7 @@ def launch_katydid(
     file_num: int,
     hold_array: bool = False,
     aid_passed: bool = False,
-    fake_field=None,
+    fake_field: float = None,
 ) -> None:
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
@@ -70,6 +70,7 @@ def launch_katydid(
         base_config,
         file_num,
         aid_passed,
+        fake_field,
     )
     file_df = preprocessor.file_df
     file_df_json_path = preprocessor.file_df_json_path
@@ -91,25 +92,49 @@ def launch_katydid(
         file_df['set_field']=file_df['fake_field']
         file_df['true_field']=file_df['fake_field']
 
-    sbatch_katydid_file_array(file_df[condition], file_df_json_path, tlim, hold_array)
+    sbatch_katydid_file_array(
+        file_df[condition],
+        file_df_json_path,
+        tlim,
+        hold_array,
+        fake_field=fake_field,
+    )
 
     # clean_up_root_dir(file_df)
 
 
+from pathlib import Path
+
+
 def sbatch_katydid_file_array(
-    file_df, 
-    file_df_json_path: str, 
+    file_df,
+    file_df_json_path: str,
     tlim: str,
     hold_array: bool = False,
+    fake_field: float | None = None,
 ) -> None:
     n_files = len(file_df)
 
     run_id = int(file_df["run_id"].iloc[0])
     analysis_id = int(file_df["analysis_id"].iloc[0])
 
-    job_name = f"r{run_id}_a{analysis_id}"
-    log_name = f"rid_{run_id}_aid_{analysis_id}_fid_%a.txt" # Slurm assigns the ARRAY_TASK_ID to %a
-    log_path = f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
+    if fake_field is None and "fake_field" in file_df.columns:
+        fake_fields = file_df["fake_field"].dropna().unique()
+        if len(fake_fields) == 1:
+            fake_field = float(fake_fields[0])
+
+    fake_field_suffix = ""
+    if fake_field is not None:
+        ff_str = str(fake_field).replace(".", "p")
+        fake_field_suffix = f"_ff{ff_str}"
+
+    job_name = f"r{run_id}_a{analysis_id}{fake_field_suffix}"
+    log_name = (
+        f"rid_{run_id}_aid_{analysis_id}{fake_field_suffix}_fid_%a.txt"
+    )
+    log_path = (
+        f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"
+    )
 
     cmd = (
         f"/opt/python3.7/bin/python3.7 -u "
@@ -117,8 +142,6 @@ def sbatch_katydid_file_array(
         f"--file_df_json_path {file_df_json_path} --idx ${{SLURM_ARRAY_TASK_ID}}"
     )
 
-    # katydid is single threaded, cpu_per_task = 1
-    # feel free to play with memory limit or add a concurrency limit as needed
     proc = sbatch_job(
         cmd,
         job_name,
@@ -128,9 +151,9 @@ def sbatch_katydid_file_array(
         cpus_per_task=1,
         mem=4,
         run_in_apptainer=True,
-        hold = hold_array,
+        hold=hold_array,
     )
-    
+
     array_jobid = proc.stdout.strip()
     print(f"Submitted array job ID: {array_jobid}")
 

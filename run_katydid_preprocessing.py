@@ -74,6 +74,7 @@ class KatydidPreprocessing:
         base_config: str, 
         file_num: int,
         aid_passed: bool = False,
+        fake_field: float = None,
     ):
 
         self.run_id = run_id
@@ -82,6 +83,7 @@ class KatydidPreprocessing:
         self.base_config = base_config
         self.file_num = file_num
         self.aid_passed = aid_passed
+        self.fake_field = fake_field
 
         print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
         print(f"\nPreprocessing: run_id: {run_id}.\n")
@@ -123,11 +125,16 @@ class KatydidPreprocessing:
             / Path(f"aid_{self.analysis_id:03d}")
         )
 
+        fake_field_suffix = ""
+        if self.fake_field is not None:
+            ff_str = str(self.fake_field).replace(".", "p")
+            fake_field_suffix = f"_ff{ff_str}"
+
         self.file_df_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.csv"
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}{fake_field_suffix}.csv"
         )
         self.file_df_json_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}{fake_field_suffix}.json"
         )
 
         self.is_cleanup = (
