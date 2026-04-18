@@ -347,7 +347,8 @@ class KatydidPreprocessing:
             raise UserWarning("This directory should have been made already.")
 
         if self.fake_field is not None:
-           current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}_ff_{self.fake_field:03d}")
+            ff_str = str(self.fake_field).replace(".", "p")
+            current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}_ff_{ff_str}")
         else: 
             current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
 
