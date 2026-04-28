@@ -376,6 +376,19 @@ class RunKatydid:
         for i in range(2):
             katydid_command_list.append(f"--spec2.filenames_{i}="+file_df["rocks_file_path"][i])
 
+        #Keep the LTF acceptance area to 45 bins (90 Hz*s) but scale f vs t with slope based on good reconstruction at 0.711T and 2.00T
+        #0.711T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
+        #2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
+        k = 0.1597 * file_df["approx_slope"] + 9.88e8
+        if k <= 0:
+            raise ValueError("No real positive solution (k must be > 0)")
+
+        freq_accept = float(np.sqrt(90 * k))
+        tgt = float(np.sqrt(90 / k))
+
+        katydid_command_list.append("--long-tr-find.frequency-acceptance="+str(freq_accept))
+        katydid_command_list.append("--long-tr-find.time-gap-tolerance="+str(tgt))
+
         katydid_command_list.append("--long-tr-find.initial-slope="+str(file_df["approx_slope"]))
         katydid_command_list.append("--long-tr-find.min-slope="+str(file_df["approx_slope"] - 1e10))
 
