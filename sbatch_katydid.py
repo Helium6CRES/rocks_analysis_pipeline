@@ -90,7 +90,11 @@ def get_max_analysis_id(run_ids) -> int:
             print(f"Created directory: {run_id_dir}")
 
         # Robust against deleted or missing aids.
-        analysis_ids = [int(f.name[-3:]) for f in run_id_dir.iterdir() if f.is_dir()]
+        analysis_ids = [
+            int(name[4:].split("_")[0])
+            for f in run_id_dir.iterdir()
+            if f.is_dir() and (name := f.name).startswith("aid_")
+        ]
         print(f"run_id = {run_id}. Existing aids = {sorted(analysis_ids)}")
         # Use the fact that an empty list is boolean False.
         max_analysis_ids.append(max(analysis_ids) if analysis_ids else 0)

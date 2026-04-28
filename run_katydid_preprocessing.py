@@ -114,6 +114,16 @@ class KatydidPreprocessing:
         print(f"analysis_id: {self.analysis_id}")
         print(f"base_config: {self.base_config}\n")
 
+    def format_fake_field(self) -> str:
+        return str(self.fake_field).replace(".", "p")
+
+
+    def analysis_dir_name(self) -> str:
+        if self.fake_field is None:
+            return f"aid_{self.analysis_id:03d}"
+
+        return f"aid_{self.analysis_id:03d}_ff_{self.format_fake_field()}"
+
     def build_file_df_path(self) -> None:
         """
         Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
@@ -122,19 +132,15 @@ class KatydidPreprocessing:
         rid_ai_dir = (
             base_path
             / Path(f"rid_{self.run_id:04d}")
-            / Path(f"aid_{self.analysis_id:03d}")
+            / Path(self.analysis_dir_name())
         )
 
-        fake_field_suffix = ""
-        if self.fake_field is not None:
-            ff_str = str(self.fake_field).replace(".", "p")
-            fake_field_suffix = f"_ff{ff_str}"
 
         self.file_df_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}{fake_field_suffix}.csv"
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.csv"
         )
         self.file_df_json_path = rid_ai_dir / Path(
-            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}{fake_field_suffix}.json"
+            f"rid_df_{self.run_id:04d}_{self.analysis_id:03d}.json"
         )
 
         self.is_cleanup = (
@@ -192,6 +198,10 @@ class KatydidPreprocessing:
         """
 
         file_df = self.create_base_file_df(self.run_id)
+        if self.fake_field is not None:
+            file_df["set_field"] = self.fake_field
+            file_df["true_field"] = self.fake_field
+
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
@@ -346,14 +356,10 @@ class KatydidPreprocessing:
         if not run_id_dir.is_dir():
             raise UserWarning("This directory should have been made already.")
 
-        if self.fake_field is not None:
-            ff_str = str(self.fake_field).replace(".", "p")
-            current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}_ff_{ff_str}")
-        else: 
-            current_analysis_dir = run_id_dir / Path(f"aid_{self.analysis_id:03d}")
+        current_analysis_dir = run_id_dir / Path(self.analysis_dir_name())
 
         if not current_analysis_dir.is_dir():
-            current_analysis_dir.mkdir(exist_ok=True)  # guard against race condition
+            current_analysis_dir.mkdir(exist_ok=True)
             print(f"Created directory: {current_analysis_dir}")
 
         return str(current_analysis_dir)
