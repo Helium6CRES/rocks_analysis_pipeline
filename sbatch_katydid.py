@@ -45,21 +45,9 @@ def main() -> None:
         analysis_id = args.analysis_id
         aid_passed = True
 
+    fake_fields = args.fake_fields or [None]
     for run_id in args.runids:
-        if args.fake_fields is not None:
-            for fake_field in args.fake_fields:
-                sbatch_katydid(
-                    args.tlim,
-                    run_id,
-                    analysis_id,
-                    args.noise_run_id,
-                    args.base_config,
-                    args.file_num,
-                    aid_passed,
-                    args.hold_array,
-                    fake_field,
-                )
-        else:
+        for fake_field in fake_fields:
             sbatch_katydid(
                 args.tlim,
                 run_id,
@@ -69,8 +57,8 @@ def main() -> None:
                 args.file_num,
                 aid_passed,
                 args.hold_array,
+                fake_field,
             )
-
 
 def get_max_analysis_id(run_ids) -> int:
     """

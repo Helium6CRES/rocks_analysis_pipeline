@@ -99,9 +99,6 @@ def launch_katydid(
     # clean_up_root_dir(file_df)
 
 
-from pathlib import Path
-
-
 def sbatch_katydid_file_array(
     file_df,
     file_df_json_path: str,
