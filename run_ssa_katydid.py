@@ -18,6 +18,7 @@ import sys
 import subprocess as sp
 import json
 import re
+import numpy as np
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
