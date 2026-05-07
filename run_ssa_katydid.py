@@ -306,8 +306,13 @@ class RunKatydid:
 
         current_analysis_dir = run_name_dir / Path(f"aid_{self.analysis_id}")
         if not current_analysis_dir.is_dir():
-            current_analysis_dir.mkdir()
-            print(f"Created directory: {current_analysis_dir}")
+            try:
+                current_analysis_dir.mkdir()
+                print(f"Created directory: {current_analysis_dir}")
+            except:
+                print(f"Issue creating directory: {current_analysis_dir}. Proceeding anyways")
+                if not run_name_dir.is_dir():
+                    raise ValueError("Directory still not created. Killing...")
 
         return str(current_analysis_dir)
 
