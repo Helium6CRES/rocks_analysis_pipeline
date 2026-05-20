@@ -76,7 +76,12 @@ def launch_katydid(
     file_df_json_path = preprocessor.file_df_json_path
 
     condition = (~file_df["root_file_exists"]) & (file_df["exists"])
-    print(f"\nRunning katydid on {condition.sum()} of {len(file_df)} files.")
+    selected_file_ids = file_df.loc[condition, "file_id"].astype(int).tolist()
+
+    debug_cols = ["file_id", "root_file_exists", "exists", "root_file_path"]
+    print(f"\nRunning katydid on {len(selected_file_ids)} of {len(file_df)} files.")
+    print("\nRows selected for Katydid:")
+    print(file_df.loc[condition, debug_cols].to_string(index=False))
 
     # Alert which run_ids files do not exist on ROCKS
     no_file_df = file_df.loc[~file_df["exists"], "rocks_file_path"]
@@ -89,11 +94,12 @@ def launch_katydid(
             print(rocks_file_path)
 
     sbatch_katydid_file_array(
-        file_df[condition],
+        file_df.loc[condition],
         file_df_json_path,
         tlim,
         hold_array,
         fake_field=fake_field,
+        file_ids=selected_file_ids,
     )
 
     # clean_up_root_dir(file_df)
@@ -105,8 +111,16 @@ def sbatch_katydid_file_array(
     tlim: str,
     hold_array: bool = False,
     fake_field: float = None,
+    file_ids=None,
 ) -> None:
-    n_files = len(file_df)
+    if file_ids is None:
+        file_ids = file_df["file_id"].astype(int).tolist()
+
+    n_files = len(file_ids)
+
+    if n_files == 0:
+        print("No files to submit.")
+        return
 
     run_id = int(file_df["run_id"].iloc[0])
     analysis_id = int(file_df["analysis_id"].iloc[0])
@@ -135,12 +149,14 @@ def sbatch_katydid_file_array(
         f"--file_df_json_path {file_df_json_path} --idx ${{SLURM_ARRAY_TASK_ID}}"
     )
 
+    array_spec = ",".join(str(fid) for fid in file_ids)
+
     proc = sbatch_job(
         cmd,
         job_name,
         tlim,
         log_path,
-        array=n_files,
+        array=array_spec,
         cpus_per_task=1,
         mem=4,
         run_in_apptainer=True,
