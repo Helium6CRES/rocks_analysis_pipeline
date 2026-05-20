@@ -114,7 +114,7 @@ def sbatch_job(
         job_name: str, 
         tlim: str, 
         log_path: typing.Union[str, Path], 
-        array: int = 0,
+        array: typing.Union[int, str] = 0,,
         max_concurrent: int = 0,
         cpus_per_task: int = 0,
         mem: int = 0,
@@ -137,11 +137,16 @@ def sbatch_job(
     if hold:
         sbatch_cmd.append("--hold")
 
-    if array > 0:
-        if max_concurrent <= 0:
-            max_concurrent = array
-        sbatch_cmd.append(f"--array=0-{array-1}%{max_concurrent}")
-
+    if array:
+        if isinstance(array, int):
+            if max_concurrent <= 0:
+                max_concurrent = array
+            sbatch_cmd.append(f"--array=0-{array-1}%{max_concurrent}")
+        else:
+            if max_concurrent > 0:
+                sbatch_cmd.append(f"--array={array}%{max_concurrent}")
+            else:
+                sbatch_cmd.append(f"--array={array}")
     if cpus_per_task > 0:
         sbatch_cmd.append(f"--cpus-per-task={cpus_per_task}")
 

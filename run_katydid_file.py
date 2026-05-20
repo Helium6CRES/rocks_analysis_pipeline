@@ -39,20 +39,22 @@ def main() -> None:
         print("Returning.\n")
         return
 
+    # Load the specific row by true file_id, not by positional index.
+    matches = file_df_loaded.loc[file_df_loaded["file_id"].astype(int) == args.idx]
     print(f"\nLoading file_df json. DONE at PST time: {get_pst_time()}\n")
 
-    # Filter which root files to run
-    # Make sure condition matches what's in run_katydid_rid.py or the indexing will be messed up!
-    condition = (~file_df_loaded["root_file_exists"]) & (file_df_loaded["exists"])
-    file_df = file_df_loaded[condition]
-
-    try:
-        file_df_row = file_df.iloc[args.idx].to_dict()
-    except IndexError as e:
-        print(f"Exception: Index {args.idx} not found in {args.file_df_json_path}.")
-        print(e)
+    if matches.empty:
+        print(f"Exception: file_id {args.idx} not found in {args.file_df_json_path}.")
         print("Returning.\n")
         return
+
+    if len(matches) > 1:
+        print(f"Exception: file_id {args.idx} is duplicated in {args.file_df_json_path}.")
+        print(matches.to_string())
+        print("Returning.\n")
+        return
+
+    file_df_row = matches.iloc[0].to_dict()
 
     # Force a write to the log.
     sys.stdout.flush()
