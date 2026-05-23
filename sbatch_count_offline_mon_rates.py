@@ -54,6 +54,7 @@ def sbatch_job(run_id, analysis_id, cmd, tlim):
     sbatch_opts = [
         "--job-name", f"r{run_id}_a{analysis_id}_count_offline_mon",
         "--time", tlim,
+        "--mem", 350G,
         "--output", log_path,
         "--export=ALL",
         "--mail-type=NONE",
