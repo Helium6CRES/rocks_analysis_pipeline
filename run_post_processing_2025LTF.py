@@ -659,11 +659,12 @@ class PostProcessing:
             # Step 1. Find the ealiest UTC time present in the given run_id.
             dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
-            # Get runname in caen_runs table nearest before the earliest time in run_id. logged_at also UTC
+            # Get runname in caen_runs table  most recent to earliest time in run_id. logged_at also UTC
+
             query = """SELECT cr.caen_run_id, cr.runname, cr.logged_at
-                       FROM he6cres_runs.caen_runs as cr 
-                       WHERE cr.logged_at >= '{}'::timestamp
-                       ORDER BY cr.caen_run_id DESC LIMIT 1
+                        FROM he6cres_runs.caen_runs AS cr
+                        ORDER BY ABS(EXTRACT(EPOCH FROM (cr.logged_at - '{}'::timestamp))) ASC
+                        LIMIT 1
                     """.format(dt_min)
 
             caen_log = he6cres_db_query(query)
