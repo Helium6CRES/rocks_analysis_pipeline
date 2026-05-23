@@ -338,10 +338,14 @@ class PostProcessing:
         # Prefer the offline-processed version if available
         file_df_path_offline = rid_ai_dir / Path(
             f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
-        )
+            )
+        print(f"using offline beta monitor file! {file_df_path_offline}")
+        
         file_df_path_normal = rid_ai_dir / Path(
             f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
-        )
+            )
+        print(f"using just normal root file csv: {file_df_path_normal}")
+        
 
         if file_df_path_offline.exists():
             return file_df_path_offline, False
@@ -554,9 +558,9 @@ class PostProcessing:
         root_files_df = self.add_field(root_files_df)
 
         # Beta monitor not working for Kr DON'T ADD BETA MONITOR!
-        root_files_df["arduino_monitor_rate"] = 1
+        # root_files_df["arduino_monitor_rate"] = 1
         
-        #root_files_df = self.add_arduino_monitor_rate(root_files_df)
+        root_files_df = self.add_arduino_monitor_rate(root_files_df)
         '''
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
@@ -658,7 +662,7 @@ class PostProcessing:
             # Get runname in caen_runs table nearest before the earliest time in run_id. logged_at also UTC
             query = """SELECT cr.caen_run_id, cr.runname, cr.logged_at
                        FROM he6cres_runs.caen_runs as cr 
-                       WHERE cr.logged_at <= '{}'::timestamp
+                       WHERE cr.logged_at >= '{}'::timestamp
                        ORDER BY cr.caen_run_id DESC LIMIT 1
                     """.format(dt_min)
 

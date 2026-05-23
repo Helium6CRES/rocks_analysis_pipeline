@@ -114,7 +114,7 @@ def sbatch_job(
         job_name: str, 
         tlim: str, 
         log_path: typing.Union[str, Path], 
-        array: typing.Union[int, str] = 0,,
+        array: typing.Union[int, str] = 0,
         max_concurrent: int = 0,
         cpus_per_task: int = 0,
         mem: int = 0,
