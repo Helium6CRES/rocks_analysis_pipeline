@@ -24,14 +24,16 @@ def count_offline_mon_for_run(run_id: int, analysis_id: int, ms_standard: int = 
         analysis_id=analysis_id,
         experiment_name=None,
         num_files_tracks=0,
+        num_files_points=0,
         file_id=0,
         stage=-1,  # just using its utilities
         ms_standard=ms_standard,
     )
 
     # Path to per-run root_files CSV
-    file_df_path = pp.build_file_df_path(run_id)
-    if not file_df_path.exists():
+    file_df_path, file_exists_flag = pp.build_file_df_path(run_id)
+    print(file_df_path)
+    if not file_exists_flag:
         raise FileNotFoundError(f"Missing file_df for run_id {run_id}: {file_df_path}")
 
     print(f"Loading {file_df_path}")
