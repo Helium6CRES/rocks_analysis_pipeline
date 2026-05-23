@@ -311,17 +311,65 @@ class PostProcessing:
         return None
 
     def get_experiment_files(self):
+        paths = []
+
+        for run_id in self.run_ids:
+            base, offline = self.build_file_df_path(run_id)
+
+            paths.append({
+                "run_id": run_id,
+                "base": base,
+                "offline": offline,
+                "has_base": base.exists(),
+                "has_offline": offline.exists(),
+            })
+
+        missing_base = [p for p in paths if not p["has_base"]]
+        if missing_base:
+            msg = "\n".join(
+                f"  rid {p['run_id']}: missing {p['base']}"
+                for p in missing_base
+            )
+            raise FileNotFoundError(f"Missing base file_df(s):\n{msg}")
+
+        has_offline = [p for p in paths if p["has_offline"]]
+        missing_offline = [p for p in paths if not p["has_offline"]]
+
+        if has_offline and missing_offline:
+            msg_has = "\n".join(
+                f"  rid {p['run_id']}: {p['offline']}"
+                for p in has_offline
+            )
+            msg_missing = "\n".join(
+                f"  rid {p['run_id']}: expected {p['offline']}"
+                for p in missing_offline
+            )
+
+            raise RuntimeError(
+                "Mixed offline-monitor CSV state for stage 0.\n\n"
+                "Some run_ids have *_with_offline_mon.csv:\n"
+                f"{msg_has}\n\n"
+                "Some run_ids do not:\n"
+                f"{msg_missing}\n\n"
+                "Either generate offline-monitor CSVs for all run_ids, "
+                "delete the existing *_with_offline_mon.csv files, or add an explicit "
+                "allow_mixed_offline_inputs option."
+            )
+
+        use_offline = len(has_offline) == len(paths)
 
         file_df_list = []
         missing_flags = []
 
-        for run_id in self.run_ids:
-            file_df_path, envir_missing = self.build_file_df_path(run_id)
-
+        for p in paths:
+            file_df_path = p["offline"] if use_offline else p["base"]
             file_df = pd.read_csv(file_df_path)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
             file_df_list.append(file_df)
-            missing_flags.extend(len(file_df) * [envir_missing])
+
+            # If using base files, env data still needs to be added.
+            # If using offline files, assume env/offline data already exists.
+            missing_flags.extend(len(file_df) * [not use_offline])
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
         root_files_df["envir_data_missing"] = missing_flags
@@ -329,32 +377,13 @@ class PostProcessing:
         return root_files_df
 
     def build_file_df_path(self, run_id):
-
         base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
-        rid_ai_dir = (
-            base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
-        )
+        rid_ai_dir = base_path / f"rid_{run_id:04d}" / f"aid_{self.analysis_id:03d}"
 
-        # Prefer the offline-processed version if available
-        file_df_path_offline = rid_ai_dir / Path(
-            f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
-            )
-        print(f"using offline beta monitor file! {file_df_path_offline}")
-        
-        file_df_path_normal = rid_ai_dir / Path(
-            f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
-            )
-        print(f"using just normal root file csv: {file_df_path_normal}")
-        
+        offline = rid_ai_dir / f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
+        base = rid_ai_dir / f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
 
-        if file_df_path_offline.exists():
-            return file_df_path_offline, False
-        elif file_df_path_normal.exists():
-            return file_df_path_normal, True
-        else:
-            raise FileNotFoundError(
-                f"No root file df found for run_id={run_id}, aid={self.analysis_id}"
-                )
+        return base, offline
 
     def load_root_files_df(self):
 
