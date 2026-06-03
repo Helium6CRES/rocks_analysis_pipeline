@@ -323,7 +323,51 @@ class PostProcessing:
         print(f"\nMade: {self.analysis_dir}")
 
         return None
+        
+    def format_fake_field(self, fake_field):
+        """
+        Format a fake-field value for use in directory names.
 
+        Example:
+            0.9515878 -> "0p9515878"
+        """
+        return str(fake_field).replace(".", "p")
+
+
+    def analysis_dir_name(self, fake_field=None):
+        """
+        Return the Katydid root-file analysis directory name.
+
+        For ordinary analyses:
+            aid_000
+
+        For fake-field analyses:
+            aid_000_ff_0p9515878
+        """
+        if fake_field is None:
+            return f"aid_{self.analysis_id:03d}"
+
+        return f"aid_{self.analysis_id:03d}_ff_{self.format_fake_field(fake_field)}"
+
+
+    def analysis_variant(self, fake_field=None):
+        """
+        String label uniquely identifying this analysis variant.
+        """
+        return self.analysis_dir_name(fake_field)
+
+
+    def get_fake_field_list(self):
+        """
+        Return fake fields to post-process.
+
+        If no fake fields were passed, use [None], corresponding to the
+        ordinary aid_### directory.
+        """
+        if self.fake_fields is None:
+            return [None]
+
+        return self.fake_fields
     def get_experiment_files(self):
         paths = []
 
