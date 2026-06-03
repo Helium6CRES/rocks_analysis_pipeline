@@ -323,7 +323,7 @@ class PostProcessing:
         print(f"\nMade: {self.analysis_dir}")
 
         return None
-        
+
     def format_fake_field(self, fake_field):
         """
         Format a fake-field value for use in directory names.
@@ -368,6 +368,18 @@ class PostProcessing:
             return [None]
 
         return self.fake_fields
+    def get_job_id_col(self):
+        """
+        Return the column used to split stage-1 post-processing jobs.
+
+        Fake-field post-processing uses pp_file_id, because physical file_id is
+        duplicated across fake-field variants. Ordinary older root_files.csv files
+        can fall back to file_id.
+        """
+        if hasattr(self, "root_files_df") and "pp_file_id" in self.root_files_df.columns:
+            return "pp_file_id"
+
+        return "file_id"
     def get_experiment_files(self):
         paths = []
 
