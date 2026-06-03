@@ -40,8 +40,8 @@ def main():
     arg("-ffs", "--fake_fields", nargs="+", type=float, default=None,
         help="fake fields to include. Omit for ordinary aid_### post-processing")
     arg("--post_processing_script", type=str,
-        default="/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing_2025LTF.py",
-        help="path to fake-field-aware run_post_processing_2025LTF.py on the cluster")
+        default="/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_post_processing_2025LTF_fakefields.py",
+        help="path to fake-field-aware run_post_processing_2025LTF_fakefields.py on the cluster")
     arg("--container", type=str,
         default="/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif",
         help="apptainer container path")
