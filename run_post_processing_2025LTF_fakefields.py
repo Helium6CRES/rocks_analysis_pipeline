@@ -709,9 +709,9 @@ class PostProcessing:
             root_files_df["field"] = root_files_df["true_field"]
 
         # Beta monitor not working for Kr DON'T ADD BETA MONITOR!
-        # root_files_df["arduino_monitor_rate"] = 1
+        root_files_df["arduino_monitor_rate"] = 1
         
-        root_files_df = self.add_arduino_monitor_rate(root_files_df)
+        #root_files_df = self.add_arduino_monitor_rate(root_files_df)
         '''
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
