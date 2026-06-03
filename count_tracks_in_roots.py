@@ -74,7 +74,9 @@ def main():
         df = df.head(args.max_files)
 
     rows = []
-    for _, row in df.iterrows():
+    n_total = len(df)
+
+    for i, (_, row) in enumerate(df.iterrows(), start=1):
         root_path = row["root_file_path"]
         info = count_tree_entries(root_path)
 
@@ -88,6 +90,21 @@ def main():
         }
         out.update(info)
         rows.append(out)
+
+        print(
+            f"[{i:5d}/{n_total:5d}] "
+            f"rid={out['run_id']} "
+            f"fid={out['file_id']} "
+            f"ppid={out['pp_file_id']} "
+            f"field={out['set_field']} "
+            f"tree={out['tree_type']} "
+            f"entries={out['entries']} "
+            f"path={root_path}",
+            flush=True,
+        )
+
+        if out["error"]:
+            print(f"    ERROR: {out['error']}", flush=True)
 
     out_df = pd.DataFrame(rows)
 
