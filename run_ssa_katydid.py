@@ -174,7 +174,7 @@ class RunKatydid:
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
 
-        file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
+        file_df["approx_slope"] = self.get_slope(file_df["true_field"])
 
         file_df["base_config_path"] = self.get_base_config_path()
         #spec_sims_analysis/root_files/r_run_name
