@@ -311,17 +311,65 @@ class PostProcessing:
         return None
 
     def get_experiment_files(self):
+        paths = []
+
+        for run_id in self.run_ids:
+            base, offline = self.build_file_df_path(run_id)
+
+            paths.append({
+                "run_id": run_id,
+                "base": base,
+                "offline": offline,
+                "has_base": base.exists(),
+                "has_offline": offline.exists(),
+            })
+
+        missing_base = [p for p in paths if not p["has_base"]]
+        if missing_base:
+            msg = "\n".join(
+                f"  rid {p['run_id']}: missing {p['base']}"
+                for p in missing_base
+            )
+            raise FileNotFoundError(f"Missing base file_df(s):\n{msg}")
+
+        has_offline = [p for p in paths if p["has_offline"]]
+        missing_offline = [p for p in paths if not p["has_offline"]]
+
+        if has_offline and missing_offline:
+            msg_has = "\n".join(
+                f"  rid {p['run_id']}: {p['offline']}"
+                for p in has_offline
+            )
+            msg_missing = "\n".join(
+                f"  rid {p['run_id']}: expected {p['offline']}"
+                for p in missing_offline
+            )
+
+            raise RuntimeError(
+                "Mixed offline-monitor CSV state for stage 0.\n\n"
+                "Some run_ids have *_with_offline_mon.csv:\n"
+                f"{msg_has}\n\n"
+                "Some run_ids do not:\n"
+                f"{msg_missing}\n\n"
+                "Either generate offline-monitor CSVs for all run_ids, "
+                "delete the existing *_with_offline_mon.csv files, or add an explicit "
+                "allow_mixed_offline_inputs option."
+            )
+
+        use_offline = len(has_offline) == len(paths)
 
         file_df_list = []
         missing_flags = []
 
-        for run_id in self.run_ids:
-            file_df_path, envir_missing = self.build_file_df_path(run_id)
-
+        for p in paths:
+            file_df_path = p["offline"] if use_offline else p["base"]
             file_df = pd.read_csv(file_df_path)
             file_df["root_file_exists"] = file_df["root_file_path"].apply(check_if_exists)
             file_df_list.append(file_df)
-            missing_flags.extend(len(file_df) * [envir_missing])
+
+            # If using base files, env data still needs to be added.
+            # If using offline files, assume env/offline data already exists.
+            missing_flags.extend(len(file_df) * [not use_offline])
 
         root_files_df = pd.concat(file_df_list).reset_index(drop=True)
         root_files_df["envir_data_missing"] = missing_flags
@@ -329,28 +377,13 @@ class PostProcessing:
         return root_files_df
 
     def build_file_df_path(self, run_id):
-
         base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
-        rid_ai_dir = (
-            base_path / Path(f"rid_{run_id:04d}") / Path(f"aid_{self.analysis_id:03d}")
-        )
+        rid_ai_dir = base_path / f"rid_{run_id:04d}" / f"aid_{self.analysis_id:03d}"
 
-        # Prefer the offline-processed version if available
-        file_df_path_offline = rid_ai_dir / Path(
-            f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
-        )
-        file_df_path_normal = rid_ai_dir / Path(
-            f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
-        )
+        offline = rid_ai_dir / f"rid_df_{run_id:04d}_{self.analysis_id:03d}_with_offline_mon.csv"
+        base = rid_ai_dir / f"rid_df_{run_id:04d}_{self.analysis_id:03d}.csv"
 
-        if file_df_path_offline.exists():
-            return file_df_path_offline, False
-        elif file_df_path_normal.exists():
-            return file_df_path_normal, True
-        else:
-            raise FileNotFoundError(
-                f"No root file df found for run_id={run_id}, aid={self.analysis_id}"
-                )
+        return base, offline
 
     def load_root_files_df(self):
 
@@ -422,7 +455,7 @@ class PostProcessing:
         tracks_df = pd.DataFrame()
 
         rootfile = uproot.open(root_files_df_row["root_file_path"])
-
+        #If present, use MBEB TTree
         if "MB-events;1" in rootfile.keys():
             tracks_root = rootfile["MB-events;1"]["MultiBandEvent"]["fTracks"]
             cols = {}
@@ -435,11 +468,28 @@ class PostProcessing:
 
             if cols:
                 tracks_df = pd.DataFrame(cols)
+        #If not present, get tracks from tracks TTree
+        elif "tracks;1" in rootfile.keys():
+            tracks_root = rootfile["tracks;1"]["Track"]
+            print(list(tracks_root.keys()))
+            cols = {}
+            for key, branch in tracks_root.items():
+                if str(key).startswith('fPoints'):
+                    continue
+                # Skip object/pointer branches that trigger the “arbitrary pointer” error
+                if branch.interpretation.__class__.__name__ == "AsObjects":
+                    continue
+
+                tracks_df[key[1:]] = self.flat(branch.array())
+
+            if cols:
+                tracks_df = pd.DataFrame(cols)
 
         tracks_df["run_id"] = root_files_df_row["run_id"]
         tracks_df["file_id"] = root_files_df_row["file_id"]
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
+        tracks_df["true_voltage"] = root_files_df_row["voltage"]
         tracks_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
         tracks_df["nitrogen"] = root_files_df_row["nitrogen"]
         tracks_df["helium"] = root_files_df_row["helium"]
@@ -537,15 +587,16 @@ class PostProcessing:
         root_files_df = self.add_field(root_files_df)
 
         # Beta monitor not working for Kr DON'T ADD BETA MONITOR!
-        root_files_df["arduino_monitor_rate"] = 1
+        # root_files_df["arduino_monitor_rate"] = 1
         
-        #root_files_df = self.add_arduino_monitor_rate(root_files_df)
+        root_files_df = self.add_arduino_monitor_rate(root_files_df)
         '''
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
         '''
         root_files_df = self.add_pressures(root_files_df)
         root_files_df = self.add_temps(root_files_df)
+        root_files_df = self.add_voltage(root_files_df)
 
         # Step 3. Add the set_field by rounding to nearest 100th place.
         root_files_df["set_field"] = root_files_df["field"].round(decimals=2)
@@ -637,11 +688,12 @@ class PostProcessing:
             # Step 1. Find the ealiest UTC time present in the given run_id.
             dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
 
-            # Get runname in caen_runs table nearest before the earliest time in run_id. logged_at also UTC
+            # Get runname in caen_runs table  most recent to earliest time in run_id. logged_at also UTC
+
             query = """SELECT cr.caen_run_id, cr.runname, cr.logged_at
-                       FROM he6cres_runs.caen_runs as cr 
-                       WHERE cr.logged_at <= '{}'::timestamp
-                       ORDER BY cr.caen_run_id DESC LIMIT 1
+                        FROM he6cres_runs.caen_runs AS cr
+                        ORDER BY ABS(EXTRACT(EPOCH FROM (cr.logged_at - '{}'::timestamp))) ASC
+                        LIMIT 1
                     """.format(dt_min)
 
             caen_log = he6cres_db_query(query)
@@ -881,6 +933,56 @@ class PostProcessing:
         # Check for missing data
         if root_files_df[sensor_names].isnull().any().any():
             print("Some temp data was not collected.")
+
+        return root_files_df
+
+    def add_voltage(self, root_files_df):
+
+        root_files_df["voltage"] = np.nan
+
+        # Step 0. Group by run_id.
+        for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+
+            # Step 1. Find the extreme times present in the given run_id.
+            # The idea is that we want to be careful about the amount of queries we do to get this info.
+            # Here we only do one query per run_id (instead of one per file)
+            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
+            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+
+            query = """SELECT n.dmm_id, n.utc_write_time, n.voltage
+                       FROM he6cres_runs.dmm as n 
+                       WHERE n.utc_write_time >= '{}'::timestamp
+                           AND n.utc_write_time <= '{}'::timestamp + interval '1 minute'
+                    """.format(
+                dt_min, dt_max
+            )
+            print(query)
+            voltage_log = he6cres_db_query(query)
+            # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
+            # to created_at for consistancy in get_nearest()
+            if voltage_log.empty:
+                voltage_log["created_at"] = np.nan
+            else:    
+                voltage_log["created_at"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
+
+                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+
+                    if len(file_path) != 1:
+                        raise UserWarning(
+                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
+                        )
+
+                    # Get voltage during second of data
+                    voltage = self.get_nearest(voltage_log, file_path.utc_time.iloc[0]).voltage
+
+                    # Now get the nearest voltage for each file_id and fill those in!! Then this gets joined with the whole table.
+                    condition = (root_files_df["run_id"] == rid) & (
+                        root_files_df["file_id"] == fid
+                    )
+                    root_files_df.loc[condition, "voltage"] = voltage
+
+        if root_files_df["voltage"].isnull().values.any():
+            print("Some voltage data was not collected.")
 
         return root_files_df
 

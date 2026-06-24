@@ -108,3 +108,82 @@ def log_file_break():
     print("################################################################")
     print("\n\n")
     return None
+
+def sbatch_job(
+        cmd: str, 
+        job_name: str, 
+        tlim: str, 
+        log_path: typing.Union[str, Path], 
+        array: typing.Union[int, str] = 0,
+        max_concurrent: int = 0,
+        cpus_per_task: int = 0,
+        mem: int = 0,
+        run_in_apptainer = False,
+        hold: bool = False,
+        ) -> sp.CompletedProcess:
+
+    log_path = str(log_path)
+
+    sbatch_cmd = [
+        "sbatch",
+        "--parsable",
+        "--job-name", job_name,
+        "--time", tlim,
+        "--output", log_path,
+        "--export=ALL",
+        "--mail-type=NONE",
+    ]
+
+    if hold:
+        sbatch_cmd.append("--hold")
+
+    if array:
+        if isinstance(array, int):
+            if max_concurrent <= 0:
+                max_concurrent = array
+            sbatch_cmd.append(f"--array=0-{array-1}%{max_concurrent}")
+        else:
+            if max_concurrent > 0:
+                sbatch_cmd.append(f"--array={array}%{max_concurrent}")
+            else:
+                sbatch_cmd.append(f"--array={array}")
+    if cpus_per_task > 0:
+        sbatch_cmd.append(f"--cpus-per-task={cpus_per_task}")
+
+    if mem > 0:
+        sbatch_cmd.append(f"--mem={mem}G")
+
+    if run_in_apptainer:
+        # Build the command to run inside the container
+        container_cmd = (
+            f"umask 002; "
+            f"source /data/raid2/eliza4/he6_cres/.bashrc; "
+        )
+
+        # Full Apptainer command
+        # Wrapping cmd in single quotes means literal text: no variable expansion etc
+        full_cmd = (
+            "apptainer exec "
+            "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
+            "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
+            f"/bin/bash -c '{container_cmd}{cmd}'"
+        )
+    else:
+        full_cmd = cmd
+
+    print("\n\n", " ".join(sbatch_cmd + [full_cmd]), "\n\n")
+
+    script = f"""#!/bin/bash
+    set -euo pipefail
+    {full_cmd}
+    """
+
+    proc = sp.run(
+        sbatch_cmd, 
+        input = script, 
+        check=True,
+        text=True, 
+        # capture_output=True, 
+    )
+    return proc
+    
