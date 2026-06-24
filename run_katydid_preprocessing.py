@@ -4,17 +4,16 @@ Perform all the preprocessing for a run_id before submitting sbatch for each job
 """
 
 import argparse
-import pandas as pd
-from pandas.core.groupby.generic import DataFrameGroupBy # type hint
 import typing
 from typing import List
 from pathlib import Path
 import sys
 import json
+import pandas as pd
+from pandas.core.groupby.generic import DataFrameGroupBy # type hint
 
-# Local imports.
-sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
-import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
+ANALYSIS_HOME = Path("/data/raid2/eliza4/he6_cres")
+SPEC_FILES_HOME = Path("/data/raid4/he6_cres")
 
 # Local imports.
 from rocks_utility import (
@@ -25,17 +24,20 @@ from rocks_utility import (
     log_file_break,
 )
 
+sys.path.append(ANALYSIS_HOME / "simulation/he6-cres-spec-sims/src")
+import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
+
 # Import settings.
 pd.set_option("display.max_columns", 100)
 
 def main() -> None:
 
     """
-    CLI entry point. Not currently used: launch_katydid imports KatydidPreprocessing directly. Might delete later, but keeping for consistency for now. 
+    CLI entry point. Not used in script: launch_katydid imports KatydidPreprocessing directly. Useful for testing without submitting to Slurm.
     """
 
     par = argparse.ArgumentParser()
-    arg = par.add_argument()
+    arg = par.add_argument
     arg("-id", "--run_id", type=int, 
         help="run_id to run katydid on")
     arg("-nid", "--noise_run_id", type=int, 
@@ -59,7 +61,6 @@ def main() -> None:
         args.file_num,
         args.aid_passed,
     )
-
 
 class KatydidPreprocessing:
     def __init__(
@@ -115,7 +116,7 @@ class KatydidPreprocessing:
         """
         Build paths to directories in katydid_analysis/root_files and csvs in those directories with file information.
         """
-        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
+        base_path = ANALYSIS_HOME / "katydid_analysis/root_files"
         rid_ai_dir = (
             base_path
             / Path(f"rid_{self.run_id:04d}")
@@ -189,7 +190,7 @@ class KatydidPreprocessing:
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False
         file_df["file_id"] = file_df.index
-        file_df["rocks_file_path"] = file_df["file_path"].apply(self.process_fp)
+        file_df["rocks_file_path"] = file_df["file_path"].apply(self.process_spec_path)
         file_df["exists"] = file_df["rocks_file_path"].apply(check_if_exists)
 
         file_df["approx_slope"] = self.get_slope(file_df["true_field"][0])
@@ -209,7 +210,7 @@ class KatydidPreprocessing:
             noise_fp_list = self.get_noise_fp()
             file_df["noise_file_path"] = [noise_fp_list] * len(file_df)
 
-        file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(self.process_fp)
+        file_df["rocks_noise_file_path"] = file_df["noise_file_path"].apply(self.process_spec_path)
 
         file_df["root_file_path"] = file_df.apply(
             lambda row: self.build_root_file_path(row), axis=1
@@ -287,13 +288,16 @@ class KatydidPreprocessing:
             'file_path': ordered_paths
         })
 
-    def process_fp(self, daq_fp_list: List[str]) -> List[str]:
+    def process_spec_path(self, daq_fp_list: List[str]) -> List[str]:
         """
-        Properly format filepaths on Wulf. 
-        TODO: rewrite with pathlib for robustness?
+        Format daq computer spec(k) filepaths into Wulf filepaths
+        Replaces /mnt/sd(X) (daq computer) with path to sd(X) on wulf
         """
         #print(daq_fp_list)
-        rocks_fp_list = ["/data/raid2/eliza4/he6_cres/" + daq_fp[5:] for daq_fp in daq_fp_list]
+        rocks_fp_list = [
+                SPEC_FILES_HOME / Path(daq_fp).relative_to("/mnt") 
+                for daq_fp in daq_fp_list
+                ]
         return rocks_fp_list
 
     def get_slope(self, true_field: float, frequency: float = 19.15e9) -> float:
@@ -323,8 +327,8 @@ class KatydidPreprocessing:
 
     def get_base_config_path(self) -> str:
 
-        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/base_configs")
-        base_config_full = base_path / Path(self.base_config)
+        base_dir = ANALYSIS_HOME / "katydid_analysis/base_configs"
+        base_config_full = base_dir / self.base_config
 
         if not base_config_full.is_file():
             raise UserWarning("base config doesn't exist. ")
@@ -333,9 +337,9 @@ class KatydidPreprocessing:
 
     def build_dir_structure(self) -> str:
 
-        base_path = Path("/data/raid2/eliza4/he6_cres/katydid_analysis/root_files")
+        base_dir = ANALYSIS_HOME / "katydid_analysis/root_files"
 
-        run_id_dir = base_path / Path(f"rid_{self.run_id:04d}")
+        run_id_dir = base_dir / f"rid_{self.run_id:04d}"
 
         if not run_id_dir.is_dir():
             raise UserWarning("This directory should have been made already.")
@@ -400,3 +404,6 @@ class KatydidPreprocessing:
         )
 
         return str(slew_path)
+
+if __name__ == "__main__":
+    main()
