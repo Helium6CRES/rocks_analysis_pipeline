@@ -85,7 +85,7 @@ def main():
             "file_id": row.get("file_id"),
             "pp_file_id": row.get("pp_file_id"),
             "analysis_variant": row.get("analysis_variant"),
-            "set_field": row.get("set_field", row.get("fake_field", row.get("field"))),
+            "set_field": row.get("set_field", row.get("field")),
             "root_file_path": root_path,
         }
         out.update(info)

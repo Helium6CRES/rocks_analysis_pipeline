@@ -70,7 +70,6 @@ class KatydidPreprocessing:
         base_config: str, 
         file_num: int,
         aid_passed: bool = False,
-        fake_field: float = None,
     ):
 
         self.run_id = run_id
@@ -79,7 +78,6 @@ class KatydidPreprocessing:
         self.base_config = base_config
         self.file_num = file_num
         self.aid_passed = aid_passed
-        self.fake_field = fake_field
 
         print(f"\nRunning Katydid preprocessing. STARTING at PST time: {get_pst_time()}\n")
         print(f"\nPreprocessing: run_id: {run_id}.\n")
@@ -110,15 +108,8 @@ class KatydidPreprocessing:
         print(f"analysis_id: {self.analysis_id}")
         print(f"base_config: {self.base_config}\n")
 
-    def format_fake_field(self) -> str:
-        return str(self.fake_field).replace(".", "p")
-
-
     def analysis_dir_name(self) -> str:
-        if self.fake_field is None:
-            return f"aid_{self.analysis_id:03d}"
-
-        return f"aid_{self.analysis_id:03d}_ff_{self.format_fake_field()}"
+        return f"aid_{self.analysis_id:03d}"
 
     def build_file_df_path(self) -> None:
         """
@@ -194,9 +185,6 @@ class KatydidPreprocessing:
         """
 
         file_df = self.create_base_file_df(self.run_id)
-        if self.fake_field is not None:
-            file_df["set_field"] = self.fake_field
-            file_df["true_field"] = self.fake_field
 
         file_df["analysis_id"] = self.analysis_id
         file_df["root_file_exists"] = False

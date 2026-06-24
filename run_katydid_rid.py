@@ -32,8 +32,6 @@ def main() -> None:
         help="analysis_id used to label directories. If -1, a new index will be created.")
     arg("--aid_passed", action="store_true",
         help="Flag to indicate that the user specified aid explicitly, instead the default value. If so, will perform a cleanup if the aid exists or run as normal.")
-    arg("-ff", "--fake_field", type=float, 
-        help="fake field to use for this run.")
     args = par.parse_args()
 
     launch_katydid(
@@ -45,7 +43,6 @@ def main() -> None:
         args.file_num,
         args.hold_array,
         args.aid_passed,
-        args.fake_field,
     )
 
 
@@ -58,7 +55,6 @@ def launch_katydid(
     file_num: int,
     hold_array: bool = False,
     aid_passed: bool = False,
-    fake_field: float = None,
 ) -> None:
     """
     Preprocess run ID then loop over all files in file_df and run Katydid on each as a separate slurm job
@@ -70,7 +66,6 @@ def launch_katydid(
         base_config,
         file_num,
         aid_passed,
-        fake_field,
     )
     file_df = preprocessor.file_df
     file_df_json_path = preprocessor.file_df_json_path
@@ -98,7 +93,6 @@ def launch_katydid(
         file_df_json_path,
         tlim,
         hold_array,
-        fake_field=fake_field,
         file_ids=selected_file_ids,
     )
 
@@ -110,7 +104,6 @@ def sbatch_katydid_file_array(
     file_df_json_path: str,
     tlim: str,
     hold_array: bool = False,
-    fake_field: float = None,
     file_ids=None,
 ) -> None:
     if file_ids is None:
@@ -125,19 +118,9 @@ def sbatch_katydid_file_array(
     run_id = int(file_df["run_id"].iloc[0])
     analysis_id = int(file_df["analysis_id"].iloc[0])
 
-    if fake_field is None and "fake_field" in file_df.columns:
-        fake_fields = file_df["fake_field"].dropna().unique()
-        if len(fake_fields) == 1:
-            fake_field = float(fake_fields[0])
-
-    fake_field_suffix = ""
-    if fake_field is not None:
-        ff_str = str(fake_field).replace(".", "p")
-        fake_field_suffix = f"_ff{ff_str}"
-
-    job_name = f"r{run_id}_a{analysis_id}{fake_field_suffix}"
+    job_name = f"r{run_id}_a{analysis_id}"
     log_name = (
-        f"rid_{run_id}_aid_{analysis_id}{fake_field_suffix}_fid_%a.txt"
+        f"rid_{run_id}_aid_{analysis_id}_fid_%a.txt"
     )
     log_path = (
         f"/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/{log_name}"

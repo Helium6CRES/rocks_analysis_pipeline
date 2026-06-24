@@ -26,8 +26,6 @@ def main() -> None:
         help="analysis_id used to label directories. If -1, most recent analysis is overwritten.")
     arg("-hold", "--hold_array", action="store_true",
         help="Submit arrays in held state.")
-    arg("-ffs", "--fake_fields", nargs="+", type=float, 
-        help="list of fake fields to run a copy of each file for.")
     args = par.parse_args()
 
     if not args.runids:
@@ -45,20 +43,17 @@ def main() -> None:
         analysis_id = args.analysis_id
         aid_passed = True
 
-    fake_fields = args.fake_fields or [None]
     for run_id in args.runids:
-        for fake_field in fake_fields:
-            sbatch_katydid(
-                args.tlim,
-                run_id,
-                analysis_id,
-                args.noise_run_id,
-                args.base_config,
-                args.file_num,
-                aid_passed,
-                args.hold_array,
-                fake_field,
-            )
+        sbatch_katydid(
+            args.tlim,
+            run_id,
+            analysis_id,
+            args.noise_run_id,
+            args.base_config,
+            args.file_num,
+            aid_passed,
+            args.hold_array,
+        )
 
 def get_max_analysis_id(run_ids) -> int:
     """
@@ -99,7 +94,6 @@ def sbatch_katydid(
     file_num: int,
     aid_passed=False,
     hold_array=False,
-    fake_field: float = None,
 ) -> None:
 
     base_dir = Path("/data/raid2/eliza4/he6_cres/rocks_analysis_pipeline")
@@ -117,8 +111,6 @@ def sbatch_katydid(
         args += "--hold_array "
     if aid_passed:
         args += "--aid_passed "
-    if fake_field is not None:
-        args += f"--fake_field {fake_field} "
 
     cmd = f"{python_venv} -u {script} {args}"
 
