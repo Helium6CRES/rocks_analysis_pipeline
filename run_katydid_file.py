@@ -27,6 +27,8 @@ def main() -> None:
 
     args = par.parse_args()
 
+    print(f"\nLoading file_df json. STARTING at PST time: {get_pst_time()}\n")
+
     # load file_df, then access a specific row.
     # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
@@ -39,6 +41,7 @@ def main() -> None:
 
     # Load the specific row by true file_id, not by positional index.
     matches = file_df_loaded.loc[file_df_loaded["file_id"].astype(int) == args.idx]
+    print(f"\nLoading file_df json. DONE at PST time: {get_pst_time()}\n")
 
     if matches.empty:
         print(f"Exception: file_id {args.idx} not found in {args.file_df_json_path}.")
@@ -57,12 +60,12 @@ def main() -> None:
     sys.stdout.flush()
     try:
         print(
-            f"\nProcessing file_id {file_df_row['file_id']} at PST time: {get_pst_time()}",
+            f"\nProcessing file_id {file_df_row['file_id']}. STARTING at PST time: {get_pst_time()}",
             flush=True
         )
         run_katydid_file(file_df_row)
         print(
-            f"Finished file_id {file_df_row['file_id']} at PST time: {get_pst_time()}",
+            f"Processing file_id {file_df_row['file_id']}. DONE at PST time: {get_pst_time()}",
             flush=True
         )
     except Exception as e:

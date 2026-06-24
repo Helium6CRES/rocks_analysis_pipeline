@@ -6,11 +6,7 @@ Perform all the preprocessing for a run_id before submitting sbatch for each job
 import argparse
 import pandas as pd
 from pandas.core.groupby.generic import DataFrameGroupBy # type hint
-# import pandas.io.sql as psql
-
-# import psycopg2
-# from psycopg2 import Error
-# import typing
+import typing
 from typing import List
 from pathlib import Path
 import sys

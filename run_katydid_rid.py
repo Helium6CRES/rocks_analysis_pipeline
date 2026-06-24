@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 # import glob
 
-from rocks_utility import sbatch_job
+from rocks_utility import sbatch_job, get_pst_time
 from run_katydid_preprocessing import KatydidPreprocessing
 
 
@@ -162,6 +162,9 @@ def sbatch_katydid_file_array(
         run_in_apptainer=True,
         hold=hold_array,
     )
+
+    if proc is None: 
+       return 
 
     array_jobid = proc.stdout.strip()
     print(f"Submitted array job ID: {array_jobid}")
