@@ -183,7 +183,7 @@ def sbatch_job(
         input = script, 
         check=True,
         text=True, 
-        # capture_output=True, 
+        capture_output=hold, 
     )
     return proc
     

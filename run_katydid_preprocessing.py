@@ -13,7 +13,7 @@ import pandas as pd
 from pandas.core.groupby.generic import DataFrameGroupBy # type hint
 
 ANALYSIS_HOME = Path("/data/raid2/eliza4/he6_cres")
-SPEC_FILES_HOME = Path("/data/raid4/he6_cres")
+SPEC_FILES_HOME = Path("/data/raid4/he6cres") # note the (lack of) underscore!
 
 # Local imports.
 from rocks_utility import (
@@ -24,7 +24,7 @@ from rocks_utility import (
     log_file_break,
 )
 
-sys.path.append(ANALYSIS_HOME / "simulation/he6-cres-spec-sims/src")
+sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
 import he6_cres_spec_sims.spec_tools.spec_calc.spec_calc as sc
 
 # Import settings.
@@ -295,7 +295,7 @@ class KatydidPreprocessing:
         """
         #print(daq_fp_list)
         rocks_fp_list = [
-                SPEC_FILES_HOME / Path(daq_fp).relative_to("/mnt") 
+                str(SPEC_FILES_HOME / Path(daq_fp).relative_to("/mnt"))
                 for daq_fp in daq_fp_list
                 ]
         return rocks_fp_list

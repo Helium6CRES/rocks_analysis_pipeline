@@ -149,10 +149,10 @@ def sbatch_katydid_file_array(
     if proc is None: 
        return 
 
-    array_jobid = proc.stdout.strip()
-    print(f"Submitted array job ID: {array_jobid}")
-
     if hold_array:
+        array_jobid = proc.stdout.strip()
+        print(f"Submitted array job ID: {array_jobid}")
+
         held_ids_path = Path(
             "/data/raid2/eliza4/he6_cres/katydid_analysis/job_logs/katydid/held_array_jobids.txt"
         )
