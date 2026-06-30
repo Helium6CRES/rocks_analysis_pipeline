@@ -164,7 +164,8 @@ def sbatch_job(
         # Wrapping cmd in single quotes means literal text: no variable expansion etc
         full_cmd = (
             "apptainer exec "
-            "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/ "
+            "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/,"
+            "/data/raid4/he6cres:/data/raid4/he6cres "
             "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
             f"/bin/bash -c '{container_cmd}{cmd}'"
         )
