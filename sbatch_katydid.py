@@ -35,7 +35,7 @@ def main() -> None:
     # If the analysis_id is set to -1 (default) then the most recent analysis is overwritten, or a new directory is built if none exist.
     # If the analysis_id does not exist yet, then the analysis runs as normal with that analysis_id.
     # Else you will conduct a clean-up.
-    aid_passed = args.analysis_id != 1
+    aid_passed = args.analysis_id != -1
     analysis_id = args.analysis_id if aid_passed else get_max_analysis_id(args.runids)
     print(f"analysis_id: {analysis_id}")
 
