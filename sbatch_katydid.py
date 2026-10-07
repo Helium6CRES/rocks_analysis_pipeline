@@ -36,7 +36,8 @@ def main() -> None:
     # If the analysis_id does not exist yet, then the analysis runs as normal with that analysis_id.
     # Else you will conduct a clean-up.
     aid_passed = args.analysis_id != -1
-    analysis_id = args.analysis_id if aid_passed else get_max_analysis_id(args.runids)
+    max_analysis_id = get_max_analysis_id(args.runids)
+    analysis_id = args.analysis_id if aid_passed else max_analysis_id
     print(f"analysis_id: {analysis_id}")
 
     for run_id in args.runids:

@@ -584,18 +584,23 @@ class PostProcessing:
         root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
         # Step 1: Add the monitor rate/field data to each file.
+        print("Adding field data")
         root_files_df = self.add_field(root_files_df)
 
         # Beta monitor not working for Kr DON'T ADD BETA MONITOR!
         # root_files_df["arduino_monitor_rate"] = 1
         
+        print("Adding monitor data")
         root_files_df = self.add_arduino_monitor_rate(root_files_df)
         '''
         if self.count_beta_mon_events_offline:
             root_files_df = self.add_offline_monitor_counts(root_files_df)
         '''
+        print("Adding pressure data")
         root_files_df = self.add_pressures(root_files_df)
+        print("Adding temperature data")
         root_files_df = self.add_temps(root_files_df)
+        print("Adding voltage data")
         root_files_df = self.add_voltage(root_files_df)
 
         # Step 3. Add the set_field by rounding to nearest 100th place.
@@ -676,8 +681,7 @@ class PostProcessing:
         return root_files_df
 
     def add_offline_monitor_counts(self, root_files_df):
-        # For now works with just the trigger channel (CH0)
-        # Does not computer offline coincidence!
+        # Sept. 2026, updating to use offline coincidence file! 50ns window, isotope-specific thresholds!
         # 10/09/2025 Checked for timestamp consistency. All clear! 
         # USED in add_env_data()
         root_files_df["offline_monitor_counts"] = np.nan
@@ -725,12 +729,34 @@ class PostProcessing:
                 caen_run_time_start = np.datetime64(dt_utc)
 
                 # Build path to compass data csv on rocks
-                rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH0@DT5725_1146_{caen_run_path.name}.csv')
+                #rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'RAW/DataR_CH0@DT5725_1146_{caen_run_path.name}.csv')
+                rocks_caen_run_data_path = Path('/data/raid2/eliza4/he6_cres/betamon/caen') / caen_run_path.name / Path(f'PROS/{caen_run_path.name}_50000ps_final_coincidences.csv')
+                print(rocks_caen_run_data_path)
                 # Read in the compass data csv to caen_df
-                caen_df = pd.read_csv(rocks_caen_run_data_path, index_col=0, sep=';')
+                dtype_SC = {'TIMETAG': 'int64', 'MLT': 'uint8'}
+                caen_df = pd.read_csv(rocks_caen_run_data_path, sep=',',usecols=['TIMETAG', 'MLT'], dtype=dtype_SC)
+                print(caen_df.head())
+                d_time = 500 #deadtime in ns
+                deadtime_ps = d_time * 1e3  # Convert 500 ns to picoseconds
+                print(f"Original software coinc. events before enforcing {d_time}ns non-paralyzable deadtime: {len(caen_df)}")
+                # Initialize variables
+                last_accepted_time = -float('inf')
+                mask = []
+                # Apply Non-paralyzable Deadtime
+                for time in caen_df['TIMETAG']:
+                    if time >= last_accepted_time + deadtime_ps:
+                        mask.append(True)
+                        last_accepted_time = time
+                    else:
+                        mask.append(False)
+
+                # Create a filtered DataFrame
+                caen_df = caen_df[mask]
+                caen_df = caen_df[caen_df['MLT']==4] #multiplicity requirment (optional)
+                print(f"Surviving software events: {len(caen_df)}")
 
                 #add a naive cut above the 511s? At ADC 4000
-                caen_df = caen_df[caen_df['ENERGY']>4000]
+                #caen_df = caen_df[caen_df['ENERGY']>4000]
 
                 # Add new column to caen_df for absolute UTC timestamp for each hit
                 # Convert TIMETAG from picoseconds to nanoseconds
