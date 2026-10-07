@@ -27,10 +27,14 @@ def main() -> None:
 
     args = par.parse_args()
 
-    print(f"\nLoading file_df json. STARTING at PST time: {get_pst_time()}\n")
+    # ----------------------------------------------------------------------
+    # Load file_df from disk
+    # ----------------------------------------------------------------------
+    # TODO: possible to avoid having each job load the dataframe each time it spawns? 
+    # I've had no luck passing individual rows around. 
+    # Not sure if 1000 concurrent read_csv calls is an issue.
+    print(f"\nLoading file_df json. STARTING at PST time: {get_pst_time()}\n", flush = True)
 
-    # load file_df, then access a specific row.
-    # TODO: possible to avoid having each job load the dataframe each time it spawns? I've had no luck passing individual rows around. Not sure if 1000 concurrent read_csv calls will be an issue.
     try:
         file_df_loaded = pd.read_json(args.file_df_json_path)
     except pd.errors.ParserError as e:
@@ -39,9 +43,12 @@ def main() -> None:
         print("Returning.\n")
         return
 
+    print(f"\nLoading file_df json. DONE at PST time: {get_pst_time()}\n", flush = True)
+
+    # ----------------------------------------------------------------------
     # Load the specific row by true file_id, not by positional index.
+    # ----------------------------------------------------------------------
     matches = file_df_loaded.loc[file_df_loaded["file_id"].astype(int) == args.idx]
-    print(f"\nLoading file_df json. DONE at PST time: {get_pst_time()}\n")
 
     if matches.empty:
         print(f"Exception: file_id {args.idx} not found in {args.file_df_json_path}.")

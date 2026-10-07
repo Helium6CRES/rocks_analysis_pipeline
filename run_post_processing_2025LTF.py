@@ -5,27 +5,19 @@ import time
 import argparse
 import pandas as pd
 
-import pandas.io.sql as psql
-
-import pytz
 import numpy as np
 import datetime
 from glob import glob
 import subprocess as sp
 import shutil
-from shutil import copyfile
-import psycopg2
-from psycopg2 import Error
 import typing
 from typing import List
 
 from pathlib import Path
-import yaml
 import uproot
 
-import numpy as np
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+# from sklearn.cluster import DBSCAN
+# from sklearn.preprocessing import StandardScaler
 
 # Local imports.
 sys.path.append("/data/raid2/eliza4/he6_cres/simulation/he6-cres-spec-sims/src")
@@ -576,7 +568,7 @@ class PostProcessing:
         print("adding environmental data!")
         # Step 0: Make sure the root_files_df has a tz aware dt column.
         root_files_df["pst_time"] = root_files_df["root_file_path"].apply(
-            lambda x: self.get_pst_time(x)
+            lambda x: self.root_file_to_pst_time(x)
         )
         root_files_df["pst_time"] = root_files_df["pst_time"].dt.tz_localize(
             "US/Pacific"
@@ -608,9 +600,12 @@ class PostProcessing:
 
         return root_files_df
 
-    def get_pst_time(self, root_file_path):
-        # USED in add_env_data()
-        # Makes a naive datetime object from the root file name. Note that the ms padding is very important!
+    def root_file_to_pst_time(self, root_file_path):
+        """
+        Makes a naive datetime object from the root file name. 
+        Note that the ms padding is very important!
+        USED in add_env_data()
+        """
         if self.ms_standard:
             #print("User specified run_ids are all in ms standard.")
             # root file name is in local PST!
@@ -638,42 +633,37 @@ class PostProcessing:
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
-
+            # Check for duplicate file ids and warn if found.
+            if not root_files_df_gb["file_id"].is_unique:
+                duplicate_fids = root_files_df_gb.loc[
+                        root_files_df_gb["file_id"].duplicated(), "file_id"
+                    ].unique()
+                raise UserWarning(
+                    f"Duplicate file_id(s) found for run_id={rid}: {duplicate_fids}"
+                )
             # Step 1. Find the extreme times present in the given run_id.
-            # The idea is that we want to be careful about the amount of queries we do to get this info.
-            # Here we only do one query per run_id (instead of one per file)
-
-            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+            dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
             # There is an issue here right now but this will be useful later.
-            query = """SELECT m.monitor_id, m.created_at, m.rate
+            query = f"""SELECT m.monitor_id, m.created_at, m.rate
                        FROM he6cres_runs.monitor as m 
-                       WHERE m.created_at >= '{}'::timestamp
-                           AND m.created_at <= '{}'::timestamp + interval '1 minute'
-                    """.format(
-                dt_min, dt_max
-            )
+                       WHERE m.created_at >= '{dt_min}'::timestamp
+                           AND m.created_at <= '{dt_max}'::timestamp + interval '1 minute'
+                    """
 
             monitor_log = he6cres_db_query(query)
+            if monitor_log.empty:
+                continue
+
             monitor_log["created_at"] = monitor_log["created_at"].dt.tz_localize("UTC")
 
-            for fid, file_path in root_files_df_gb.groupby(["file_id"]):
-
-                if len(file_path) != 1:
-                    raise UserWarning(
-                        f"There should be only one file with run_id = {rid} and file_id = {fid}."
-                    )
-
+            for idx, file_row in root_files_df_gb.iterrows():
                 # Get arduino_monitor_rate during run.
                 arduino_monitor_rate = self.get_nearest(
-                    monitor_log, file_path.utc_time.iloc[0]
+                    monitor_log, file_row.utc_time
                 ).rate
 
-                condition = (root_files_df["run_id"] == rid) & (
-                    root_files_df["file_id"] == fid
-                )
-                root_files_df.loc[condition, "arduino_monitor_rate"] = arduino_monitor_rate
+                root_files_df.loc[idx, "arduino_monitor_rate"] = arduino_monitor_rate
 
         if root_files_df["arduino_monitor_rate"].isnull().values.any():
             raise UserWarning(f"Some arduino_monitor_rate data was not collected.")
@@ -798,50 +788,60 @@ class PostProcessing:
         # Return the count of events within the range
         return end_idx - start_idx        
 
+    def _get_run_time_window(self, run_id_df):
+        """
+        Find the extreme times present in given run_id.
+        The idea is that we want to be careful about the amount of queries we do to get this info.
+        Here we only do one query per run_id (instead of one per file)
+        Static + non-public method, can maybe move outside the class definition
+        """
+        dt_max = run_id_df.utc_time.max().floor("min").tz_localize(None)
+        dt_min = run_id_df.utc_time.min().floor("min").tz_localize(None)
+        if dt_max <= dt_min:
+            raise UserWarning("Max time less than or equal to min time!")
+        return dt_min, dt_max
+
     def add_field(self, root_files_df):
 
         root_files_df["field"] = np.nan
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+            # Check for duplicate file ids and warn if found.
+            if not root_files_df_gb["file_id"].is_unique:
+                duplicate_fids = root_files_df_gb.loc[
+                        root_files_df_gb["file_id"].duplicated(), "file_id"
+                    ].unique()
+                raise UserWarning(
+                    f"Duplicate file_id(s) found for run_id={rid}: {duplicate_fids}"
+                )
 
-            # Step 1. Find the extreme times present in the given run_id.
-            # The idea is that we want to be careful about the amount of queries we do to get this info.
-            # Here we only do one query per run_id (instead of one per file)
-            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+            # Step 1. Find the extreme times present in given run_id.
+            dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
             # Note that I also need to make sure the field probe was locked!
-            query = """SELECT n.nmr_id, n.created_at, n.field
+            query = f"""SELECT n.nmr_id, n.created_at, n.field
                        FROM he6cres_runs.nmr as n 
-                       WHERE n.created_at >= '{}'::timestamp
-                           AND n.created_at <= '{}'::timestamp + interval '1 minute'
+                       WHERE n.created_at >= '{dt_min}'::timestamp
+                           AND n.created_at <= '{dt_max}'::timestamp + interval '1 minute'
                            AND n.locked = TRUE
-                    """.format(
-                dt_min, dt_max
-            )
+                    """
             #print(query)
+
             field_log = he6cres_db_query(query)
             if field_log.empty:
                 field_log["created_at"] = np.nan
-            else:    
-                field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
+                continue
 
-                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+            field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
 
-                    if len(file_path) != 1:
-                        raise UserWarning(
-                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
-                        )
+            for idx, file_row in root_files_df_gb.iterrows():
+                # Get field during second of data
+                field = self.get_nearest(field_log, file_row.utc_time).field
 
-                    # Get field during second of data
-                    field = self.get_nearest(field_log, file_path.utc_time.iloc[0]).field
-
-                    # Now get the nearest rate for each file_id and fill those in!! Then this gets joined with the whole table.
-                    condition = (root_files_df["run_id"] == rid) & (
-                        root_files_df["file_id"] == fid
-                    )
-                    root_files_df["field"][condition] = field
+                # Now get the nearest rate for each file_id and fill those in!! 
+                # Then this gets joined with the whole table.
+                root_files_df.loc[idx, "field"] = field
 
         if root_files_df["field"].isnull().values.any():
             #raise UserWarning(f"Some rate data was not collected.")
@@ -863,43 +863,38 @@ class PostProcessing:
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+            # Check for duplicate file ids and warn if found.
+            if not root_files_df_gb["file_id"].is_unique:
+                duplicate_fids = root_files_df_gb.loc[
+                        root_files_df_gb["file_id"].duplicated(), "file_id"
+                    ].unique()
+                raise UserWarning(
+                    f"Duplicate file_id(s) found for run_id={rid}: {duplicate_fids}"
+                )
 
             # Step 1. Find the extreme times present in the given run_id.
-            # The idea is that we want to be careful about the amount of queries we do to get this info.
-            # Here we only do one query per run_id (instead of one per file)
-            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+            dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
-            # Note that I also need to make sure the field probe was locked!
-            query = """SELECT r.utc_write_time, r.nitrogen, r.helium, r.co2, r.hydrogen, r.water, r.oxygen, r.krypton, r.argon, r.cf3, r.a19, r.total
+            query = f"""SELECT r.utc_write_time, r.nitrogen, r.helium, r.co2, r.hydrogen, r.water, r.oxygen, r.krypton, r.argon, r.cf3, r.a19, r.total
                        FROM he6cres_runs.rga as r 
-                       WHERE r.utc_write_time >= '{}'::timestamp
-                           AND r.utc_write_time <= '{}'::timestamp + interval '1 minute'
+                       WHERE r.utc_write_time >= '{dt_min}'::timestamp
+                           AND r.utc_write_time <= '{dt_max}'::timestamp + interval '1 minute'
                            AND r.time_since_write < 60.0
-                    """.format(
-                dt_min, dt_max
-            )
+                    """
             #print(query)
+
             rga_log = he6cres_db_query(query)
             if rga_log.empty:
                 rga_log["created_at"] = np.nan
-            else:    
-                # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
-                # to created_at for consistancy in get_nearest()
-                rga_log["created_at"] = rga_log["utc_write_time"].dt.tz_localize("UTC")
+                continue
 
-                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
-
-                    if len(file_path) != 1:
-                        raise UserWarning(
-                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
-                        )
-
-                    nearest_row = self.get_nearest(rga_log, file_path.utc_time.iloc[0])
-                    # Assign values for all gases at once
-                    condition = (root_files_df["run_id"] == rid) & (root_files_df["file_id"] == fid)
-                    root_files_df.loc[condition, gases] = nearest_row[gases].values
-
+            # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
+            # to created_at for consistancy in get_nearest()
+            rga_log["created_at"] = rga_log["utc_write_time"].dt.tz_localize("UTC")
+            for idx, file_row in root_files_df_gb.iterrows():
+                nearest_row = self.get_nearest(rga_log, file_row.utc_time)
+                # Assign values for all gases at once
+                root_files_df.loc[idx, gases] = nearest_row[gases].values
 
         if root_files_df["total"].isnull().values.any():
             print("Some rga data was not collected.")
@@ -916,22 +911,24 @@ class PostProcessing:
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
-
+            # Check for duplicate file ids and warn if found.
+            if not root_files_df_gb["file_id"].is_unique:
+                duplicate_fids = root_files_df_gb.loc[
+                        root_files_df_gb["file_id"].duplicated(), "file_id"
+                    ].unique()
+                raise UserWarning(
+                    f"Duplicate file_id(s) found for run_id={rid}: {duplicate_fids}"
+                )
             # Step 1. Find the extreme times present in the given run_id.
-            # The idea is that we want to be careful about the amount of queries we do to get this info.
-            # Here we only do one query per run_id (instead of one per file)
-            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+            dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
-            # 
-            query = """SELECT e.endpoint_id, e.timestamp, e.value_raw
+            query = f"""SELECT e.endpoint_id, e.timestamp, e.value_raw
                        FROM public.endpoint_numeric_data as e
-                       WHERE e.timestamp >= '{}'::timestamp
-                           AND e.timestamp <= '{}'::timestamp + interval '1 minute'
-                    """.format(
-                dt_min, dt_max
-            )
+                       WHERE e.timestamp >= '{dt_min}'::timestamp
+                           AND e.timestamp <= '{dt_max}'::timestamp + interval '1 minute'
+                    """
             #print(query)
+
             rga_log = he6cres_db_query(query)
 
             if not rga_log.empty:
@@ -940,11 +937,8 @@ class PostProcessing:
                 # Filter and group `rga_log` by `endpoint_id` once
                 rga_log_grouped = {ept: grp for ept, grp in rga_log.groupby("endpoint_id")}
 
-                for fid, file_path in root_files_df_gb.groupby("file_id"):
-                    if len(file_path) != 1:
-                        raise UserWarning(f"There should be only one file with run_id = {rid} and file_id = {fid}.")
-
-                    file_time = file_path.utc_time.iloc[0]
+                for idx, file_row in root_files_df_gb.iterrows():
+                    file_time = file_row.utc_time
 
                     # Iterate over the endpoints and assign temperatures
                     for i, ept in enumerate(epts):
@@ -953,8 +947,7 @@ class PostProcessing:
                             temp_value = self.get_nearest(rga_log_ept, file_time)["value_raw"]
 
                             # Apply the value to the relevant rows
-                            condition = (root_files_df["run_id"] == rid) & (root_files_df["file_id"] == fid)
-                            root_files_df.loc[condition, sensor_names[i]] = temp_value
+                            root_files_df.loc[idx, sensor_names[i]] = temp_value
 
         # Check for missing data
         if root_files_df[sensor_names].isnull().any().any():
@@ -968,44 +961,39 @@ class PostProcessing:
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
+            # Check for duplicate file ids and warn if found.
+            if not root_files_df_gb["file_id"].is_unique:
+                duplicate_fids = root_files_df_gb.loc[
+                        root_files_df_gb["file_id"].duplicated(), "file_id"
+                    ].unique()
+                raise UserWarning(
+                    f"Duplicate file_id(s) found for run_id={rid}: {duplicate_fids}"
+                )
 
             # Step 1. Find the extreme times present in the given run_id.
-            # The idea is that we want to be careful about the amount of queries we do to get this info.
-            # Here we only do one query per run_id (instead of one per file)
-            dt_max = root_files_df_gb.utc_time.max().floor("min").tz_localize(None)
-            dt_min = root_files_df_gb.utc_time.min().floor("min").tz_localize(None)
+            dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
-            query = """SELECT n.dmm_id, n.utc_write_time, n.voltage
+            query = f"""SELECT n.dmm_id, n.utc_write_time, n.voltage
                        FROM he6cres_runs.dmm as n 
-                       WHERE n.utc_write_time >= '{}'::timestamp
-                           AND n.utc_write_time <= '{}'::timestamp + interval '1 minute'
-                    """.format(
-                dt_min, dt_max
-            )
-            print(query)
+                       WHERE n.utc_write_time >= '{dt_min}'::timestamp
+                           AND n.utc_write_time <= '{dt_max}'::timestamp + interval '1 minute'
+                    """
+            # print(query)
             voltage_log = he6cres_db_query(query)
             # This is NOT the same as the created_at field in the db, I'm re-naming the more accurate utc_write_time
             # to created_at for consistancy in get_nearest()
             if voltage_log.empty:
                 voltage_log["created_at"] = np.nan
-            else:    
-                voltage_log["created_at"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
+                continue
 
-                for fid, file_path in root_files_df_gb.groupby(["file_id"]):
+            voltage_log["created_at"] = voltage_log["utc_write_time"].dt.tz_localize("UTC")
 
-                    if len(file_path) != 1:
-                        raise UserWarning(
-                            f"There should be only one file with run_id = {rid} and file_id = {fid}."
-                        )
+            for idx, file_row in root_files_df_gb.iterrows():
+                # Get voltage during second of data
+                voltage = self.get_nearest(voltage_log, file_row.utc_time).voltage
 
-                    # Get voltage during second of data
-                    voltage = self.get_nearest(voltage_log, file_path.utc_time.iloc[0]).voltage
-
-                    # Now get the nearest voltage for each file_id and fill those in!! Then this gets joined with the whole table.
-                    condition = (root_files_df["run_id"] == rid) & (
-                        root_files_df["file_id"] == fid
-                    )
-                    root_files_df.loc[condition, "voltage"] = voltage
+                # Now get the nearest voltage for each file_id and fill those in!! Then this gets joined with the whole table.
+                root_files_df.loc[idx, "voltage"] = voltage
 
         if root_files_df["voltage"].isnull().values.any():
             print("Some voltage data was not collected.")
