@@ -481,6 +481,7 @@ class PostProcessing:
         tracks_df["file_id"] = root_files_df_row["file_id"]
         tracks_df["root_file_path"] = root_files_df_row["root_file_path"]
         tracks_df["field"] = root_files_df_row["field"]
+        tracks_df["trap_current"] = root_files_df_row["trap_current"]
         tracks_df["true_voltage"] = root_files_df_row["voltage"]
         tracks_df["arduino_monitor_rate"] = root_files_df_row["arduino_monitor_rate"]
         tracks_df["nitrogen"] = root_files_df_row["nitrogen"]
@@ -576,8 +577,8 @@ class PostProcessing:
         root_files_df["utc_time"] = root_files_df["pst_time"].dt.tz_convert("UTC")
 
         # Step 1: Add the monitor rate/field data to each file.
-        print("Adding field data")
-        root_files_df = self.add_field(root_files_df)
+        print("Adding field and trap coil current datadata")
+        root_files_df = self.add_field_trap_current(root_files_df)
 
         # Beta monitor not working for Kr DON'T ADD BETA MONITOR!
         # root_files_df["arduino_monitor_rate"] = 1
@@ -801,9 +802,10 @@ class PostProcessing:
             raise UserWarning("Max time less than or equal to min time!")
         return dt_min, dt_max
 
-    def add_field(self, root_files_df):
+    def add_field_trap_current(self, root_files_df):
 
         root_files_df["field"] = np.nan
+        root_files_df["trap_current"] = np.nan
 
         # Step 0. Group by run_id.
         for rid, root_files_df_gb in root_files_df.groupby(["run_id"]):
@@ -820,7 +822,7 @@ class PostProcessing:
             dt_min, dt_max = self._get_run_time_window(root_files_df_gb)
 
             # Note that I also need to make sure the field probe was locked!
-            query = f"""SELECT n.nmr_id, n.created_at, n.field
+            query = f"""SELECT n.nmr_id, n.created_at, n.field, n.trap_current
                        FROM he6cres_runs.nmr as n 
                        WHERE n.created_at >= '{dt_min}'::timestamp
                            AND n.created_at <= '{dt_max}'::timestamp + interval '1 minute'
@@ -836,17 +838,19 @@ class PostProcessing:
             field_log["created_at"] = field_log["created_at"].dt.tz_localize("UTC")
 
             for idx, file_row in root_files_df_gb.iterrows():
-                # Get field during second of data
+                # Get field and trap current during second of data
                 field = self.get_nearest(field_log, file_row.utc_time).field
-
-                # Now get the nearest rate for each file_id and fill those in!! 
+                trap_current = self.get_nearest(field_log, file_row.utc_time).trap_current
                 # Then this gets joined with the whole table.
                 root_files_df.loc[idx, "field"] = field
+                root_files_df.loc[idx, "trap_current"] = trap_current
 
         if root_files_df["field"].isnull().values.any():
             #raise UserWarning(f"Some rate data was not collected.")
             print("Some nmr data was not collected.")
-
+        if root_files_df["trap_current"].isnull().values.any():
+            #raise UserWarning(f"Some rate data was not collected.")
+            print("Some trap current data was not collected from the Kepco.")
         return root_files_df
 
     def add_pressures(self, root_files_df):
