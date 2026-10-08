@@ -27,18 +27,19 @@ def main():
     # Note: the \n must be a literal thing not a \n in the python string itself. Be careful with this.
 
     apptainer_prefix = (
-        "\"apptainer exec --bind /data/raid2/eliza4/he6_cres/ "
-        "/data/raid2/eliza4/he6_cres/containers/he6cres-base.sif "
+        "\"apptainer exec "
+            "--bind /data/raid2/eliza4/he6_cres/:/data/raid2/eliza4/he6_cres/,"
+            "/data/raid4/he6cres:/data/raid4/he6cres "
+        "/data/raid2/eliza4/he6_cres/containers/specsims-base.sif "
         "/bin/bash -c $'umask 002; source /data/raid2/eliza4/he6_cres/.bashrc {} "
     ).format(r"\n")
-
 
     #args.num_subruns long list of seeds starting at initial_seed
     rand_seeds = list(range(args.initial_seed, args.initial_seed + args.num_subruns))
 
     for subrun_id in range(args.num_subruns):
         default_spec_sims_sub = (
-                f"/opt/python3.7/bin/python3.7 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_spec_sims.py "
+                f"python3.11 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_spec_sims.py "
             f"-r {args.run_name} -nid {args.noise_run_id} -y \"{args.yaml_config}\" -j \"{args.json_config}\" -sr {subrun_id} -s {rand_seeds[subrun_id]} "
         )
         cmd = apptainer_prefix + f"{default_spec_sims_sub}'\""

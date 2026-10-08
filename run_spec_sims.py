@@ -184,7 +184,7 @@ class RunSpecSims:
         print(f"Noise path: {noise_file_path}")
 
         #Convert to directory structure on wulf
-        wulf_noise_paths = [Path("/data/raid2/eliza4/he6_cres/") / Path(old).relative_to("/mnt") for old in noise_file_path]
+        wulf_noise_paths = [Path("/data/raid4/he6cres/") / Path(old).relative_to("/mnt") for old in noise_file_path]
         #wulf_noise_paths = [Path("/Users/buzinsky/Builds/DAQ/He6DAQ/pyqt5_GUI/temp/") / Path(old).name for old in noise_file_path]
         print(wulf_noise_paths)
 
@@ -225,6 +225,7 @@ class RunSpecSims:
         #    "rand_seeds": rand_seeds,
         #    "fields_T" : fields.tolist(),
         #    "traps_A": traps.tolist()
+        #    "voltages_V": voltages.tolist()
         #}
 
         run_params["experiment_name"] = self.run_name
