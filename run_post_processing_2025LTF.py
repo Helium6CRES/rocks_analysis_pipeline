@@ -648,7 +648,7 @@ class PostProcessing:
             # There is an issue here right now but this will be useful later.
             query = f"""SELECT m.monitor_id, m.created_at, m.rate
                        FROM he6cres_runs.monitor as m 
-                       WHERE m.created_at >= '{dt_min}'::timestamp
+                       WHERE m.created_at >= '{dt_min}'::timestamp - interval '1 minute'
                            AND m.created_at <= '{dt_max}'::timestamp + interval '1 minute'
                     """
 
@@ -796,10 +796,14 @@ class PostProcessing:
         Here we only do one query per run_id (instead of one per file)
         Static + non-public method, can maybe move outside the class definition
         """
-        dt_max = run_id_df.utc_time.max().floor("min").tz_localize(None)
-        dt_min = run_id_df.utc_time.min().floor("min").tz_localize(None)
-        if dt_max <= dt_min:
+        raw_min = run_id_df.utc_time.min()
+        raw_max = run_id_df.utc_time.max()
+
+        if raw_max <= raw_min:
             raise UserWarning("Max time less than or equal to min time!")
+
+        dt_min = raw_min.floor("min").tz_localize(None)
+        dt_max = raw_max.floor("min").tz_localize(None)
         return dt_min, dt_max
 
     def add_field_trap_current(self, root_files_df):
@@ -881,7 +885,7 @@ class PostProcessing:
 
             query = f"""SELECT r.utc_write_time, r.nitrogen, r.helium, r.co2, r.hydrogen, r.water, r.oxygen, r.krypton, r.argon, r.cf3, r.a19, r.total
                        FROM he6cres_runs.rga as r 
-                       WHERE r.utc_write_time >= '{dt_min}'::timestamp
+                       WHERE r.utc_write_time >= '{dt_min}'::timestamp - interval '1 minute'
                            AND r.utc_write_time <= '{dt_max}'::timestamp + interval '1 minute'
                            AND r.time_since_write < 60.0
                     """
@@ -928,7 +932,7 @@ class PostProcessing:
 
             query = f"""SELECT e.endpoint_id, e.timestamp, e.value_raw
                        FROM public.endpoint_numeric_data as e
-                       WHERE e.timestamp >= '{dt_min}'::timestamp
+                       WHERE e.timestamp >= '{dt_min}'::timestamp - interval '1 minute'
                            AND e.timestamp <= '{dt_max}'::timestamp + interval '1 minute'
                     """
             #print(query)
@@ -979,7 +983,7 @@ class PostProcessing:
 
             query = f"""SELECT n.dmm_id, n.utc_write_time, n.voltage
                        FROM he6cres_runs.dmm as n 
-                       WHERE n.utc_write_time >= '{dt_min}'::timestamp
+                       WHERE n.utc_write_time >= '{dt_min}'::timestamp - interval '1 minute'
                            AND n.utc_write_time <= '{dt_max}'::timestamp + interval '1 minute'
                     """
             # print(query)
