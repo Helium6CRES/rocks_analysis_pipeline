@@ -37,7 +37,7 @@ def main():
     #args.num_subruns long list of seeds starting at initial_seed
     rand_seeds = list(range(args.initial_seed, args.initial_seed + args.num_subruns))
 
-    for subrun_id in range(args.num_subruns):
+    for subrun_id in range(3,args.num_subruns):
         default_spec_sims_sub = (
                 f"python3.11 -u /data/raid2/eliza4/he6_cres/rocks_analysis_pipeline/run_spec_sims.py "
             f"-r {args.run_name} -nid {args.noise_run_id} -y \"{args.yaml_config}\" -j \"{args.json_config}\" -sr {subrun_id} -s {rand_seeds[subrun_id]} "
@@ -59,6 +59,8 @@ def sbatch_job(run_name, subrun_id, cmd, tlim, dry_run):
         "--time", tlim,
         "--output", log_path,
         "--export=ALL",
+        "--mem=8G",
+        "--cpus-per-task=1",
         "--mail-type=NONE",
     ]
 
