@@ -798,6 +798,10 @@ class PostProcessing:
         """
         raw_min = run_id_df.utc_time.min()
         raw_max = run_id_df.utc_time.max()
+        print(f"\nRun {run_id_df['run_id'].iloc[0]}")
+        print(f"Number of files: {len(run_id_df)}")
+        print(f"Raw utc_time min: {run_id_df.utc_time.min()}")
+        print(f"Raw utc_time max: {run_id_df.utc_time.max()}")
 
         if raw_max <= raw_min:
             raise UserWarning("Max time less than or equal to min time!")
