@@ -136,7 +136,7 @@ def run_katydid_file(file_df_row: dict) -> None:
             if processor["name"] == "spec2":
                 processor["type"] = processor_type
 
-    config_dict["spec1"]["filenames"] = [node_local_cached_file(i) for i in file_df_row["rocks_noise_file_path"]]
+    config_dict["spec1"]["filenames"] = [str(node_local_cached_file(i)) for i in file_df_row["rocks_noise_file_path"]]
     config_dict["spec2"]["filenames"] = file_df_row["rocks_file_path"]
 
     for key, val in config_dict.items():
