@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-import psycopg2
-from psycopg2 import Error
-import pandas as pd
-import pytz
-import numpy as np
 import datetime
-import typing
-import pandas.io.sql as psql
+import fcntl
+import hashlib
+import os
+import shutil
 import subprocess as sp
+import typing
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import pandas.io.sql as psql
+import psycopg2
+import pytz
+from psycopg2 import Error
 
 def he6cres_db_connection_local():
 
@@ -187,4 +191,54 @@ def sbatch_job(
         capture_output=hold, 
     )
     return proc
-    
+
+def node_local_cached_file(source, cache_dir = "/tmp", unique = False):
+    """
+    Get a path to a local cache of some source file on node-local storage
+    (typically node-local /tmp or /scratch) with a lockfile to prevent race
+    conditions.
+    By default, caches in cache_dir="/tmp". Pass unique=True to add a hash
+    to uniquely identify different files that might have the same name
+    Returns cache file Path
+    """
+    source = Path(source).resolve()
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    local_stem = source.stem
+    suffix = source.suffix
+    if unique:
+        # Avoid collisions between files with identical basenames
+        key = hashlib.sha256(str(source).encode()).hexdigest()[:16]
+        local_stem = f"{source.stem}_{key}"
+
+    local_file = cache_dir / f"{local_stem}{suffix}"
+    lock_file = cache_dir / f"{local_stem}.lock"
+
+    with open(lock_file, "w") as lock:
+        # Only one job per node can stage this file at a time
+        fcntl.flock(lock, fcntl.LOCK_EX)
+
+        if local_file.exists():
+            fcntl.flock(lock, fcntl.LOCK_UN)
+            print(f"Found local cache of {source}")
+            return local_file
+
+        if not local_file.exists():
+            temp_file = cache_dir / f"{local_stem}.tmp.{os.getpid()}{suffix}"
+            try:
+                print(f"Copying {source} to local scratch")
+                # python >=3.14: replace shutil with Path.copy(target)
+                shutil.copy2(source, temp_file)
+                os.replace(temp_file, local_file)
+            finally:
+                if temp_file.exists():
+                    temp_file.unlink()
+        fcntl.flock(lock, fcntl.LOCK_UN)
+
+    if local_file.exists():
+        return local_file
+    else:
+        print("Caching failed! Returning original source path.")
+        return source
+

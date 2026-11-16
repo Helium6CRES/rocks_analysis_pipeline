@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 
 # Local imports
-from rocks_utility import get_pst_time
+from rocks_utility import get_pst_time, node_local_cached_file
 
 
 # Import settings
@@ -124,19 +124,19 @@ def run_katydid_file(file_df_row: dict) -> None:
     # copy base config file to edit
     copyfile(base_config_path, config_path)
 
+    # configure spec2 to be either a spec-processor or speck-processor
     # Check the file extension of the first path in rocks_file_path list
-    rocks_file_path = file_df_row["rocks_file_path"]
-    first_rock_file = rocks_file_path[0] if rocks_file_path else ""
-    if first_rock_file.endswith(".spec"):
+    first_rock_file = file_df_row["rocks_file_path"][0] if rocks_file_path else ""
+    processor_type = {
+        ".spec": "spec-processor",
+        ".speck": "speck-processor",
+    }.get(Path(first_rock_file).suffix, default=None)
+    if processor_type:
         for processor in config_dict["processor-toolbox"]["processors"]:
             if processor["name"] == "spec2":
-                processor["type"] = "spec-processor"
-    elif first_rock_file.endswith(".speck"):
-        for processor in config_dict["processor-toolbox"]["processors"]:
-            if processor["name"] == "spec2":
-                processor["type"] = "speck-processor"
+                processor["type"] = processor_type
 
-    config_dict["spec1"]["filenames"] = file_df_row["rocks_noise_file_path"]
+    config_dict["spec1"]["filenames"] = [node_local_cached_file(i) for i in file_df_row["rocks_noise_file_path"]]
     config_dict["spec2"]["filenames"] = file_df_row["rocks_file_path"]
 
     for key, val in config_dict.items():
@@ -150,9 +150,10 @@ def run_katydid_file(file_df_row: dict) -> None:
             if inner_key == "min-slope":
                 config_dict[key][inner_key] = file_df_row["approx_slope"] - 1e10
             
-            #Keep the LTF acceptance area to 45 bins (90 Hz*s) but scale f vs t with slope based on good reconstruction at 0.711T and 2.00T
-            #0.711T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
-            #2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
+            #Keep the LTF acceptance area to 45 bins (90 Hz*s) but scale f vs t 
+            # with slope based on good reconstruction at 0.711T and 2.00T
+            # - 0.71T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
+            # - 2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
             k = 0.1597 * file_df_row["approx_slope"] + 9.88e8
             if k <= 0:
                 raise ValueError("No real positive solution (k must be > 0)")
@@ -170,13 +171,13 @@ def run_katydid_file(file_df_row: dict) -> None:
     config_dict["stv"]["output-file"] = file_df_row["slew_file_path"]
 
     # Dump the altered config_dict into the copy of the config file.
-    # Note that the comments are all lost because you only write the contents of the
-    # config dict.
+    # Note that the comments are all lost because you only write the contents of the config dict.
     with open(config_path, "w") as f:
         # Convert np types to pure Python types, otherwise yaml.dump will print binary for numpy types
         # This might be unnecessary after manually applying float(np.sqrt(...)) above, that was the main troublemaker
+        # TODO: recursively explore config_dict and apply conversion only to lowest level items
         config_dict = {k: (v.item() if isinstance(v, np.generic) else v) 
-                       for k, v in config_dict.items()} # Todo: recursively explore config_dict and apply conversion only to lowest level items
+                       for k, v in config_dict.items()} 
         yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
     # copy first config file to the analysis directory for future reference.
