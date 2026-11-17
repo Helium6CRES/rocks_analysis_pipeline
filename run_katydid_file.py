@@ -97,100 +97,107 @@ def run_katydid_file(file_df_row: dict) -> None:
     """
 
     base_config_path = Path(file_df_row["base_config_path"])
-
-    # Grab the config_dict from the katydid config file.
-    with open(base_config_path, "r") as f:
-        try:
-            config_dict = yaml.load(f, Loader=yaml.FullLoader)
-            # print(config_dict)
-        except yaml.YAMLError as e:
-            print(e)
-
-    # Copy the katydid config file (in same dir) so that we can write to the copy not
-    # the original.
     rid = file_df_row["run_id"]
     aid = file_df_row["analysis_id"]
     fid = file_df_row["file_id"]
 
+    rocks_noise_path = file_df_row["rocks_noise_path"]
+    rocks_file_path = file_df_row["rocks_file_path"]
+    root_file_path = file_df_row["root_file_path"]
+    slew_file_path = file_df_row["slew_file_path"]
+
+    approx_slope = file_df_row["approx_slope"]
+    dbscan_radius_0 = file_df_row["dbscan_radius_0"]
+    dbscan_radius_1 = file_df_row["dbscan_radius_1"]
+
+    use_cache = True
+    if use_cache:
+        cached_noise_path = [str(cache_file_in_node(f)) for f in rocks_noise_path]
+        cached_file_path = [str(cache_file_in_node(f)) for f in rocks_file_path]
+
+    #Keep the LTF acceptance area to 90 Hz*s (45 bins with ROACH avg = 2)
+    #but scale f vs t with slope based on good reconstruction at 0.711T and 2.00T
+    # - 0.71T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
+    # - 2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
+    k = 0.1597 * approx_slope + 9.88e8
+    if k <= 0:
+        raise ValueError("No real positive solution (k must be > 0)")
+    LTF_size = 90 # Hz*s = # bins * ROACH_avg
+    LTF_freq_acceptance = float(np.sqrt(LTF_size_bins * k))
+    LTF_time_acceptance = float(np.sqrt(LTF_size_bins / k))
+
+    # Copy the katydid config file (in same dir) so that we can write to the copy not
+    # the original.
+    # copy base config file to edit
     temp_config_dir = base_config_path.parent / "temp"
     temp_config_dir.mkdir(exist_ok = True)
-
     config_path = temp_config_dir / str(
         base_config_path.stem
         + f"_{rid:04d}_{aid:03d}_{fid:04d}"
         + base_config_path.suffix
     )
-
-    # copy base config file to edit
     copyfile(base_config_path, config_path)
+
+    # Grab the config_dict from the katydid config file.
+    config_dict = load_yaml(config_path)
+    # print(config_dict)
 
     # configure spec2 to be either a spec-processor or speck-processor
     # Check the file extension of the first path in rocks_file_path list
-    rocks_file_path = file_df_row["rocks_file_path"]
-    first_rock_file = rocks_file_path[0] if rocks_file_path else ""
+    data_file_suffix = Path(rocks_file_path[0]).suffix if rocks_file_path else ""
     processor_type = {
         ".spec": "spec-processor",
         ".speck": "speck-processor",
-    }.get(Path(first_rock_file).suffix, None)
+    }.get(data_file_suffix) # returns None if missing key
     if processor_type:
         for processor in config_dict["processor-toolbox"]["processors"]:
             if processor["name"] == "spec2":
                 processor["type"] = processor_type
 
-    config_dict["spec1"]["filenames"] = [str(node_local_cached_file(i)) for i in file_df_row["rocks_noise_file_path"]]
-    config_dict["spec2"]["filenames"] = [str(node_local_cached_file(i)) for i in file_df_row["rocks_file_path"]]
+    inner_key_replace = {
+        "output-file": root_file_path,
+        "initial-slope": approx_slope,
+        "min-slope": approx_slope - 1e10,
+        "frequency-acceptance": LTF_freq_acceptance,
+        "time-gap-tolerance": LTF_time_acceptance,
+        "radii": [dbscan_radius_0, dbscan_radius_1],
+    }
+    for outer_key, val in config_dict.items():
+        for inner_key in val.keys():
+            new_value = inner_key_replace.get(inner_key)
+            if new_value:
+                config_dict[outer_key][inner_key] = new_value
 
-    for key, val in config_dict.items():
-        for inner_key, inner_val in val.items():
-            if inner_key == "output-file":
-                config_dict[key][inner_key] = file_df_row["root_file_path"]
+    config_dict["spec1"]["filenames"] = rocks_noise_path
+    config_dict["spec2"]["filenames"] = rocks_file_path
+    config_dict["stv"]["output-file"] = slew_file_path
 
-            if inner_key == "initial-slope":
-                config_dict[key][inner_key] = file_df_row["approx_slope"]
-
-            if inner_key == "min-slope":
-                config_dict[key][inner_key] = file_df_row["approx_slope"] - 1e10
-            
-            #Keep the LTF acceptance area to 45 bins (90 Hz*s) but scale f vs t 
-            # with slope based on good reconstruction at 0.711T and 2.00T
-            # - 0.71T: frequency-acceptance: 3e5, time-gap-tolerance: 3.0e-4
-            # - 2.00T: frequency-acceptance: 8e5, time-gap-tolerance: 1.0e-4
-            k = 0.1597 * file_df_row["approx_slope"] + 9.88e8
-            if k <= 0:
-                raise ValueError("No real positive solution (k must be > 0)")
-
-            if inner_key == "frequency-acceptance":
-                config_dict[key][inner_key] = float(np.sqrt(90 * k))
-            if inner_key == "time-gap-tolerance":
-                config_dict[key][inner_key] = float(np.sqrt(90 / k))
-            
-            if inner_key == "radii":
-                config_dict[key][inner_key] = [
-                    file_df_row["dbscan_radius_0"],
-                    file_df_row["dbscan_radius_1"],
-                ]
-    config_dict["stv"]["output-file"] = file_df_row["slew_file_path"]
-
+    # This might be unnecessary after manually applying float(np.sqrt(...)) above, that was the main troublemaker
+    config_dict = sanitize_dict(config_dict)
     # Dump the altered config_dict into the copy of the config file.
     # Note that the comments are all lost because you only write the contents of the config dict.
     with open(config_path, "w") as f:
-        # Convert np types to pure Python types, otherwise yaml.dump will print binary for numpy types
-        # This might be unnecessary after manually applying float(np.sqrt(...)) above, that was the main troublemaker
-        # TODO: recursively explore config_dict and apply conversion only to lowest level items
-        config_dict = {k: (v.item() if isinstance(v, np.generic) else v) 
-                       for k, v in config_dict.items()} 
         yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
 
     # copy first config file to the analysis directory for future reference.
-    if file_df_row["file_id"] == 0:
+    if fid == 0:
         config_path_name = base_config_path.stem + f"_{rid:04d}_{aid:03d}" + base_config_path.suffix
-        analysis_dir = Path(file_df_row["root_file_path"]).parents[0]
+        analysis_dir = Path(root_file_path).parents[0]
         saved_config_path = analysis_dir / config_path_name
         copyfile(config_path, saved_config_path)
 
         print(
             f"Writing the config file used in analysis to disk here: \n {str(saved_config_path)}\n"
         )
+
+    if use_cache:
+        config_dict["spec1"]["filenames"] = cached_noise_path
+        config_dict["spec2"]["filenames"] = cached_file_path
+        cached_config_path = "/tmp/he6cres/" + config_path.name
+        with open(cached_config_path, "w") as f:
+            yaml.dump(config_dict, f, default_flow_style=False, sort_keys=False)
+        
+    config_path_str = str(cached_config_path if use_cache else config_path)
 
     # Run katydid on the edited katydid config file.
     # Note that you need to have Katydid configured as a bash executable for this to
@@ -201,7 +208,7 @@ def run_katydid_file(file_df_row: dict) -> None:
     cmd = [
         "/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid",
         "-c",
-        str(config_path),
+        config_path_str,
     ]
 
     proc = sp.run(cmd, capture_output=True, text=True, errors="replace")
@@ -216,28 +223,30 @@ def run_katydid_file(file_df_row: dict) -> None:
     dt_stop = get_pst_time()
     dt_elapsed = dt_stop - dt_start
 
-    root_path = Path(file_df_row["root_file_path"])
-    root_exists = root_path.is_file()
-    root_size = root_path.stat().st_size if root_exists else 0
+    root_exists = root_file_path.is_file()
+    root_size = root_file_path.stat().st_size if root_exists else 0
+
+    if use_cache:
+        cached_config_path.unlink()
+        # DO NOT try and delete cached .spec(k) files unless there is a serious issue with disk usage
+        # in the temp storage. If you mishandle the paths you could accidentally delete the original data file!
+        # If you absolutely must, be extremely careful and at minimum do a check like:
+        # (not str(path.resolve()).startswith("/data")) and str(path.resolve()).startswith("/tmp/")
 
     # Only claim success if returncode==0 and the file exists and is non-empty
     if proc.returncode == 0 and root_exists and root_size > 0:
         print(
-            f"\nfile {file_df_row['file_id']}."
+            f"\nfile {fid}."
             f"\ncurrent wall time: {dt_stop}."
             f"\nwall time elapsed: {dt_elapsed}."
             f"\nCPU time elapsed: {t_elapsed:.2f} s."
             f"\nroot file created {root_path}\n"
         )
-        Path(config_path).unlink()
-
-        for f in config_dict["spec2"]["filenames"]:
-            print(f"Removing temp file {f}")
-            Path(f).unlink()
+        config_path.unlink()
 
     else:
         print(
-            f"\nfile {file_df_row['file_id']} FAILED."
+            f"\nfile {fid} FAILED."
             f"\nwall time elapsed: {dt_elapsed}."
             f"\nCPU time elapsed: {t_elapsed:.2f} s."
             f"\nreturncode: {proc.returncode}"
@@ -254,6 +263,21 @@ def run_katydid_file(file_df_row: dict) -> None:
         # Re-raise or just return; your choice:
         # raise RuntimeError("Katydid failed")
 
+def load_yaml(yaml_path):
+    with open(yaml_path, "r") as f:
+        try:
+            return yaml.load(f, Loader=yaml.FullLoader)
+        except yaml.YAMLError as e:
+            print(e)
+    return {}
+
+def sanitize_dict(d):
+    """
+    Convert numpy types to pure Python types, otherwise yaml.dump will print binary for numpy types
+    """
+    # TODO: recursively explore config_dict and apply conversion only to lowest level items
+    return {k: (v.item() if isinstance(v, np.generic) else v)
+                   for k, v in d.items()}
 
 if __name__ == "__main__":
     main()

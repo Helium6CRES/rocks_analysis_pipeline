@@ -192,12 +192,12 @@ def sbatch_job(
     )
     return proc
 
-def node_local_cached_file(source, cache_dir = "/tmp", unique = False):
+def cache_file_in_node(source, cache_dir = "/tmp/he6cres", unique = False):
     """
     Get a path to a local cache of some source file on node-local storage
     (typically node-local /tmp or /scratch) with a lockfile to prevent race
     conditions.
-    By default, caches in cache_dir="/tmp". Pass unique=True to add a hash
+    By default, caches in cache_dir="/tmp/he6cres". Pass unique=True to add a hash
     to uniquely identify different files that might have the same name
     Returns cache file Path
     """
@@ -205,15 +205,20 @@ def node_local_cached_file(source, cache_dir = "/tmp", unique = False):
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
 
-    local_stem = source.stem
+    stem = source.stem
     suffix = source.suffix
     if unique:
         # Avoid collisions between files with identical basenames
         key = hashlib.sha256(str(source).encode()).hexdigest()[:16]
-        local_stem = f"{source.stem}_{key}"
+        stem += f"_{key}"
 
-    local_file = cache_dir / f"{local_stem}{suffix}"
-    lock_file = cache_dir / f"{local_stem}.lock"
+    local_file = cache_dir / f"{stem}{suffix}"
+
+    if not source.is_file():
+        print(f"Could not find {source}. Returning.")
+        return
+
+    lock_file = cache_dir / f"{stem}.lock"
 
     with open(lock_file, "w") as lock:
         # Only one job per node can stage this file at a time
@@ -225,7 +230,7 @@ def node_local_cached_file(source, cache_dir = "/tmp", unique = False):
             return local_file
 
         if not local_file.exists():
-            temp_file = cache_dir / f"{local_stem}.tmp.{os.getpid()}{suffix}"
+            temp_file = cache_dir / f"{stem}.tmp.{os.getpid()}{suffix}"
             try:
                 print(f"Copying {source} to local scratch")
                 # python >=3.14: replace shutil with Path.copy(target)
@@ -239,6 +244,5 @@ def node_local_cached_file(source, cache_dir = "/tmp", unique = False):
     if local_file.exists():
         return local_file
     else:
-        print("Caching failed! Returning original source path.")
-        return source
+        print("Caching failed!")
 
