@@ -126,18 +126,19 @@ def run_katydid_file(file_df_row: dict) -> None:
 
     # configure spec2 to be either a spec-processor or speck-processor
     # Check the file extension of the first path in rocks_file_path list
-    first_rock_file = file_df_row["rocks_file_path"][0] if rocks_file_path else ""
+    rocks_file_path = file_df_row["rocks_file_path"]
+    first_rock_file = rocks_file_path[0] if rocks_file_path else ""
     processor_type = {
         ".spec": "spec-processor",
         ".speck": "speck-processor",
-    }.get(Path(first_rock_file).suffix, default=None)
+    }.get(Path(first_rock_file).suffix, None)
     if processor_type:
         for processor in config_dict["processor-toolbox"]["processors"]:
             if processor["name"] == "spec2":
                 processor["type"] = processor_type
 
     config_dict["spec1"]["filenames"] = [str(node_local_cached_file(i)) for i in file_df_row["rocks_noise_file_path"]]
-    config_dict["spec2"]["filenames"] = file_df_row["rocks_file_path"]
+    config_dict["spec2"]["filenames"] = [str(node_local_cached_file(i)) for i in file_df_row["rocks_file_path"]]
 
     for key, val in config_dict.items():
         for inner_key, inner_val in val.items():
@@ -194,7 +195,9 @@ def run_katydid_file(file_df_row: dict) -> None:
     # Run katydid on the edited katydid config file.
     # Note that you need to have Katydid configured as a bash executable for this to
     # work (as is standard).
+    dt_start = get_pst_time()
     t_start = time.process_time()
+
     cmd = [
         "/data/raid2/eliza4/he6_cres/katydid/build/bin/Katydid",
         "-c",
@@ -209,7 +212,9 @@ def run_katydid_file(file_df_row: dict) -> None:
         print("Katydid stderr (tail 1k):", proc.stderr[-1000:], flush=True)
 
     t_stop = time.process_time()
-    elapsed = t_stop - t_start
+    t_elapsed = t_stop - t_start
+    dt_stop = get_pst_time()
+    dt_elapsed = dt_stop - dt_start
 
     root_path = Path(file_df_row["root_file_path"])
     root_exists = root_path.is_file()
@@ -219,16 +224,22 @@ def run_katydid_file(file_df_row: dict) -> None:
     if proc.returncode == 0 and root_exists and root_size > 0:
         print(
             f"\nfile {file_df_row['file_id']}."
-            f"\ntime to run: {elapsed:.2f} s."
-            f"\ncurrent time: {get_pst_time()}."
+            f"\ncurrent wall time: {dt_stop}."
+            f"\nwall time elapsed: {dt_elapsed}."
+            f"\nCPU time elapsed: {t_elapsed:.2f} s."
             f"\nroot file created {root_path}\n"
         )
         Path(config_path).unlink()
 
+        for f in config_dict["spec2"]["filenames"]:
+            print(f"Removing temp file {f}")
+            Path(f).unlink()
+
     else:
         print(
             f"\nfile {file_df_row['file_id']} FAILED."
-            f"\ntime: {elapsed:.2f} s."
+            f"\nwall time elapsed: {dt_elapsed}."
+            f"\nCPU time elapsed: {t_elapsed:.2f} s."
             f"\nreturncode: {proc.returncode}"
             f"\nroot exists: {root_exists} size: {root_size}\n"
             f"Config kept for debug: {config_path}\n"
